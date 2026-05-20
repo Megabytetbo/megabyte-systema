@@ -43,7 +43,7 @@ export default function Home() {
     });
   };
 
-  const deleteRepair = (index: number) => }
+  const deleteRepair = (index: number) => {
     const updated = repairs.filter((_, i) => i !== index);
     setRepairs(updated);
   };
