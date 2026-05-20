@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [repairs, setRepairs] = useState(() => {
-    const saved = localStorage.getItem('megabyte_repairs');
+    const saved = typeof window !== "undefined"? localStorage.getItem("megabyte_repairs"): null;
 
     if (saved) {
       return JSON.parse(saved);
@@ -44,7 +44,7 @@ export default function Home() {
   };
 
   const deleteRepair = (index: number) => {
-    const updated = repairs.filter((_, i) => i !== index);
+    const updated = repairs.filter((_: any, i: number) => i !== index);
     setRepairs(updated);
   };
 
@@ -134,7 +134,7 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {repairs.map((item, index) => (
+              {repairs.map((item: any, index: number) => (
                 <tr
                   key={index}
                   className="border-t border-zinc-800"
