@@ -572,7 +572,8 @@ if (!user) {
                 email: e.target.value,
               })
             }
-            className="bg-zinc-800 p-4 rounded-2xl"
+            className="bg-zinc-800 text-white placeholder-zinc-400 p-4 rounded-2xl outline-none border border-zinc-700"
+style={{ color: 'white' }}
           />
 
           <input
@@ -585,7 +586,8 @@ if (!user) {
                 password: e.target.value,
               })
             }
-            className="bg-zinc-800 p-4 rounded-2xl"
+            className="bg-zinc-800 text-white placeholder-zinc-400 p-4 rounded-2xl outline-none border border-zinc-700"
+style={{ color: 'white' }}
           />
 
           <button
