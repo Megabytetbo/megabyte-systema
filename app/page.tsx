@@ -218,7 +218,7 @@ const generatePDF = (repair: any) => {
   y += 6;
 
   pdf.text(
-    `Sena: $ ${repair.sena || 0}`,
+    `Entrega: $ ${repair.sena || 0}`,
     5,
     y
   );
@@ -1220,7 +1220,7 @@ style={{ color: 'white' }}
                     </th>
 
                     <th className="text-left p-4">
-                      Seña
+                      Entrega
                     </th>
 
                     <th className="text-left p-4">
@@ -1601,7 +1601,7 @@ style={{ color: 'white' }}
 
                     <input
                       type="number"
-                      placeholder="Seña"
+                      placeholder="Entrega"
                       value={form.sena}
                       onChange={(e) =>
                         setForm({
