@@ -8,7 +8,12 @@ export default function Home() {
   const [repairs, setRepairs] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+const [user, setUser] = useState<any>(null);
 
+const [loginForm, setLoginForm] = useState({
+  email: '',
+  password: '',
+});
   const [section, setSection] = useState('reparaciones');
 
   // EDITAR
@@ -26,6 +31,45 @@ export default function Home() {
   });
 
   useEffect(() => {
+    // VERIFICAR SESION
+const checkUser = async () => {
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    setUser(session.user);
+  }
+};
+
+checkUser();
+// LOGIN
+const handleLogin = async () => {
+
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
+      email: loginForm.email,
+      password: loginForm.password,
+    });
+
+  if (error) {
+    alert('Usuario o contraseña incorrectos');
+    return;
+  }
+
+  if (data.user) {
+    setUser(data.user);
+  }
+};
+
+// LOGOUT
+const handleLogout = async () => {
+
+  await supabase.auth.signOut();
+
+  setUser(null);
+};
     const loadRepairs = async () => {
       const { data, error } = await supabase
         .from('repairs')
@@ -43,6 +87,19 @@ export default function Home() {
 
     loadRepairs();
   }, []);
+  useEffect(() => {
+
+  supabase.auth.onAuthStateChange((event, session) => {
+
+    if (session) {
+      setUser(session.user);
+    } else {
+      setUser(null);
+    }
+
+  });
+
+}, []);
 
   // PDF
  // =============================
@@ -460,6 +517,91 @@ const getNivelCliente = (
       'text-zinc-400',
   };
 };
+// PANTALLA LOGIN
+// LOGIN
+const handleLogin = async () => {
+
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
+      email: loginForm.email,
+      password: loginForm.password,
+    });
+
+  if (error) {
+    alert('Usuario o contraseña incorrectos');
+    return;
+  }
+
+  if (data.user) {
+    setUser(data.user);
+  }
+};
+
+// LOGOUT
+const handleLogout = async () => {
+
+  await supabase.auth.signOut();
+
+  setUser(null);
+};
+if (!user) {
+
+  return (
+
+    <div className="min-h-screen bg-black flex items-center justify-center p-6">
+
+      <div className="bg-zinc-900 p-10 rounded-3xl w-full max-w-md">
+
+        <h1 className="text-5xl font-bold text-green-400 mb-2 text-center">
+          MegaByte
+        </h1>
+
+        <p className="text-zinc-400 text-center mb-8">
+          Iniciar sesión
+        </p>
+
+        <div className="flex flex-col gap-4">
+
+          <input
+            type="email"
+            placeholder="Correo"
+            value={loginForm.email}
+            onChange={(e) =>
+              setLoginForm({
+                ...loginForm,
+                email: e.target.value,
+              })
+            }
+            className="bg-zinc-800 p-4 rounded-2xl"
+          />
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={loginForm.password}
+            onChange={(e) =>
+              setLoginForm({
+                ...loginForm,
+                password: e.target.value,
+              })
+            }
+            className="bg-zinc-800 p-4 rounded-2xl"
+          />
+
+          <button
+            onClick={handleLogin}
+            className="bg-green-500 hover:bg-green-600 text-black font-bold py-4 rounded-2xl"
+          >
+            Ingresar
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
   return (
     <div className="min-h-screen bg-black text-white flex">
 
@@ -528,6 +670,12 @@ const getNivelCliente = (
           </button>
 
         </nav>
+        <button
+  onClick={handleLogout}
+  className="mt-10 bg-red-500 hover:bg-red-600 py-3 rounded-2xl font-bold w-full"
+>
+  Cerrar sesión
+</button>
       </aside>
 
       {/* CONTENIDO */}
