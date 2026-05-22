@@ -985,7 +985,7 @@ style={{ color: 'white' }}
       Clientes
     </h1>
 
-    <div className="bg-zinc-900 rounded-3xl overflow-visible relative">
+    <div className="bg-zinc-900 rounded-3xl overflow-visible relative pb-40">
 
       <table className="w-full">
 
