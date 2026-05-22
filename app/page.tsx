@@ -985,7 +985,7 @@ style={{ color: 'white' }}
       Clientes
     </h1>
 
-    <div className="bg-zinc-900 rounded-3xl overflow-visible">
+    <div className="bg-zinc-900 rounded-3xl overflow-visible relative">
 
       <table className="w-full">
 
@@ -1516,7 +1516,7 @@ style={{ color: 'white' }}
 
   <div
     id={`menu-${repair.id}`}
-    className="hidden absolute right-10 mt-2 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 w-44 overflow-hidden"
+    className="hidden absolute right-10 bottom-full mb-2 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 w-44 overflow-hidden"
   >
 
     <button
