@@ -1511,7 +1511,7 @@ style={{ color: 'white' }}
       onClick={() =>
         generatePDF(repair)
       }
-      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
+      className="w-full text-left px-4 py-3 bg-zinc-700 hover:bg-zinc-600 font-semibold"
     >
       📄 PDF
     </button>
@@ -1520,7 +1520,7 @@ style={{ color: 'white' }}
       onClick={() =>
         editRepair(repair)
       }
-      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
+      className="w-full text-left px-4 py-3 bg-blue-500 hover:bg-blue-600 font-semibold"
     >
       ✏️ Editar
     </button>
@@ -1530,7 +1530,7 @@ style={{ color: 'white' }}
         .replace(/\D/g, '')
         .replace(/^0/, '')}`}
       target="_blank"
-      className="block px-4 py-3 hover:bg-zinc-800"
+      className="block px-4 py-3 bg-green-500 hover:bg-green-600 text-black font-semibold"
     >
       💬 WhatsApp
     </a>
@@ -1539,7 +1539,7 @@ style={{ color: 'white' }}
       onClick={() =>
         deleteRepair(repair.id)
       }
-      className="w-full text-left px-4 py-3 hover:bg-red-600"
+      className="w-full text-left px-4 py-3 bg-red-500 hover:bg-red-600 font-semibold"
     >
       🗑️ Eliminar
     </button>
