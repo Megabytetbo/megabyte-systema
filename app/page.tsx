@@ -1731,7 +1731,7 @@ style={{ color: 'white' }}
       trabajo: e.target.value,
     })
   }
-  className="bg-zinc-800 rounded-2xl p-3 md:col-span-2 min-h-[120px]"
+  className="bg-zinc-800 rounded-2xl p-4 w-full md:col-span-2 min-h-[180px] mt-4 resize-none"
 />
 
                   <div className="flex gap-4 mt-6">
