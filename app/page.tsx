@@ -315,7 +315,11 @@ pdf.text(
 };
   // CREAR / EDITAR
   const addRepair = async () => {
-    if (!form.cliente || !form.modelo) return;
+    console.log("click funciona")
+    if (!form.cliente) {
+  alert("Falta cliente")
+  return;
+}
 
     const costo = Number(form.costo || 0);
     const sena = Number(form.sena || 0);
@@ -372,6 +376,8 @@ trabajo: form.trabajo,
         equipo: `${form.tipo} - ${form.modelo}`,
         falla: form.falla,
         telefono: form.telefono,
+        contrasena: form.contrasena,
+trabajo: form.trabajo,
         costo,
         sena,
         saldo,
@@ -392,9 +398,10 @@ trabajo: form.trabajo,
         .select();
 
       if (error) {
-        console.log(error);
-        return;
-      }
+  console.log(error);
+  alert(error.message);
+  return;
+}
 
       if (data) {
         setRepairs([data[0], ...repairs]);
@@ -502,6 +509,7 @@ const clienteVIP =
         clientesCount[b] -
         clientesCount[a]
     )[0] || 'Sin datos';
+    //prueba
 
 // PROMEDIO
 const promedio =
