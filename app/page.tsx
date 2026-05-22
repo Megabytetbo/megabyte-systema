@@ -29,7 +29,7 @@ const [loginForm, setLoginForm] = useState({
   contrasena: '',
   trabajo: '',
   costo: '',
-  sena: '',
+  entrega: '',
   saldo: '',
 });
 
@@ -231,7 +231,7 @@ const generatePDF = (repair: any) => {
   y += 6;
 
   pdf.text(
-    `Entrega: $ ${repair.sena || 0}`,
+    `Entrega: $ ${repair.entrega || 0}`,
     5,
     y
   );
@@ -322,8 +322,8 @@ pdf.text(
 }
 
     const costo = Number(form.costo || 0);
-    const sena = Number(form.sena || 0);
-    const saldo = costo - sena;
+    const entrega = Number(form.entrega || 0);
+    const saldo = costo - entrega;
 
     // EDITAR
     if (editingRepair) {
@@ -338,7 +338,7 @@ pdf.text(
           contrasena: form.contrasena,
 trabajo: form.trabajo,
           costo,
-          sena,
+          entrega,
           saldo,
         })
         .eq('id', editingRepair.id);
@@ -357,7 +357,7 @@ trabajo: form.trabajo,
                   contrasena: form.contrasena,
 trabajo: form.trabajo,
                   costo,
-                  sena,
+                  entrega,
                   saldo,
                 }
               : repair
@@ -379,7 +379,7 @@ trabajo: form.trabajo,
         contrasena: form.contrasena,
 trabajo: form.trabajo,
         costo,
-        sena,
+        entrega,
         saldo,
         estado: 'Pendiente',
         fecha: new Date().toLocaleString('es-UY', {
@@ -417,7 +417,7 @@ trabajo: form.trabajo,
   contrasena: '',
   trabajo: '',
   costo: '',
-  sena: '',
+  entrega: '',
   saldo: '',
 });
 
@@ -451,7 +451,7 @@ trabajo: form.trabajo,
   contrasena: repair.contrasena || '',
   trabajo: repair.trabajo || '',
   costo: String(repair.costo || ''),
-  sena: String(repair.sena || ''),
+  entrega: String(repair.entrega || ''),
   saldo: String(repair.saldo || ''),
 });
 
@@ -462,7 +462,7 @@ trabajo: form.trabajo,
 
   // TOTALES FINANZAS
   const totalCobrado = repairs.reduce(
-    (acc, repair) => acc + Number(repair.sena || 0),
+    (acc, repair) => acc + Number(repair.entrega || 0),
     0
   );
 
@@ -1239,7 +1239,7 @@ style={{ color: 'white' }}
   contrasena: '',
   trabajo: '',
   costo: '',
-  sena: '',
+  entrega: '',
   saldo: '',
 });
 
@@ -1374,7 +1374,7 @@ style={{ color: 'white' }}
                           </td>
 
                           <td className="p-4 text-green-400 font-semibold">
-                            $ {repair.sena || 0}
+                            $ {repair.entrega || 0}
                           </td>
 
                           <td className="p-4 text-yellow-400 font-semibold">
@@ -1705,11 +1705,11 @@ className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800"    >
                     <input
                       type="number"
                       placeholder="Entrega"
-                      value={form.sena}
+                      value={form.entrega}
                       onChange={(e) =>
                         setForm({
                           ...form,
-                          sena: e.target.value,
+                          entrega: e.target.value,
                           saldo: String(
                             Number(form.costo || 0) -
                               Number(e.target.value || 0)
