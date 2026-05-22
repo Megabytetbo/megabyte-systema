@@ -1480,57 +1480,73 @@ style={{ color: 'white' }}
 
                           </td>
 
-                          <td className="p-4">
+                          <td className="p-4 relative">
 
-                            <div className="flex flex-col gap-2">
+  <button
+    onClick={() => {
 
-                              <button
-                                onClick={() =>
-                                  generatePDF(repair)
-                                }
-                                className="bg-zinc-700 w-28 py-2 rounded-xl text-white font-semibold text-sm"
-                              >
-                                PDF
-                              </button>
+      const menu =
+        document.getElementById(
+          `menu-${repair.id}`
+        );
 
-                              <button
-                                onClick={() =>
-                                  editRepair(repair)
-                                }
-                                className="bg-blue-500 w-28 py-2 rounded-xl text-white font-semibold text-sm"
-                              >
-                                Editar
-                              </button>
+      if (menu) {
 
-                              <a
-                                href={`https://wa.me/598${repair.telefono
-                                  .replace(
-                                    /\D/g,
-                                    ''
-                                  )
-                                  .replace(
-                                    /^0/,
-                                    ''
-                                  )}`}
-                                target="_blank"
-                                className="bg-green-500 w-28 py-2 rounded-xl text-black font-semibold text-sm text-center"
-                              >
-                                WhatsApp
-                              </a>
+        menu.classList.toggle(
+          'hidden'
+        );
+      }
+    }}
+    className="bg-zinc-700 hover:bg-zinc-600 w-10 h-10 rounded-xl text-xl font-bold"
+  >
+    ⋮
+  </button>
 
-                              <button
-                                onClick={() =>
-                                  deleteRepair(
-                                    repair.id
-                                  )
-                                }
-                                className="bg-red-500 w-28 py-2 rounded-xl text-white font-semibold text-sm"
-                              >
-                                Eliminar
-                              </button>
+  <div
+    id={`menu-${repair.id}`}
+    className="hidden absolute right-10 mt-2 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 w-44 overflow-hidden"
+  >
 
-                            </div>
-                          </td>
+    <button
+      onClick={() =>
+        generatePDF(repair)
+      }
+      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
+    >
+      📄 PDF
+    </button>
+
+    <button
+      onClick={() =>
+        editRepair(repair)
+      }
+      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
+    >
+      ✏️ Editar
+    </button>
+
+    <a
+      href={`https://wa.me/598${repair.telefono
+        .replace(/\D/g, '')
+        .replace(/^0/, '')}`}
+      target="_blank"
+      className="block px-4 py-3 hover:bg-zinc-800"
+    >
+      💬 WhatsApp
+    </a>
+
+    <button
+      onClick={() =>
+        deleteRepair(repair.id)
+      }
+      className="w-full text-left px-4 py-3 hover:bg-red-600"
+    >
+      🗑️ Eliminar
+    </button>
+
+  </div>
+
+</td>
 
                         </tr>
                       )
