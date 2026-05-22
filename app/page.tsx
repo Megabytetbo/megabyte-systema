@@ -1516,15 +1516,13 @@ style={{ color: 'white' }}
 
   <div
     id={`menu-${repair.id}`}
-    className="hidden absolute right-10 top-full mt-2 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl z-50 w-44 overflow-hidden"
-  >
+className="hidden absolute right-12 top-full mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-36 overflow-hidden"  >
 
     <button
       onClick={() =>
         generatePDF(repair)
       }
-      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
-    >
+className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800"    >
       📄 PDF
     </button>
 
@@ -1532,8 +1530,7 @@ style={{ color: 'white' }}
       onClick={() =>
         editRepair(repair)
       }
-      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
-    >
+className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800"    >
       ✏️ Editar
     </button>
 
@@ -1542,8 +1539,7 @@ style={{ color: 'white' }}
         .replace(/\D/g, '')
         .replace(/^0/, '')}`}
       target="_blank"
-      className="block px-4 py-3 hover:bg-zinc-800"
-    >
+className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800"    >
       💬 WhatsApp
     </a>
 
@@ -1551,8 +1547,7 @@ style={{ color: 'white' }}
       onClick={() =>
         deleteRepair(repair.id)
       }
-      className="w-full text-left px-4 py-3 hover:bg-red-600"
-    >
+className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800"    >
       🗑️ Eliminar
     </button>
 
