@@ -1244,7 +1244,7 @@ style={{ color: 'white' }}
             </div>
 
             {/* TABLA */}
-            <div className="bg-zinc-900 rounded-3xl overflow-hidden">
+            <div className="bg-zinc-900 rounded-3xl overflow-visible relative pb-40">
 
               <div className="p-5 border-b border-zinc-800">
 
