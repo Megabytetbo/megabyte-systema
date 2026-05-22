@@ -1598,136 +1598,128 @@ className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-800"    >
 
                   <div className="grid md:grid-cols-2 gap-4">
 
-                    <input
-                      placeholder="Cliente"
-                      value={form.cliente}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          cliente: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    />
+  {/* Cliente */}
+  <input
+    placeholder="Cliente"
+    value={form.cliente}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        cliente: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                    <select
-                      value={form.tipo}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          tipo: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    >
-                      <option value="">
-                        Tipo de equipo
-                      </option>
+  {/* Telefono */}
+  <input
+    placeholder="Teléfono"
+    value={form.telefono}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        telefono: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                      <option value="Celular">
-                        Celular
-                      </option>
+  {/* Modelo */}
+  <input
+    placeholder="Modelo"
+    value={form.modelo}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        modelo: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                      <option value="Notebook">
-                        Notebook
-                      </option>
+  {/* Tipo */}
+  <select
+    value={form.tipo}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        tipo: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  >
+    <option value="">Tipo de equipo</option>
+    <option value="Celular">Celular</option>
+    <option value="Notebook">Notebook</option>
+    <option value="Tablet">Tablet</option>
+  </select>
 
-                      <option value="Consola">
-                        Consola
-                      </option>
+  {/* Falla */}
+  <input
+    placeholder="Falla"
+    value={form.falla}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        falla: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                      <option value="Impresora">
-                        Impresora
-                      </option>
-                    </select>
+  {/* Contraseña */}
+  <input
+    placeholder="Contraseña"
+    value={form.contrasena}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        contrasena: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                    <input
-                      placeholder="Modelo"
-                      value={form.modelo}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          modelo: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    />
+  {/* Costo */}
+  <input
+    placeholder="Costo total"
+    value={form.costo}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        costo: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                    <input
-                      placeholder="Falla"
-                      value={form.falla}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          falla: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    />
+  {/* Entrega */}
+  <input
+    placeholder="Entrega"
+    value={form.entrega}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        entrega: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-                    <input
-  placeholder="Teléfono"
-  value={form.telefono}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      telefono: e.target.value,
-    })
-  }
-  className="bg-zinc-800 rounded-2xl p-3"
-/>
+  {/* Saldo */}
+  <input
+    placeholder="Saldo"
+    value={form.saldo}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        saldo: e.target.value,
+      })
+    }
+    className="bg-zinc-800 rounded-2xl p-3"
+  />
 
-<input
-  placeholder="Contraseña"
-  value={form.contrasena}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      contrasena: e.target.value,
-    })
-  }
-  className="bg-zinc-800 rounded-2xl p-3"
-/>
-
-                    <input
-                      type="number"
-                      placeholder="Costo total"
-                      value={form.costo}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          costo: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    />
-
-                    <input
-                      type="number"
-                      placeholder="Entrega"
-                      value={form.entrega}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          entrega: e.target.value,
-                          saldo: String(
-                            Number(form.costo || 0) -
-                              Number(e.target.value || 0)
-                          ),
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    />
-
-                    <input
-                      type="number"
-                      placeholder="Saldo"
-                      value={form.saldo}
-                      readOnly
-                      className="bg-zinc-700 rounded-2xl p-3"
-                    />
-
-                  </div>
+</div>
                   <textarea
   placeholder="Trabajo realizado"
   value={form.trabajo}
