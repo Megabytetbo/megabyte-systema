@@ -631,6 +631,22 @@ style={{ color: 'white' }}
   No cerrar sesión
 
 </label>
+<label className="flex items-center gap-3 text-zinc-300">
+
+  <input
+    type="checkbox"
+    checked={loginForm.recordar}
+    onChange={(e) =>
+      setLoginForm({
+        ...loginForm,
+        recordar: e.target.checked,
+      })
+    }
+  />
+
+  No cerrar sesión
+
+</label>
           <button
             onClick={handleLogin}
             className="bg-green-500 hover:bg-green-600 text-black font-bold py-4 rounded-2xl"
