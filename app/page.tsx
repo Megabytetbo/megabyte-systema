@@ -13,6 +13,7 @@ const [user, setUser] = useState<any>(null);
 const [loginForm, setLoginForm] = useState({
   email: '',
   password: '',
+  recordar: false,
 });
   const [section, setSection] = useState('reparaciones');
 
@@ -44,6 +45,16 @@ const checkUser = async () => {
 };
 
 checkUser();
+const recordar =
+  localStorage.getItem(
+    'megabyte_recordar'
+  );
+
+if (!recordar) {
+
+  supabase.auth.signOut();
+
+}
 // LOGIN
 const handleLogin = async () => {
 
@@ -532,9 +543,24 @@ const handleLogin = async () => {
     return;
   }
 
-  if (data.user) {
-    setUser(data.user);
+ if (data.user) {
+
+  if (loginForm.recordar) {
+
+    localStorage.setItem(
+      'megabyte_recordar',
+      'true'
+    );
+
+  } else {
+
+    localStorage.removeItem(
+      'megabyte_recordar'
+    );
   }
+
+  setUser(data.user);
+}
 };
 
 // LOGOUT
@@ -589,7 +615,22 @@ style={{ color: 'white' }}
             className="bg-zinc-800 text-white placeholder-zinc-400 p-4 rounded-2xl outline-none border border-zinc-700"
 style={{ color: 'white' }}
           />
+<label className="flex items-center gap-3 text-zinc-300">
 
+  <input
+    type="checkbox"
+    checked={loginForm.recordar}
+    onChange={(e) =>
+      setLoginForm({
+        ...loginForm,
+        recordar: e.target.checked,
+      })
+    }
+  />
+
+  No cerrar sesión
+
+</label>
           <button
             onClick={handleLogin}
             className="bg-green-500 hover:bg-green-600 text-black font-bold py-4 rounded-2xl"
