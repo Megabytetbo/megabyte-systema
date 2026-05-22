@@ -1326,6 +1326,11 @@ style={{ color: 'white' }}
                           .includes(
                             search.toLowerCase()
                           )
+                          || repair.orden
+  ?.toLowerCase()
+  .includes(
+    search.toLowerCase()
+  )
                     )
                     .map(
                       (
