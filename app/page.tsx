@@ -20,16 +20,18 @@ const [loginForm, setLoginForm] = useState({
   // EDITAR
   const [editingRepair, setEditingRepair] = useState<any | null>(null);
 
-  const [form, setForm] = useState({
-    cliente: '',
-    tipo: '',
-    modelo: '',
-    falla: '',
-    telefono: '',
-    costo: '',
-    sena: '',
-    saldo: '',
-  });
+ const [form, setForm] = useState({
+  cliente: '',
+  tipo: '',
+  modelo: '',
+  falla: '',
+  telefono: '',
+  contrasena: '',
+  trabajo: '',
+  costo: '',
+  sena: '',
+  saldo: '',
+});
 
   useEffect(() => {
     // VERIFICAR SESION
@@ -329,6 +331,8 @@ pdf.text(
           equipo: `${form.tipo} - ${form.modelo}`,
           falla: form.falla,
           telefono: form.telefono,
+          contrasena: form.contrasena,
+trabajo: form.trabajo,
           costo,
           sena,
           saldo,
@@ -346,6 +350,8 @@ pdf.text(
                   equipo: `${form.tipo} - ${form.modelo}`,
                   falla: form.falla,
                   telefono: form.telefono,
+                  contrasena: form.contrasena,
+trabajo: form.trabajo,
                   costo,
                   sena,
                   saldo,
@@ -396,15 +402,17 @@ pdf.text(
     }
 
     setForm({
-      cliente: '',
-      tipo: '',
-      modelo: '',
-      falla: '',
-      telefono: '',
-      costo: '',
-      sena: '',
-      saldo: '',
-    });
+  cliente: '',
+  tipo: '',
+  modelo: '',
+  falla: '',
+  telefono: '',
+  contrasena: '',
+  trabajo: '',
+  costo: '',
+  sena: '',
+  saldo: '',
+});
 
     setEditingRepair(null);
 
@@ -428,15 +436,17 @@ pdf.text(
     const partesEquipo = repair.equipo.split(' - ');
 
     setForm({
-      cliente: repair.cliente || '',
-      tipo: partesEquipo[0] || '',
-      modelo: partesEquipo[1] || '',
-      falla: repair.falla || '',
-      telefono: repair.telefono || '',
-      costo: String(repair.costo || ''),
-      sena: String(repair.sena || ''),
-      saldo: String(repair.saldo || ''),
-    });
+  cliente: repair.cliente || '',
+  tipo: partesEquipo[0] || '',
+  modelo: partesEquipo[1] || '',
+  falla: repair.falla || '',
+  telefono: repair.telefono || '',
+  contrasena: repair.contrasena || '',
+  trabajo: repair.trabajo || '',
+  costo: String(repair.costo || ''),
+  sena: String(repair.sena || ''),
+  saldo: String(repair.saldo || ''),
+});
 
     setEditingRepair(repair);
 
@@ -1213,15 +1223,17 @@ style={{ color: 'white' }}
                   setEditingRepair(null);
 
                   setForm({
-                    cliente: '',
-                    tipo: '',
-                    modelo: '',
-                    falla: '',
-                    telefono: '',
-                    costo: '',
-                    sena: '',
-                    saldo: '',
-                  });
+  cliente: '',
+  tipo: '',
+  modelo: '',
+  falla: '',
+  telefono: '',
+  contrasena: '',
+  trabajo: '',
+  costo: '',
+  sena: '',
+  saldo: '',
+});
 
                   setShowModal(true);
                 }}
@@ -1511,7 +1523,7 @@ style={{ color: 'white' }}
       onClick={() =>
         generatePDF(repair)
       }
-      className="w-full text-left px-4 py-3 bg-zinc-700 hover:bg-zinc-600 font-semibold"
+      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
     >
       📄 PDF
     </button>
@@ -1520,7 +1532,7 @@ style={{ color: 'white' }}
       onClick={() =>
         editRepair(repair)
       }
-      className="w-full text-left px-4 py-3 bg-blue-500 hover:bg-blue-600 font-semibold"
+      className="w-full text-left px-4 py-3 hover:bg-zinc-800"
     >
       ✏️ Editar
     </button>
@@ -1530,7 +1542,7 @@ style={{ color: 'white' }}
         .replace(/\D/g, '')
         .replace(/^0/, '')}`}
       target="_blank"
-      className="block px-4 py-3 bg-green-500 hover:bg-green-600 text-black font-semibold"
+      className="block px-4 py-3 hover:bg-zinc-800"
     >
       💬 WhatsApp
     </a>
@@ -1539,7 +1551,7 @@ style={{ color: 'white' }}
       onClick={() =>
         deleteRepair(repair.id)
       }
-      className="w-full text-left px-4 py-3 bg-red-500 hover:bg-red-600 font-semibold"
+      className="w-full text-left px-4 py-3 hover:bg-red-600"
     >
       🗑️ Eliminar
     </button>
@@ -1648,16 +1660,28 @@ style={{ color: 'white' }}
                     />
 
                     <input
-                      placeholder="Teléfono"
-                      value={form.telefono}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          telefono: e.target.value,
-                        })
-                      }
-                      className="bg-zinc-800 rounded-2xl p-3"
-                    />
+  placeholder="Teléfono"
+  value={form.telefono}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      telefono: e.target.value,
+    })
+  }
+  className="bg-zinc-800 rounded-2xl p-3"
+/>
+
+<input
+  placeholder="Contraseña"
+  value={form.contrasena}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      contrasena: e.target.value,
+    })
+  }
+  className="bg-zinc-800 rounded-2xl p-3"
+/>
 
                     <input
                       type="number"
@@ -1698,6 +1722,17 @@ style={{ color: 'white' }}
                     />
 
                   </div>
+                  <textarea
+  placeholder="Trabajo realizado"
+  value={form.trabajo}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      trabajo: e.target.value,
+    })
+  }
+  className="bg-zinc-800 rounded-2xl p-3 md:col-span-2 min-h-[120px]"
+/>
 
                   <div className="flex gap-4 mt-6">
 
