@@ -22,6 +22,10 @@ export default function Home() {
     cliente: '', tipo: '', modelo: '', falla: '',
     telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '',
   });
+  const [config, setConfig] = useState<any>({
+    nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
+  });
+  const [configGuardando, setConfigGuardando] = useState(false);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -42,7 +46,7 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Cargar reparaciones ───────────────────────────────────────────────────
+  // ── Cargar reparaciones y configuracion ──────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const loadRepairs = async () => {
@@ -51,7 +55,13 @@ export default function Home() {
       if (data) setRepairs(data);
       if (error) console.error(error);
     };
+    const loadConfig = async () => {
+      const { data } = await supabase
+        .from('configuracion').select('*').eq('user_id', user.id).single();
+      if (data) setConfig(data);
+    };
     loadRepairs();
+    loadConfig();
   }, [user]);
 
   // ── Login / Logout ────────────────────────────────────────────────────────
@@ -72,6 +82,39 @@ export default function Home() {
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
     setUser(null);
+  };
+
+  const guardarConfig = async () => {
+    setConfigGuardando(true);
+    const { data: existing } = await supabase
+      .from('configuracion').select('id').eq('user_id', user.id).single();
+    if (existing) {
+      await supabase.from('configuracion').update({
+        nombre_negocio: config.nombre_negocio,
+        direccion: config.direccion,
+        telefono: config.telefono,
+        logo_url: config.logo_url,
+      }).eq('user_id', user.id);
+    } else {
+      await supabase.from('configuracion').insert({
+        user_id: user.id,
+        nombre_negocio: config.nombre_negocio,
+        direccion: config.direccion,
+        telefono: config.telefono,
+        logo_url: config.logo_url,
+      });
+    }
+    setConfigGuardando(false);
+    alert('Configuración guardada!');
+  };
+
+  const subirLogo = async (file: File) => {
+    const ext = file.name.split('.').pop();
+    const nombre = `logo-${user.id}.${ext}`;
+    const { error } = await supabase.storage.from('logos').upload(nombre, file, { upsert: true });
+    if (error) { alert('Error al subir logo: ' + error.message); return; }
+    const { data } = supabase.storage.from('logos').getPublicUrl(nombre);
+    setConfig({ ...config, logo_url: data.publicUrl });
   };
 
   const toggleTheme = () => {
@@ -107,10 +150,11 @@ export default function Home() {
     let y = 12;
 
     pdf.setFontSize(18);
-    pdf.text('MegaByte', 40, y, { align: 'center' }); y += 6;
+    pdf.text(config.nombre_negocio || 'MegaByte', 40, y, { align: 'center' }); y += 6;
     pdf.setFontSize(8);
-    pdf.text('Soluciones en Informatica', 40, y, { align: 'center' }); y += 5;
-    pdf.text('WhatsApp: 099 347 478', 40, y, { align: 'center' }); y += 6;
+    if (config.direccion) { pdf.text(config.direccion, 40, y, { align: 'center' }); y += 5; }
+    if (config.telefono) { pdf.text(`Tel: ${config.telefono}`, 40, y, { align: 'center' }); y += 5; }
+    y += 1;
     pdf.line(5, y, 75, y); y += 8;
 
     pdf.setFontSize(10);
@@ -480,26 +524,77 @@ export default function Home() {
           <div>
             <div className="mb-8">
               <h1 className={`text-2xl font-bold ${t.text}`}>Configuración</h1>
-              <p className={`${t.subtext} text-sm mt-1`}>Ajustes del sistema</p>
+              <p className={`${t.subtext} text-sm mt-1`}>Personalizá tu negocio</p>
             </div>
-            <div className={`${t.card} border rounded-2xl p-6 max-w-lg`}>
-              <h2 className={`text-base font-semibold ${t.text} mb-1`}>Apariencia</h2>
-              <p className={`text-sm ${t.subtext} mb-5`}>Cambiá el tema visual de la aplicación</p>
-              <div className={`flex items-center justify-between p-4 rounded-xl border ${t.divider} ${darkMode ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
+            <div className="flex flex-col gap-5 max-w-lg">
+
+              {/* Apariencia */}
+              <div className={`${t.card} border rounded-2xl p-6`}>
+                <h2 className={`text-base font-semibold ${t.text} mb-1`}>Apariencia</h2>
+                <p className={`text-sm ${t.subtext} mb-5`}>Cambiá el tema visual de la aplicación</p>
+                <div className={`flex items-center justify-between p-4 rounded-xl border ${t.divider} ${darkMode ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
+                    <div>
+                      <p className={`text-sm font-medium ${t.text}`}>{darkMode ? 'Tema oscuro' : 'Tema claro'}</p>
+                      <p className={`text-xs ${t.subtext}`}>{darkMode ? 'Fondo oscuro, ideal para poca luz' : 'Fondo claro, ideal para el día'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-green-500' : 'bg-gray-300'}`}
+                  >
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Datos del negocio */}
+              <div className={`${t.card} border rounded-2xl p-6`}>
+                <h2 className={`text-base font-semibold ${t.text} mb-1`}>Datos del negocio</h2>
+                <p className={`text-sm ${t.subtext} mb-5`}>Se muestran en el ticket de impresión</p>
+
+                {/* Logo */}
+                <div className="mb-5">
+                  <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO DEL NEGOCIO</label>
+                  {config.logo_url && (
+                    <div className={`mb-3 p-3 ${darkMode ? 'bg-zinc-800' : 'bg-gray-100'} rounded-xl inline-block`}>
+                      <img src={config.logo_url} alt="Logo" className="max-h-20 max-w-full object-contain" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/*"
+                    onChange={(e) => { if (e.target.files?.[0]) subirLogo(e.target.files[0]); }}
+                    className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-green-500 file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
+                  <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG. Se mostrará en el ticket de impresión.</p>
+                </div>
+
+                <div className="flex flex-col gap-4 mb-6">
                   <div>
-                    <p className={`text-sm font-medium ${t.text}`}>{darkMode ? 'Tema oscuro' : 'Tema claro'}</p>
-                    <p className={`text-xs ${t.subtext}`}>{darkMode ? 'Fondo oscuro, ideal para poca luz' : 'Fondo claro, ideal para el día'}</p>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>NOMBRE DEL NEGOCIO</label>
+                    <input value={config.nombre_negocio || ''} onChange={e => setConfig({...config, nombre_negocio: e.target.value})}
+                      placeholder="Ej: MegaByte"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                  </div>
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>DIRECCIÓN</label>
+                    <input value={config.direccion || ''} onChange={e => setConfig({...config, direccion: e.target.value})}
+                      placeholder="Ej: Gral. Flores 287"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                  </div>
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>TELÉFONO</label>
+                    <input value={config.telefono || ''} onChange={e => setConfig({...config, telefono: e.target.value})}
+                      placeholder="Ej: 099 347 478"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                   </div>
                 </div>
-                <button
-                  onClick={toggleTheme}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-green-500' : 'bg-gray-300'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+
+                <button onClick={guardarConfig} disabled={configGuardando}
+                  className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm">
+                  {configGuardando ? 'Guardando...' : 'Guardar configuración'}
                 </button>
               </div>
+
             </div>
           </div>
         )}
