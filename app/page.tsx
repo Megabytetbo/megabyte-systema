@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 export default function Home() {
   const [repairs, setRepairs] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [searchClientes, setSearchClientes] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loginForm, setLoginForm] = useState({ email: '', password: '', recordar: false });
@@ -456,15 +457,22 @@ export default function Home() {
         {/* ── Clientes ── */}
         {section === 'clientes' && (
           <div>
-            <div className="mb-8">
-              <h1 className={`text-2xl font-bold ${t.text}`}>Clientes</h1>
-              <p className={`${t.subtext} text-sm mt-1`}>Directorio de clientes</p>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className={`text-2xl font-bold ${t.text}`}>Clientes</h1>
+                <p className={`${t.subtext} text-sm mt-1`}>Directorio de clientes</p>
+              </div>
             </div>
             <div className={`${t.card} border rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider}`}>
+                <input type="text" placeholder="🔍  Buscar por nombre o teléfono..."
+                  value={searchClientes} onChange={(e) => setSearchClientes(e.target.value)}
+                  className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
+              </div>
               <table className="w-full">
                 <thead>
                   <tr className={`border-b ${t.divider}`}>
-                    {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp'].map(h => (
+                    {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
                       <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
                     ))}
                   </tr>
@@ -479,6 +487,9 @@ export default function Home() {
                       acc[repair.telefono].total += Number(repair.costo || 0);
                       return acc;
                     }, {})
+                  ).filter((cliente: any) =>
+                    cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
+                    cliente.telefono.includes(searchClientes)
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`border-t ${t.row} transition-colors`}>
                       <td className={`p-4 font-medium ${t.text}`}>{cliente.cliente}</td>
@@ -510,6 +521,16 @@ export default function Home() {
                           className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
                           WhatsApp
                         </a>
+                      </td>
+                      <td className="p-4">
+                        <button onClick={() => {
+                          setEditingRepair(null);
+                          setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
+                          setSection('reparaciones');
+                          setShowModal(true);
+                        }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
+                          + Orden
+                        </button>
                       </td>
                     </tr>
                   ))}
