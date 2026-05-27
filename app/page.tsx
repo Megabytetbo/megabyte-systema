@@ -234,6 +234,57 @@ export default function Home() {
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
 
+  // ── TICKET INTERNO 80x45mm ────────────────────────────────────────────────
+  const generateTicketInterno = (repair: any) => {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Interno ${repair.orden}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            width: 72mm;
+            padding: 2mm 4mm;
+            color: #000;
+          }
+          .linea { border-top: 1.5px solid #000; margin: 4px 0; }
+          .orden { font-size: 26px; font-weight: 900; text-align: center; letter-spacing: 2px; margin: 4px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
+          .label { font-weight: bold; }
+          .falla-label { font-weight: bold; font-size: 11px; margin-bottom: 2px; }
+          @media print {
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm 45mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="linea"></div>
+        <div class="orden">${repair.orden}</div>
+        <div class="linea"></div>
+        <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
+        <div class="fila"><span class="label">Tel:</span><span>${repair.telefono || '-'}</span></div>
+        <div class="linea"></div>
+        <div class="falla-label">Falla:</div>
+        <div style="font-size:11px">${repair.falla}</div>
+        <div class="linea"></div>
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    const ventana = window.open('', '_blank', 'width=380,height=300');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
   // ── CRUD ──────────────────────────────────────────────────────────────────
   const addRepair = async () => {
     if (!form.cliente) { alert('Falta cliente'); return; }
@@ -752,8 +803,9 @@ export default function Home() {
                               const menu = document.getElementById(`menu-${repair.id}`);
                               if (menu) menu.classList.toggle('hidden');
                             }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
-                            <div id={`menu-${repair.id}`} className={`hidden absolute right-12 top-full mt-1 ${t.menuBg} border rounded-xl shadow-2xl z-50 w-36 overflow-hidden`}>
-                              <button onClick={() => generatePDF(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 PDF</button>
+                            <div id={`menu-${repair.id}`} className={`hidden absolute right-12 top-full mt-1 ${t.menuBg} border rounded-xl shadow-2xl z-50 w-40 overflow-hidden`}>
+                              <button onClick={() => generatePDF(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
+                              <button onClick={() => generateTicketInterno(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
                               <button onClick={() => editRepair(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
                               <a href={`https://wa.me/598${repair.telefono.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
                               <button onClick={() => deleteRepair(repair.id)} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
