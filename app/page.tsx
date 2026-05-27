@@ -287,6 +287,93 @@ export default function Home() {
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
 
+  // ── TICKET ENTREGA 80mm ──────────────────────────────────────────────────
+  const generateTicketEntrega = (repair: any) => {
+    const nombre = config.nombre_negocio || 'MegaByte';
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Entrega ${repair.orden}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            width: 72mm;
+            padding: 3mm 4mm;
+            color: #000;
+            position: relative;
+          }
+          .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
+          .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
+          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+          .label { font-weight: bold; }
+          .bloque { margin-bottom: 3px; }
+          .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
+          .sello {
+            position: fixed;
+            top: 18mm;
+            right: -8mm;
+            background: #000;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            padding: 4px 28px;
+            transform: rotate(35deg);
+            opacity: 0.85;
+            z-index: 99;
+          }
+          @media print {
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm auto; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="sello">ENTREGADO</div>
+        ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
+        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
+        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div>
+          <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
+          <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
+          <div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div>
+          <div class="fila label"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="footer">Gracias por confiar en ${nombre}</div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); };
+          };
+        <\/script>
+      </body>
+      </html>
+    \`;
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
   // ── CRUD ──────────────────────────────────────────────────────────────────
   const addRepair = async () => {
     if (!form.cliente) { alert('Falta cliente'); return; }
@@ -818,6 +905,7 @@ export default function Home() {
                                 className={`${t.menuBg} border rounded-xl shadow-2xl w-40 overflow-hidden`}>
                                 <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
                                 <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
+                                <button onClick={() => { generateTicketEntrega(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
                                 <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
                                 <a href={`https://wa.me/598${repair.telefono.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
                                 <button onClick={() => { deleteRepair(repair.id); setOpenMenu(null); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
