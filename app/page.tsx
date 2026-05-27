@@ -260,7 +260,7 @@ export default function Home() {
           .falla-label { font-weight: bold; font-size: 11px; margin-bottom: 2px; }
           @media print {
             body { width: 72mm; }
-            @page { margin: 0; size: 80mm 45mm; }
+            @page { margin: 0; size: 80mm auto; }
           }
         </style>
       </head>
