@@ -8,6 +8,7 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [searchClientes, setSearchClientes] = useState('');
   const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loginForm, setLoginForm] = useState({ email: '', password: '', recordar: false });
@@ -803,10 +804,19 @@ export default function Home() {
                             {openMenu === repair.id && (
                               <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
                             )}
-                            <button onClick={() => setOpenMenu(openMenu === repair.id ? null : repair.id)}
-                              className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
+                            <button onClick={(e) => {
+                              if (openMenu === repair.id) { setOpenMenu(null); return; }
+                              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                              const menuH = 210;
+                              const menuW = 160;
+                              const top = rect.bottom + menuH > window.innerHeight ? rect.top - menuH : rect.bottom + 4;
+                              const left = Math.min(rect.right - menuW, window.innerWidth - menuW - 8);
+                              setMenuPos({ top, left });
+                              setOpenMenu(repair.id);
+                            }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
                             {openMenu === repair.id && (
-                              <div className={`absolute right-10 bottom-10 ${t.menuBg} border rounded-xl shadow-2xl z-50 w-40 overflow-hidden`}>
+                              <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
+                                className={`${t.menuBg} border rounded-xl shadow-2xl w-40 overflow-hidden`}>
                                 <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
                                 <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
                                 <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
