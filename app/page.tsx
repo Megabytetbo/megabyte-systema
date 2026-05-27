@@ -29,7 +29,7 @@ export default function Home() {
   });
   const [configGuardando, setConfigGuardando] = useState(false);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ Auth ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -48,7 +48,7 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Cargar reparaciones y configuracion ──────────────────────────────────
+  // ÔöÇÔöÇ Cargar reparaciones y configuracion ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   useEffect(() => {
     if (!user) return;
     const loadRepairs = async () => {
@@ -66,13 +66,13 @@ export default function Home() {
     loadConfig();
   }, [user]);
 
-  // ── Login / Logout ────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ Login / Logout ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: loginForm.email,
       password: loginForm.password,
     });
-    if (error) { alert('Usuario o contraseña incorrectos'); return; }
+    if (error) { alert('Usuario o contrase├▒a incorrectos'); return; }
     if (data.user) {
       if (loginForm.recordar) localStorage.setItem('megabyte_recordar', 'true');
       else localStorage.removeItem('megabyte_recordar');
@@ -107,7 +107,7 @@ export default function Home() {
       });
     }
     setConfigGuardando(false);
-    alert('Configuración guardada!');
+    alert('Configuraci├│n guardada!');
   };
 
   const subirLogo = async (file: File) => {
@@ -125,7 +125,7 @@ export default function Home() {
     localStorage.setItem('megabyte_theme', next ? 'dark' : 'light');
   };
 
-  // Clases dinámicas según tema
+  // Clases din├ímicas seg├║n tema
   const t = darkMode ? {
     bg: 'bg-zinc-950', sidebar: 'bg-zinc-900 border-zinc-800', card: 'bg-zinc-900 border-zinc-800',
     input: 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-green-500',
@@ -146,7 +146,7 @@ export default function Home() {
     tableHead: 'text-gray-500',
   };
 
-  // ── TICKET HTML para impresora térmica 80mm ──────────────────────────────
+  // ÔöÇÔöÇ TICKET HTML para impresora t├®rmica 80mm ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   const generatePDF = (repair: any) => {
     const nombre = config.nombre_negocio || 'MegaByte';
     const html = `
@@ -188,7 +188,7 @@ export default function Home() {
           <div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div>
           <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
           <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
-          <div class="fila"><span class="label">Teléfono:</span><span>${repair.telefono || '-'}</span></div>
+          <div class="fila"><span class="label">Tel├®fono:</span><span>${repair.telefono || '-'}</span></div>
         </div>
         <div class="linea"></div>
 
@@ -236,7 +236,7 @@ export default function Home() {
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
 
-  // ── TICKET INTERNO 80x45mm ────────────────────────────────────────────────
+  // ÔöÇÔöÇ TICKET INTERNO 80x45mm ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   const generateTicketInterno = (repair: any) => {
     const html = `
       <!DOCTYPE html>
@@ -290,91 +290,15 @@ export default function Home() {
   // ── TICKET ENTREGA 80mm ──────────────────────────────────────────────────
   const generateTicketEntrega = (repair: any) => {
     const nombre = config.nombre_negocio || 'MegaByte';
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8"/>
-        <title>Entrega ${repair.orden}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-            width: 72mm;
-            padding: 3mm 4mm;
-            color: #000;
-            position: relative;
-          }
-          .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
-          .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
-          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
-          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
-          .label { font-weight: bold; }
-          .bloque { margin-bottom: 3px; }
-          .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
-          .sello {
-            position: fixed;
-            top: 18mm;
-            right: -8mm;
-            background: #000;
-            color: #fff;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: 3px;
-            padding: 4px 28px;
-            transform: rotate(35deg);
-            opacity: 0.85;
-            z-index: 99;
-          }
-          @media print {
-            body { width: 72mm; }
-            @page { margin: 0; size: 80mm auto; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="sello">ENTREGADO</div>
-        ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
-        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ""}
-        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ""}
-        <div class="linea"></div>
-
-        <div class="bloque">
-          <div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div>
-          <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
-          <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
-        </div>
-        <div class="linea"></div>
-
-        <div class="bloque">
-          <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
-          <div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div>
-          <div class="fila label"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
-        </div>
-        <div class="linea"></div>
-
-        <div class="bloque">
-          <div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div>
-        </div>
-        <div class="linea"></div>
-
-        <div class="footer">Gracias por confiar en ${nombre}</div>
-
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() { window.close(); };
-          };
-        <\/script>
-      </body>
-      </html>
-    \`;
+    const logoHtml = config.logo_url ? '<div style="text-align:center;margin-bottom:4px"><img src="' + config.logo_url + '" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>' : '<div class="titulo">' + nombre + '</div>';
+    const dirHtml = config.direccion ? '<div class="subtitulo">' + config.direccion + '</div>' : '';
+    const telHtml = config.telefono ? '<div class="subtitulo">Tel: ' + config.telefono + '</div>' : '';
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Entrega ${repair.orden}</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; width: 72mm; padding: 3mm 4mm; color: #000; } .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; } .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; } .linea { border-top: 1.5px solid #000; margin: 5px 0; } .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; } .label { font-weight: bold; } .bloque { margin-bottom: 3px; } .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; } .sello { position: fixed; top: 18mm; right: -8mm; background: #000; color: #fff; font-size: 13px; font-weight: 900; letter-spacing: 3px; padding: 4px 28px; transform: rotate(35deg); opacity: 0.85; z-index: 99; } @media print { body { width: 72mm; } @page { margin: 0; size: 80mm auto; } }</style></head><body><div class="sello">ENTREGADO</div>${logoHtml}${dirHtml}${telHtml}<div class="linea"></div><div class="bloque"><div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div><div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div><div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div></div><div class="linea"></div><div class="bloque"><div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div><div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div><div class="fila label"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div></div><div class="linea"></div><div class="bloque"><div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div></div><div class="linea"></div><div class="footer">Gracias por confiar en ${nombre}</div><script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};</` + `script></body></html>`;
     const ventana = window.open('', '_blank', 'width=400,height=600');
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
 
-  // ── CRUD ──────────────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ CRUD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   const addRepair = async () => {
     if (!form.cliente) { alert('Falta cliente'); return; }
     const costo = Number(form.costo || 0);
@@ -418,7 +342,7 @@ export default function Home() {
   };
 
   const deleteRepair = async (id: number) => {
-    if (!confirm('¿Eliminar esta orden?')) return;
+    if (!confirm('┬┐Eliminar esta orden?')) return;
     const { error } = await supabase.from('repairs').delete().eq('id', id);
     if (!error) setRepairs(repairs.filter((r) => r.id !== id));
   };
@@ -435,7 +359,7 @@ export default function Home() {
     setShowModal(true);
   };
 
-  // ── Estadísticas ──────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ Estad├¡sticas ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   const totalCobrado = repairs.reduce((acc, r) => acc + Number(r.entrega || 0), 0);
   const totalPendiente = repairs.reduce((acc, r) => acc + Number(r.saldo || 0), 0);
   const totalTrabajos = repairs.reduce((acc, r) => acc + Number(r.costo || 0), 0);
@@ -450,26 +374,26 @@ export default function Home() {
   const clienteVIP = Object.keys(clientesCount).sort((a, b) => clientesCount[b] - clientesCount[a])[0] || 'Sin datos';
 
   const getNivelCliente = (cantidad: number) => {
-    if (cantidad >= 5) return { texto: 'VIP ⭐', color: 'text-yellow-400' };
+    if (cantidad >= 5) return { texto: 'VIP Ô¡É', color: 'text-yellow-400' };
     if (cantidad >= 3) return { texto: 'Frecuente', color: 'text-blue-400' };
     return { texto: 'Normal', color: 'text-zinc-400' };
   };
 
   const estadoColor: any = {
     'Pendiente': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
-    'En reparación': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+    'En reparaci├│n': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
     'Esperando repuesto': 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
     'Entregado': 'bg-green-500/20 text-green-400 border border-green-500/30',
   };
 
   const estadoSelectColor: any = {
     'Pendiente': 'bg-yellow-500 text-black',
-    'En reparación': 'bg-blue-500 text-white',
+    'En reparaci├│n': 'bg-blue-500 text-white',
     'Esperando repuesto': 'bg-orange-500 text-white',
     'Entregado': 'bg-green-600 text-white',
   };
 
-  // ── Login screen ──────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ Login screen ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   if (!user) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
@@ -477,23 +401,23 @@ export default function Home() {
           {/* Logo */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-4">
-              <span className="text-3xl">🔧</span>
+              <span className="text-3xl">­ƒöº</span>
             </div>
             <h1 className="text-3xl font-bold text-white tracking-tight">MegaByte</h1>
-            <p className="text-zinc-500 text-sm mt-1">Sistema de gestión técnica</p>
+            <p className="text-zinc-500 text-sm mt-1">Sistema de gesti├│n t├®cnica</p>
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
             <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
+              <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electr├│nico</label>
               <input type="email" placeholder="admin@megabyte.com" value={loginForm.email}
                 onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                 className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
             </div>
             <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Contraseña</label>
-              <input type="password" placeholder="••••••••" value={loginForm.password}
+              <label className="text-xs text-zinc-400 font-medium mb-1 block">Contrase├▒a</label>
+              <input type="password" placeholder="ÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇóÔÇó" value={loginForm.password}
                 onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                 className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
@@ -502,7 +426,7 @@ export default function Home() {
               <input type="checkbox" checked={loginForm.recordar}
                 onChange={(e) => setLoginForm({ ...loginForm, recordar: e.target.checked })}
                 className="accent-green-500 w-4 h-4" />
-              Mantener sesión iniciada
+              Mantener sesi├│n iniciada
             </label>
             <button onClick={handleLogin}
               className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
@@ -514,26 +438,26 @@ export default function Home() {
     );
   }
 
-  // ── Nav items ─────────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ Nav items ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'reparaciones', label: 'Reparaciones', icon: '🔧' },
-    { id: 'finanzas', label: 'Finanzas', icon: '💰' },
-    { id: 'clientes', label: 'Clientes', icon: '👥' },
-    { id: 'configuracion', label: 'Configuración', icon: '⚙️' },
+    { id: 'dashboard', label: 'Dashboard', icon: '­ƒôè' },
+    { id: 'reparaciones', label: 'Reparaciones', icon: '­ƒöº' },
+    { id: 'finanzas', label: 'Finanzas', icon: '­ƒÆ░' },
+    { id: 'clientes', label: 'Clientes', icon: '­ƒæÑ' },
+    { id: 'configuracion', label: 'Configuraci├│n', icon: 'ÔÜÖ´©Å' },
   ];
 
-  // ── Main app ──────────────────────────────────────────────────────────────
+  // ÔöÇÔöÇ Main app ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
   return (
     <div className={`min-h-screen ${t.bg} ${t.text} flex`}>
 
       {/* Sidebar */}
       <aside className={`w-64 ${t.sidebar} border-r flex flex-col p-5 shrink-0`}>
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center text-lg shrink-0">🔧</div>
+          <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center text-lg shrink-0">­ƒöº</div>
           <div>
             <h1 className="text-lg font-bold text-white leading-none">MegaByte</h1>
-            <p className="text-xs text-zinc-500">Sistema técnico</p>
+            <p className="text-xs text-zinc-500">Sistema t├®cnico</p>
           </div>
         </div>
 
@@ -558,7 +482,7 @@ export default function Home() {
           </div>
           <button onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all">
-            🚪 Cerrar sesión
+            ­ƒÜ¬ Cerrar sesi├│n
           </button>
         </div>
       </aside>
@@ -566,7 +490,7 @@ export default function Home() {
       {/* Main content */}
       <main className="flex-1 overflow-auto p-8">
 
-        {/* ── Dashboard ── */}
+        {/* ÔöÇÔöÇ Dashboard ÔöÇÔöÇ */}
         {section === 'dashboard' && (
           <div>
             <div className="mb-8">
@@ -576,10 +500,10 @@ export default function Home() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {[
-                { label: 'Total reparaciones', value: repairs.length, color: 'text-green-400', icon: '🔧' },
-                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', icon: '⏳' },
-                { label: 'En reparación', value: repairs.filter(r => r.estado === 'En reparación').length, color: 'text-blue-400', icon: '⚙️' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', icon: '✅' },
+                { label: 'Total reparaciones', value: repairs.length, color: 'text-green-400', icon: '­ƒöº' },
+                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', icon: 'ÔÅ│' },
+                { label: 'En reparaci├│n', value: repairs.filter(r => r.estado === 'En reparaci├│n').length, color: 'text-blue-400', icon: 'ÔÜÖ´©Å' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', icon: 'Ô£à' },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
                   <div className="flex items-center justify-between mb-3">
@@ -593,12 +517,12 @@ export default function Home() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {[
-                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400', icon: '💵' },
-                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400', icon: '✅' },
-                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400', icon: '⏳' },
-                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400', icon: '📈' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', icon: '📱', small: true },
-                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', icon: '⭐', small: true },
+                { label: 'Facturaci├│n total', value: `$ ${totalTrabajos}`, color: 'text-blue-400', icon: '­ƒÆÁ' },
+                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400', icon: 'Ô£à' },
+                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400', icon: 'ÔÅ│' },
+                { label: 'Promedio por reparaci├│n', value: `$ ${promedio}`, color: 'text-purple-400', icon: '­ƒôê' },
+                { label: 'Equipo m├ís reparado', value: equipoTop, color: 'text-green-400', icon: '­ƒô▒', small: true },
+                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', icon: 'Ô¡É', small: true },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
                   <div className="flex items-center justify-between mb-3">
@@ -612,7 +536,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Finanzas ── */}
+        {/* ÔöÇÔöÇ Finanzas ÔöÇÔöÇ */}
         {section === 'finanzas' && (
           <div>
             <div className="mb-8">
@@ -621,15 +545,15 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { label: 'Reparaciones totales', value: repairs.length, color: 'text-green-400', icon: '🔧' },
-                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', icon: '⏳' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', icon: '✅' },
-                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400', icon: '💵' },
-                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400', icon: '💳' },
-                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400', icon: '⚠️' },
-                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400', icon: '📈' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', icon: '📱', small: true },
-                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', icon: '⭐', small: true },
+                { label: 'Reparaciones totales', value: repairs.length, color: 'text-green-400', icon: '­ƒöº' },
+                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', icon: 'ÔÅ│' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', icon: 'Ô£à' },
+                { label: 'Facturaci├│n total', value: `$ ${totalTrabajos}`, color: 'text-blue-400', icon: '­ƒÆÁ' },
+                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400', icon: '­ƒÆ│' },
+                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400', icon: 'ÔÜá´©Å' },
+                { label: 'Promedio por reparaci├│n', value: `$ ${promedio}`, color: 'text-purple-400', icon: '­ƒôê' },
+                { label: 'Equipo m├ís reparado', value: equipoTop, color: 'text-green-400', icon: '­ƒô▒', small: true },
+                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', icon: 'Ô¡É', small: true },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
                   <div className="flex items-center justify-between mb-3">
@@ -643,7 +567,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Clientes ── */}
+        {/* ÔöÇÔöÇ Clientes ÔöÇÔöÇ */}
         {section === 'clientes' && (
           <div>
             <div className="flex items-center justify-between mb-8">
@@ -654,14 +578,14 @@ export default function Home() {
             </div>
             <div className={`${t.card} border rounded-2xl overflow-hidden`}>
               <div className={`p-4 border-b ${t.divider}`}>
-                <input type="text" placeholder="🔍  Buscar por nombre o teléfono..."
+                <input type="text" placeholder="­ƒöì  Buscar por nombre o tel├®fono..."
                   value={searchClientes} onChange={(e) => setSearchClientes(e.target.value)}
                   className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
               </div>
               <table className="w-full">
                 <thead>
                   <tr className={`border-b ${t.divider}`}>
-                    {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
+                    {['Cliente', 'Tel├®fono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
                       <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
                     ))}
                   </tr>
@@ -697,7 +621,7 @@ export default function Home() {
                           const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
                           let texto = `Historial de ${cliente.cliente}\n\n`;
                           historial.forEach((r: any) => {
-                            texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
+                            texto += `ÔÇó ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
                           });
                           alert(texto);
                         }} className={`${t.badge} hover:bg-zinc-600 px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted}`}>
@@ -729,25 +653,25 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Configuración ── */}
+        {/* ÔöÇÔöÇ Configuraci├│n ÔöÇÔöÇ */}
         {section === 'configuracion' && (
           <div>
             <div className="mb-8">
-              <h1 className={`text-2xl font-bold ${t.text}`}>Configuración</h1>
-              <p className={`${t.subtext} text-sm mt-1`}>Personalizá tu negocio</p>
+              <h1 className={`text-2xl font-bold ${t.text}`}>Configuraci├│n</h1>
+              <p className={`${t.subtext} text-sm mt-1`}>Personaliz├í tu negocio</p>
             </div>
             <div className="flex flex-col gap-5 max-w-lg">
 
               {/* Apariencia */}
               <div className={`${t.card} border rounded-2xl p-6`}>
                 <h2 className={`text-base font-semibold ${t.text} mb-1`}>Apariencia</h2>
-                <p className={`text-sm ${t.subtext} mb-5`}>Cambiá el tema visual de la aplicación</p>
+                <p className={`text-sm ${t.subtext} mb-5`}>Cambi├í el tema visual de la aplicaci├│n</p>
                 <div className={`flex items-center justify-between p-4 rounded-xl border ${t.divider} ${darkMode ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
+                    <span className="text-xl">{darkMode ? '­ƒîÖ' : 'ÔÿÇ´©Å'}</span>
                     <div>
                       <p className={`text-sm font-medium ${t.text}`}>{darkMode ? 'Tema oscuro' : 'Tema claro'}</p>
-                      <p className={`text-xs ${t.subtext}`}>{darkMode ? 'Fondo oscuro, ideal para poca luz' : 'Fondo claro, ideal para el día'}</p>
+                      <p className={`text-xs ${t.subtext}`}>{darkMode ? 'Fondo oscuro, ideal para poca luz' : 'Fondo claro, ideal para el d├¡a'}</p>
                     </div>
                   </div>
                   <button
@@ -762,7 +686,7 @@ export default function Home() {
               {/* Datos del negocio */}
               <div className={`${t.card} border rounded-2xl p-6`}>
                 <h2 className={`text-base font-semibold ${t.text} mb-1`}>Datos del negocio</h2>
-                <p className={`text-sm ${t.subtext} mb-5`}>Se muestran en el ticket de impresión</p>
+                <p className={`text-sm ${t.subtext} mb-5`}>Se muestran en el ticket de impresi├│n</p>
 
                 {/* Logo */}
                 <div className="mb-5">
@@ -775,7 +699,7 @@ export default function Home() {
                   <input type="file" accept="image/*"
                     onChange={(e) => { if (e.target.files?.[0]) subirLogo(e.target.files[0]); }}
                     className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-green-500 file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
-                  <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG. Se mostrará en el ticket de impresión.</p>
+                  <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG. Se mostrar├í en el ticket de impresi├│n.</p>
                 </div>
 
                 <div className="flex flex-col gap-4 mb-6">
@@ -786,13 +710,13 @@ export default function Home() {
                       className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                   </div>
                   <div>
-                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>DIRECCIÓN</label>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>DIRECCI├ôN</label>
                     <input value={config.direccion || ''} onChange={e => setConfig({...config, direccion: e.target.value})}
                       placeholder="Ej: Gral. Flores 287"
                       className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                   </div>
                   <div>
-                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>TELÉFONO</label>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>TEL├ëFONO</label>
                     <input value={config.telefono || ''} onChange={e => setConfig({...config, telefono: e.target.value})}
                       placeholder="Ej: 099 347 478"
                       className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
@@ -801,7 +725,7 @@ export default function Home() {
 
                 <button onClick={guardarConfig} disabled={configGuardando}
                   className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm">
-                  {configGuardando ? 'Guardando...' : 'Guardar configuración'}
+                  {configGuardando ? 'Guardando...' : 'Guardar configuraci├│n'}
                 </button>
               </div>
 
@@ -809,13 +733,13 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── Reparaciones ── */}
+        {/* ÔöÇÔöÇ Reparaciones ÔöÇÔöÇ */}
         {section === 'reparaciones' && (
           <>
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className={`text-2xl font-bold ${t.text}`}>Reparaciones</h1>
-                <p className={`${t.subtext} text-sm mt-1`}>{repairs.length} órdenes en total</p>
+                <p className={`${t.subtext} text-sm mt-1`}>{repairs.length} ├│rdenes en total</p>
               </div>
               <button onClick={() => {
                 setEditingRepair(null);
@@ -828,7 +752,7 @@ export default function Home() {
 
             <div className={`${t.card} border rounded-2xl overflow-hidden`}>
               <div className={`p-4 border-b ${t.divider}`}>
-                <input type="text" placeholder="🔍  Buscar por cliente, equipo o número de orden..."
+                <input type="text" placeholder="­ƒöì  Buscar por cliente, equipo o n├║mero de orden..."
                   value={search} onChange={(e) => setSearch(e.target.value)}
                   className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
               </div>
@@ -867,12 +791,12 @@ export default function Home() {
                                 setRepairs(repairs.map((r: any) => r.id === repair.id ? { ...r, estado: nuevoEstado } : r));
 
                                 let mensaje = '';
-                                if (nuevoEstado === 'En reparación')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya ingresó a reparación en MegaByte 🔧`;
+                                if (nuevoEstado === 'En reparaci├│n')
+                                  mensaje = `Hola ${repair.cliente} ­ƒæï%0A%0ATu equipo ${repair.equipo} ya ingres├│ a reparaci├│n en MegaByte ­ƒöº`;
                                 else if (nuevoEstado === 'Esperando repuesto')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} está esperando repuesto 📦`;
+                                  mensaje = `Hola ${repair.cliente} ­ƒæï%0A%0ATu equipo ${repair.equipo} est├í esperando repuesto ­ƒôª`;
                                 else if (nuevoEstado === 'Entregado')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya está pronto para retirar ✅%0A%0ASaldo pendiente: $${repair.saldo || 0}%0A%0AGracias por confiar en MegaByte`;
+                                  mensaje = `Hola ${repair.cliente} ­ƒæï%0A%0ATu equipo ${repair.equipo} ya est├í pronto para retirar Ô£à%0A%0ASaldo pendiente: $${repair.saldo || 0}%0A%0AGracias por confiar en MegaByte`;
 
                                 if (mensaje) {
                                   const numero = repair.telefono?.replace(/\D/g, '')?.replace(/^0/, '');
@@ -881,7 +805,7 @@ export default function Home() {
                               }}
                               className={`px-2 py-1.5 rounded-lg text-xs font-bold border-0 outline-none cursor-pointer ${estadoSelectColor[repair.estado] || 'bg-zinc-700 text-white'}`}>
                               <option>Pendiente</option>
-                              <option>En reparación</option>
+                              <option>En reparaci├│n</option>
                               <option>Esperando repuesto</option>
                               <option>Entregado</option>
                             </select>
@@ -899,16 +823,16 @@ export default function Home() {
                               const left = Math.min(rect.right - menuW, window.innerWidth - menuW - 8);
                               setMenuPos({ top, left });
                               setOpenMenu(repair.id);
-                            }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
+                            }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>Ôï«</button>
                             {openMenu === repair.id && (
                               <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
                                 className={`${t.menuBg} border rounded-xl shadow-2xl w-40 overflow-hidden`}>
-                                <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
-                                <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
+                                <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>­ƒôä Ticket cliente</button>
+                                <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>­ƒÅÀ´©Å Ticket interno</button>
                                 <button onClick={() => { generateTicketEntrega(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
-                                <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
-                                <a href={`https://wa.me/598${repair.telefono.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
-                                <button onClick={() => { deleteRepair(repair.id); setOpenMenu(null); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
+                                <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>Ô£Å´©Å Editar</button>
+                                <a href={`https://wa.me/598${repair.telefono.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>­ƒÆ¼ WhatsApp</a>
+                                <button onClick={() => { deleteRepair(repair.id); setOpenMenu(null); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">­ƒùæ´©Å Eliminar</button>
                               </div>
                             )}
                           </td>
@@ -925,9 +849,9 @@ export default function Home() {
                 <div className={`${t.modal} border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto`}>
                   <div className={`flex items-center justify-between p-6 border-b ${t.divider}`}>
                     <h2 className={`text-xl font-bold ${t.text}`}>
-                      {editingRepair ? '✏️ Editar Orden' : '➕ Nueva Orden'}
+                      {editingRepair ? 'Ô£Å´©Å Editar Orden' : 'Ô×ò Nueva Orden'}
                     </h2>
-                    <button onClick={() => setShowModal(false)} className={`${t.subtext} hover:${t.text} text-xl transition-colors`}>✕</button>
+                    <button onClick={() => setShowModal(false)} className={`${t.subtext} hover:${t.text} text-xl transition-colors`}>Ô£ò</button>
                   </div>
 
                   <div className="p-6">
@@ -943,7 +867,7 @@ export default function Home() {
                         </div>
                       ))}
                       <div>
-                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tel├®fono</label>
                         <input placeholder="09X XXX XXX" value={form.telefono}
                           onChange={(e) => {
                             const digits = e.target.value.replace(/\D/g, '');
@@ -954,8 +878,8 @@ export default function Home() {
                       </div>
                       {[
                         { key: 'modelo', label: 'Modelo', placeholder: 'Ej: iPhone 13, Lenovo V15' },
-                        { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
-                        { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
+                        { key: 'falla', label: 'Falla', placeholder: 'Descripci├│n del problema' },
+                        { key: 'contrasena', label: 'Contrase├▒a', placeholder: 'Contrase├▒a del equipo' },
                         { key: 'costo', label: 'Costo total ($)', placeholder: '0' },
                         { key: 'entrega', label: 'Entrega ($)', placeholder: '0' },
                       ].map(({ key, label, placeholder }) => (
@@ -982,7 +906,7 @@ export default function Home() {
 
                     <div className="mt-4">
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Trabajo realizado</label>
-                      <textarea placeholder="Descripción detallada del trabajo..." value={form.trabajo}
+                      <textarea placeholder="Descripci├│n detallada del trabajo..." value={form.trabajo}
                         onChange={(e) => setForm({ ...form, trabajo: e.target.value })}
                         className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[100px] resize-none`} />
                     </div>
