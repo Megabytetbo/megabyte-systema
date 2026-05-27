@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
-import jsPDF from 'jspdf';
 
 export default function Home() {
   const [repairs, setRepairs] = useState<any[]>([]);
@@ -145,44 +144,95 @@ export default function Home() {
     tableHead: 'text-gray-500',
   };
 
-  // ── PDF ───────────────────────────────────────────────────────────────────
+  // ── TICKET HTML para impresora térmica 80mm ──────────────────────────────
   const generatePDF = (repair: any) => {
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 160] });
-    let y = 12;
+    const nombre = config.nombre_negocio || 'MegaByte';
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Ticket ${repair.orden}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            width: 72mm;
+            padding: 3mm 4mm;
+            color: #000;
+          }
+          .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
+          .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
+          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+          .label { font-weight: bold; }
+          .bloque { margin-bottom: 3px; }
+          .legal { font-size: 10px; text-align: left; margin-top: 4px; line-height: 1.4; }
+          .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
+          @media print {
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm auto; }
+          }
+        </style>
+      </head>
+      <body>
+        ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : ''}
+        <div class="titulo">${nombre}</div>
+        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
+        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
+        <div class="linea"></div>
 
-    pdf.setFontSize(18);
-    pdf.text(config.nombre_negocio || 'MegaByte', 40, y, { align: 'center' }); y += 6;
-    pdf.setFontSize(8);
-    if (config.direccion) { pdf.text(config.direccion, 40, y, { align: 'center' }); y += 5; }
-    if (config.telefono) { pdf.text(`Tel: ${config.telefono}`, 40, y, { align: 'center' }); y += 5; }
-    y += 1;
-    pdf.line(5, y, 75, y); y += 8;
+        <div class="bloque">
+          <div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div>
+          <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
+          <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
+          <div class="fila"><span class="label">Teléfono:</span><span>${repair.telefono || '-'}</span></div>
+        </div>
+        <div class="linea"></div>
 
-    pdf.setFontSize(10);
-    pdf.text(`Orden: ${repair.orden}`, 5, y); y += 8;
-    pdf.text(`Cliente: ${repair.cliente}`, 5, y); y += 8;
-    pdf.text(`Equipo: ${repair.equipo}`, 5, y); y += 8;
-    pdf.text('Falla:', 5, y); y += 5;
-    const fallaTexto = pdf.splitTextToSize(repair.falla || '', 65);
-    pdf.text(fallaTexto, 5, y); y += fallaTexto.length * 5 + 8;
+        <div class="bloque">
+          <div class="label">Falla:</div>
+          <div style="margin-top:2px">${repair.falla}</div>
+        </div>
 
-    pdf.text(`Costo: $ ${repair.costo || 0}`, 5, y); y += 6;
-    pdf.text(`Entrega: $ ${repair.entrega || 0}`, 5, y); y += 6;
-    pdf.text(`Saldo: $ ${repair.saldo || 0}`, 5, y); y += 8;
-    pdf.text(`Estado: ${repair.estado}`, 5, y); y += 8;
-    pdf.text(`${repair.fecha}`, 5, y); y += 10;
-    pdf.line(5, y, 75, y); y += 8;
+        ${repair.trabajo ? `
+        <div class="linea"></div>
+        <div class="bloque">
+          <div class="label">Trabajo realizado:</div>
+          <div style="margin-top:2px">${repair.trabajo}</div>
+        </div>` : ''}
 
-    pdf.setFontSize(8);
-    pdf.text('Gracias por confiar en MegaByte', 40, y, { align: 'center' }); y += 5;
-    pdf.text('Conserve este comprobante', 40, y, { align: 'center' }); y += 12;
+        <div class="linea"></div>
+        <div class="bloque">
+          <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
+          <div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div>
+          <div class="fila label"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
+        </div>
+        <div class="linea"></div>
 
-    pdf.setFontSize(7);
-    const textoLegal = 'Pasados los 90 dias la empresa no se responsabiliza por los equipos y se tomaran como abandono, pudiendo disponer de los mismos como forma de pago por el servicio brindado.';
-    const textoDividido = pdf.splitTextToSize(textoLegal, 65);
-    pdf.text(textoDividido, 5, y);
+        <div class="bloque">
+          <div class="fila"><span class="label">Estado:</span><span>${repair.estado}</span></div>
+          <div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div>
+        </div>
+        <div class="linea"></div>
 
-    window.open(pdf.output('bloburl'), '_blank');
+        <div class="footer">Gracias por confiar en ${nombre}</div>
+        <div class="footer">Conserve este comprobante</div>
+        <div class="linea"></div>
+        <div class="legal">Pasados los 90 dias la empresa no se responsabiliza por los equipos y se tomaran como abandono, pudiendo disponer de los mismos como forma de pago por el servicio brindado.</div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
