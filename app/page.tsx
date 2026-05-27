@@ -112,7 +112,7 @@ export default function Home() {
 
   const subirLogo = async (file: File) => {
     const ext = file.name.split('.').pop();
-    const nombre = 'logo-' + user.id + '.' + ext;
+    const nombre = `logo-${user.id}.${ext}`;
     const { error } = await supabase.storage.from('logos').upload(nombre, file, { upsert: true });
     if (error) { alert('Error al subir logo: ' + error.message); return; }
     const { data } = supabase.storage.from('logos').getPublicUrl(nombre);
@@ -366,10 +366,10 @@ export default function Home() {
             window.print();
             window.onafterprint = function() { window.close(); };
           };
-        <\/script>
+        </script>
       </body>
       </html>
-    \`;
+    `;
     const ventana = window.open('', '_blank', 'width=400,height=600');
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
@@ -383,7 +383,7 @@ export default function Home() {
 
     if (editingRepair) {
       const { error } = await supabase.from('repairs').update({
-        cliente: form.cliente, equipo: form.tipo + ' - ' + form.modelo,
+        cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
         falla: form.falla, telefono: form.telefono,
         contrasena: form.contrasena, trabajo: form.trabajo,
         costo, entrega, saldo,
@@ -391,14 +391,14 @@ export default function Home() {
 
       if (!error) {
         setRepairs(repairs.map((r) => r.id === editingRepair.id
-          ? { ...r, cliente: form.cliente, equipo: form.tipo + ' - ' + form.modelo, falla: form.falla, telefono: form.telefono, contrasena: form.contrasena, trabajo: form.trabajo, costo, entrega, saldo }
+          ? { ...r, cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`, falla: form.falla, telefono: form.telefono, contrasena: form.contrasena, trabajo: form.trabajo, costo, entrega, saldo }
           : r));
       }
     } else {
       const numeroOrden = repairs.length + 1;
       const nuevoRepair = {
-        orden: '#' + numeroOrden.toString().padStart(4, '0'),
-        cliente: form.cliente, equipo: form.tipo + ' - ' + form.modelo,
+        orden: `#${numeroOrden.toString().padStart(4, '0')}`,
+        cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
         falla: form.falla, telefono: form.telefono,
         contrasena: form.contrasena, trabajo: form.trabajo,
         costo, entrega, saldo, estado: 'Pendiente',
