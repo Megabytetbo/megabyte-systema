@@ -902,7 +902,7 @@ export default function Home() {
                             }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
                             {openMenu === repair.id && (
                               <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
-                                className={`${t.menuBg} border rounded-xl shadow-2xl w-40 overflow-hidden`}>
+                                className={`${t.menuBg} border rounded-xl shadow-2xl w-48 overflow-hidden`}>
                                 <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
                                 <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
                                 <button onClick={() => { generateTicketEntrega(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
