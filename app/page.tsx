@@ -7,6 +7,7 @@ export default function Home() {
   const [repairs, setRepairs] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [searchClientes, setSearchClientes] = useState('');
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loginForm, setLoginForm] = useState({ email: '', password: '', recordar: false });
@@ -799,17 +800,20 @@ export default function Home() {
                             </select>
                           </td>
                           <td className="p-4 relative">
-                            <button onClick={() => {
-                              const menu = document.getElementById(`menu-${repair.id}`);
-                              if (menu) menu.classList.toggle('hidden');
-                            }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
-                            <div id={`menu-${repair.id}`} className={`hidden absolute right-12 top-full mt-1 ${t.menuBg} border rounded-xl shadow-2xl z-50 w-40 overflow-hidden`}>
-                              <button onClick={() => generatePDF(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
-                              <button onClick={() => generateTicketInterno(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
-                              <button onClick={() => editRepair(repair)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
-                              <a href={`https://wa.me/598${repair.telefono.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
-                              <button onClick={() => deleteRepair(repair.id)} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
-                            </div>
+                            {openMenu === repair.id && (
+                              <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
+                            )}
+                            <button onClick={() => setOpenMenu(openMenu === repair.id ? null : repair.id)}
+                              className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
+                            {openMenu === repair.id && (
+                              <div className={`absolute right-10 bottom-10 ${t.menuBg} border rounded-xl shadow-2xl z-50 w-40 overflow-hidden`}>
+                                <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
+                                <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
+                                <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
+                                <a href={`https://wa.me/598${repair.telefono.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
+                                <button onClick={() => { deleteRepair(repair.id); setOpenMenu(null); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
