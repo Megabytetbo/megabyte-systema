@@ -846,11 +846,6 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { key: 'cliente', label: 'Cliente', placeholder: 'Nombre del cliente' },
-                        { key: 'modelo', label: 'Modelo', placeholder: 'Ej: iPhone 13, Lenovo V15' },
-                        { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
-                        { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
-                        { key: 'costo', label: 'Costo total ($)', placeholder: '0' },
-                        { key: 'entrega', label: 'Entrega ($)', placeholder: '0' },
                       ].map(({ key, label, placeholder }) => (
                         <div key={key}>
                           <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
@@ -869,6 +864,20 @@ export default function Home() {
                           }}
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                       </div>
+                      {[
+                        { key: 'modelo', label: 'Modelo', placeholder: 'Ej: iPhone 13, Lenovo V15' },
+                        { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
+                        { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
+                        { key: 'costo', label: 'Costo total ($)', placeholder: '0' },
+                        { key: 'entrega', label: 'Entrega ($)', placeholder: '0' },
+                      ].map(({ key, label, placeholder }) => (
+                        <div key={key}>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
+                          <input placeholder={placeholder} value={(form as any)[key]}
+                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                        </div>
+                      ))}
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tipo de equipo</label>
                         <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
