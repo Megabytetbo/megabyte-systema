@@ -595,7 +595,7 @@ export default function Home() {
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`border-t ${t.row} transition-colors`}>
                       <td className={`p-4 font-medium ${t.text}`}>{cliente.cliente}</td>
-                      <td className={`p-4 ${t.muted}`}>{cliente.telefono?.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')}</td>
+                      <td className={`p-4 ${t.muted}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
                       <td className="p-4">
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
                           {cliente.cantidad}
@@ -846,7 +846,6 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { key: 'cliente', label: 'Cliente', placeholder: 'Nombre del cliente' },
-                        { key: 'telefono', label: 'Teléfono', placeholder: '09X XXX XXX' },
                         { key: 'modelo', label: 'Modelo', placeholder: 'Ej: iPhone 13, Lenovo V15' },
                         { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
                         { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
@@ -860,6 +859,16 @@ export default function Home() {
                             className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                         </div>
                       ))}
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
+                        <input placeholder="09X XXX XXX" value={form.telefono}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, '');
+                            const formatted = digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+                            setForm({ ...form, telefono: formatted });
+                          }}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                      </div>
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tipo de equipo</label>
                         <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
