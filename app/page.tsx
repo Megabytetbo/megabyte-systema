@@ -595,7 +595,7 @@ export default function Home() {
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`border-t ${t.row} transition-colors`}>
                       <td className={`p-4 font-medium ${t.text}`}>{cliente.cliente}</td>
-                      <td className={`p-4 ${t.muted}`}>{cliente.telefono}</td>
+                      <td className={`p-4 ${t.muted}`}>{cliente.telefono?.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')}</td>
                       <td className="p-4">
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
                           {cliente.cantidad}
@@ -750,7 +750,7 @@ export default function Home() {
                 <table className="w-full">
                   <thead>
                     <tr className={`border-b ${t.divider}`}>
-                      {['Orden', 'Cliente', 'Equipo', 'Falla', 'Teléfono', 'Costo', 'Entrega', 'Saldo', 'Fecha', 'Estado', ''].map(h => (
+                      {['Orden', 'Cliente', 'Equipo', 'Falla', 'Costo', 'Entrega', 'Saldo', 'Fecha', 'Estado', ''].map(h => (
                         <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
                       ))}
                     </tr>
@@ -768,7 +768,6 @@ export default function Home() {
                           <td className={`p-4 font-medium ${t.text} whitespace-nowrap`}>{repair.cliente}</td>
                           <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap`}>{repair.equipo}</td>
                           <td className={`p-4 ${t.muted} max-w-[160px] truncate`}>{repair.falla}</td>
-                          <td className={`p-4 ${t.muted} whitespace-nowrap`}>{repair.telefono}</td>
                           <td className="p-4 text-blue-400 font-semibold whitespace-nowrap">$ {repair.costo || 0}</td>
                           <td className="p-4 text-green-400 font-semibold whitespace-nowrap">$ {repair.entrega || 0}</td>
                           <td className="p-4 text-yellow-400 font-semibold whitespace-nowrap">$ {repair.saldo || 0}</td>
