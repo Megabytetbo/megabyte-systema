@@ -336,8 +336,8 @@ export default function Home() {
       <body>
         <div class="sello">ENTREGADO</div>
         ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
-        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
-        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
+        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ""}
+        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ""}
         <div class="linea"></div>
 
         <div class="bloque">
