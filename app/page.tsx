@@ -314,18 +314,14 @@ export default function Home() {
           .bloque { margin-bottom: 3px; }
           .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
           .sello {
-            position: fixed;
-            top: 18mm;
-            right: -8mm;
-            background: #000;
-            color: #fff;
-            font-size: 13px;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            text-align: center;
+            font-size: 16px;
             font-weight: 900;
-            letter-spacing: 3px;
-            padding: 4px 28px;
-            transform: rotate(35deg);
-            opacity: 0.85;
-            z-index: 99;
+            letter-spacing: 4px;
+            padding: 4px 0;
+            margin-top: 4px;
           }
           @media print {
             body { width: 72mm; }
@@ -334,7 +330,7 @@ export default function Home() {
         </style>
       </head>
       <body>
-        <div class="sello">ENTREGADO</div>
+        
         ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
         ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ""}
         ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ""}
@@ -359,6 +355,7 @@ export default function Home() {
         </div>
         <div class="linea"></div>
 
+        <div class="sello">ENTREGADO</div>
         <div class="footer">Gracias por confiar en ${nombre}</div>
 
         <script>
