@@ -455,14 +455,14 @@ export default function Home() {
   const estadoColor: any = {
     'Pendiente': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
     'En reparación': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-    'Esperando repuesto': 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+    'Reparado': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
     'Entregado': 'bg-green-500/20 text-green-400 border border-green-500/30',
   };
 
   const estadoSelectColor: any = {
     'Pendiente': 'bg-yellow-500 text-black',
     'En reparación': 'bg-blue-500 text-white',
-    'Esperando repuesto': 'bg-orange-500 text-white',
+    'Reparado': 'bg-purple-500 text-white',
     'Entregado': 'bg-green-600 text-white',
   };
 
@@ -866,8 +866,8 @@ export default function Home() {
                                 let mensaje = '';
                                 if (nuevoEstado === 'En reparación')
                                   mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya ingresó a reparación en MegaByte 🔧`;
-                                else if (nuevoEstado === 'Esperando repuesto')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} está esperando repuesto 📦`;
+                                else if (nuevoEstado === 'Reparado')
+                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya está reparado y listo para retirar ✅`;
                                 else if (nuevoEstado === 'Entregado')
                                   mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya está pronto para retirar ✅%0A%0ASaldo pendiente: $${repair.saldo || 0}%0A%0AGracias por confiar en MegaByte`;
 
@@ -879,7 +879,7 @@ export default function Home() {
                               className={`px-2 py-1.5 rounded-lg text-xs font-bold border-0 outline-none cursor-pointer ${estadoSelectColor[repair.estado] || 'bg-zinc-700 text-white'}`}>
                               <option>Pendiente</option>
                               <option>En reparación</option>
-                              <option>Esperando repuesto</option>
+                              <option>Reparado</option>
                               <option>Entregado</option>
                             </select>
                           </td>
