@@ -849,7 +849,7 @@ export default function Home() {
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`border-t ${t.row} transition-colors`}>
                           <td className="p-4 font-bold text-green-400 whitespace-nowrap">{repair.orden}</td>
-                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`}>{repair.cliente}</td>
+                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
                           <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap`}>{repair.equipo}</td>
                           <td className={`p-4 ${t.muted} max-w-[160px] truncate`}>{repair.falla}</td>
                           <td className="p-4 text-blue-400 font-semibold whitespace-nowrap">$ {repair.costo || 0}</td>
