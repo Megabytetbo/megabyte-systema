@@ -163,7 +163,6 @@ export default function Home() {
             width: 72mm;
             padding: 3mm 4mm;
             color: #000;
-            overflow: hidden;
           }
           .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
           .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
@@ -174,8 +173,8 @@ export default function Home() {
           .legal { font-size: 10px; text-align: left; margin-top: 4px; line-height: 1.4; }
           .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
           @media print {
-            html, body { width: 72mm; height: auto; }
-            @page { margin: 0; size: 80mm; }
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm auto; }
           }
         </style>
       </head>
