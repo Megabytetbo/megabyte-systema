@@ -29,6 +29,7 @@ export default function Home() {
     msg_en_reparacion: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya ingresó a reparación en MegaByte \u{1F527}',
     msg_reparado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está reparado y listo para retirar \u2705',
     msg_entregado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está pronto para retirar \u2705\n\nSaldo pendiente: ${saldo}\n\nGracias por confiar en MegaByte',
+    switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
 
@@ -102,6 +103,9 @@ export default function Home() {
         msg_en_reparacion: config.msg_en_reparacion,
         msg_reparado: config.msg_reparado,
         msg_entregado: config.msg_entregado,
+        switch_en_reparacion: config.switch_en_reparacion,
+        switch_reparado: config.switch_reparado,
+        switch_entregado: config.switch_entregado,
       }).eq('user_id', user.id);
     } else {
       await supabase.from('configuracion').insert({
@@ -113,6 +117,9 @@ export default function Home() {
         msg_en_reparacion: config.msg_en_reparacion,
         msg_reparado: config.msg_reparado,
         msg_entregado: config.msg_entregado,
+        switch_en_reparacion: config.switch_en_reparacion,
+        switch_reparado: config.switch_reparado,
+        switch_entregado: config.switch_entregado,
       });
     }
     setConfigGuardando(false);
@@ -810,21 +817,32 @@ export default function Home() {
                   <h3 className={`text-sm font-bold ${t.text} mb-1`}>Mensajes automáticos de WhatsApp</h3>
                   <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{cliente}"}</code> <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{equipo}"}</code> <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{saldo}"}</code></p>
                   <div className="space-y-4">
-                    <div>
-                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>EN REPARACIÓN</label>
-                      <textarea value={config.msg_en_reparacion || ''} onChange={e => setConfig({...config, msg_en_reparacion: e.target.value})}
-                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none`} />
-                    </div>
-                    <div>
-                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>REPARADO</label>
-                      <textarea value={config.msg_reparado || ''} onChange={e => setConfig({...config, msg_reparado: e.target.value})}
-                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none`} />
-                    </div>
-                    <div>
-                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>ENTREGADO</label>
-                      <textarea value={config.msg_entregado || ''} onChange={e => setConfig({...config, msg_entregado: e.target.value})}
-                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none`} />
-                    </div>
+                    {[
+                      { key: 'en_reparacion', label: 'EN REPARACIÓN', msgKey: 'msg_en_reparacion', switchKey: 'switch_en_reparacion' },
+                      { key: 'reparado', label: 'REPARADO', msgKey: 'msg_reparado', switchKey: 'switch_reparado' },
+                      { key: 'entregado', label: 'ENTREGADO', msgKey: 'msg_entregado', switchKey: 'switch_entregado' },
+                    ].map(({ label, msgKey, switchKey }) => (
+                      <div key={msgKey} className={`border ${t.divider} rounded-xl p-3`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className={`text-xs ${t.subtext} font-medium`}>{label}</label>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-medium ${config[switchKey] ? 'text-green-400' : t.subtext}`}>
+                              {config[switchKey] ? 'Activo' : 'Inactivo'}
+                            </span>
+                            <button
+                              onClick={() => setConfig({...config, [switchKey]: !config[switchKey]})}
+                              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${config[switchKey] ? 'bg-green-500' : 'bg-zinc-600'}`}>
+                              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-200 ${config[switchKey] ? 'left-[18px]' : 'left-0.5'}`} />
+                            </button>
+                          </div>
+                        </div>
+                        <textarea
+                          value={config[msgKey] || ''}
+                          onChange={e => setConfig({...config, [msgKey]: e.target.value})}
+                          disabled={!config[switchKey]}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none ${!config[switchKey] ? 'opacity-40 cursor-not-allowed' : ''}`} />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -903,11 +921,11 @@ export default function Home() {
                                       .replace(/{saldo}/g, repair.saldo || '0')
                                   );
                                 let mensaje = '';
-                                if (nuevoEstado === 'En reparación')
+                                if (nuevoEstado === 'En reparación' && config.switch_en_reparacion !== false)
                                   mensaje = buildMsg(config.msg_en_reparacion || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya ingresó a reparación 🔧');
-                                else if (nuevoEstado === 'Reparado')
+                                else if (nuevoEstado === 'Reparado' && config.switch_reparado !== false)
                                   mensaje = buildMsg(config.msg_reparado || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya está reparado y listo para retirar ✅');
-                                else if (nuevoEstado === 'Entregado')
+                                else if (nuevoEstado === 'Entregado' && config.switch_entregado !== false)
                                   mensaje = buildMsg(config.msg_entregado || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya está pronto para retirar ✅\n\nSaldo pendiente: ${saldo}\n\nGracias por confiar en MegaByte');
 
                                 if (mensaje) {
