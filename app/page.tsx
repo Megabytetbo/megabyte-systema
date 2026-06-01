@@ -26,6 +26,9 @@ export default function Home() {
   });
   const [config, setConfig] = useState<any>({
     nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
+    msg_en_reparacion: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya ingresó a reparación en MegaByte \u{1F527}',
+    msg_reparado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está reparado y listo para retirar \u2705',
+    msg_entregado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está pronto para retirar \u2705\n\nSaldo pendiente: ${saldo}\n\nGracias por confiar en MegaByte',
   });
   const [configGuardando, setConfigGuardando] = useState(false);
 
@@ -96,6 +99,9 @@ export default function Home() {
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        msg_en_reparacion: config.msg_en_reparacion,
+        msg_reparado: config.msg_reparado,
+        msg_entregado: config.msg_entregado,
       }).eq('user_id', user.id);
     } else {
       await supabase.from('configuracion').insert({
@@ -104,6 +110,9 @@ export default function Home() {
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        msg_en_reparacion: config.msg_en_reparacion,
+        msg_reparado: config.msg_reparado,
+        msg_entregado: config.msg_entregado,
       });
     }
     setConfigGuardando(false);
@@ -796,6 +805,29 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Mensajes automáticos */}
+                <div className={`border-t ${t.divider} pt-6`}>
+                  <h3 className={`text-sm font-bold ${t.text} mb-1`}>Mensajes automáticos de WhatsApp</h3>
+                  <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{cliente}"}</code> <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{equipo}"}</code> <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{saldo}"}</code></p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>EN REPARACIÓN</label>
+                      <textarea value={config.msg_en_reparacion || ''} onChange={e => setConfig({...config, msg_en_reparacion: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none`} />
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>REPARADO</label>
+                      <textarea value={config.msg_reparado || ''} onChange={e => setConfig({...config, msg_reparado: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none`} />
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>ENTREGADO</label>
+                      <textarea value={config.msg_entregado || ''} onChange={e => setConfig({...config, msg_entregado: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none`} />
+                    </div>
+                  </div>
+                </div>
+
                 <button onClick={guardarConfig} disabled={configGuardando}
                   className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm">
                   {configGuardando ? 'Guardando...' : 'Guardar configuración'}
@@ -849,7 +881,7 @@ export default function Home() {
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`border-t ${t.row} transition-colors`}>
                           <td className="p-4 font-bold text-green-400 whitespace-nowrap">{repair.orden}</td>
-                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`}>{repair.cliente}</td>
                           <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap`}>{repair.equipo}</td>
                           <td className={`p-4 ${t.muted} max-w-[160px] truncate`}>{repair.falla}</td>
                           <td className="p-4 text-blue-400 font-semibold whitespace-nowrap">$ {repair.costo || 0}</td>
@@ -863,13 +895,20 @@ export default function Home() {
                                 await supabase.from('repairs').update({ estado: nuevoEstado }).eq('id', repair.id);
                                 setRepairs(repairs.map((r: any) => r.id === repair.id ? { ...r, estado: nuevoEstado } : r));
 
+                                const buildMsg = (template: string) =>
+                                  encodeURIComponent(
+                                    template
+                                      .replace(/{cliente}/g, repair.cliente)
+                                      .replace(/{equipo}/g, repair.equipo)
+                                      .replace(/{saldo}/g, repair.saldo || '0')
+                                  );
                                 let mensaje = '';
                                 if (nuevoEstado === 'En reparación')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya ingresó a reparación en MegaByte 🔧`;
+                                  mensaje = buildMsg(config.msg_en_reparacion || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya ingresó a reparación 🔧');
                                 else if (nuevoEstado === 'Reparado')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya está reparado y listo para retirar ✅`;
+                                  mensaje = buildMsg(config.msg_reparado || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya está reparado y listo para retirar ✅');
                                 else if (nuevoEstado === 'Entregado')
-                                  mensaje = `Hola ${repair.cliente} 👋%0A%0ATu equipo ${repair.equipo} ya está pronto para retirar ✅%0A%0ASaldo pendiente: $${repair.saldo || 0}%0A%0AGracias por confiar en MegaByte`;
+                                  mensaje = buildMsg(config.msg_entregado || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya está pronto para retirar ✅\n\nSaldo pendiente: ${saldo}\n\nGracias por confiar en MegaByte');
 
                                 if (mensaje) {
                                   const numero = repair.telefono?.replace(/\D/g, '')?.replace(/^0/, '');
