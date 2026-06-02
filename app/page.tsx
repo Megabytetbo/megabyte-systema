@@ -714,7 +714,7 @@ export default function Home() {
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`border-t ${t.row} transition-colors`}>
-                      <td className={`p-4 font-medium ${t.text}`}>{cliente.cliente}</td>
+                      <td className={`p-4 font-medium ${t.text}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
                       <td className={`p-4 ${t.muted}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
                       <td className="p-4">
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
