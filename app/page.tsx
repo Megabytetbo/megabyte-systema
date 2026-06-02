@@ -775,7 +775,11 @@ export default function Home() {
                     </div>
                     <div>
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
-                      <input value={editClienteForm.telefono} onChange={e => setEditClienteForm({...editClienteForm, telefono: e.target.value})}
+                      <input value={editClienteForm.telefono} onChange={e => {
+                            const digits = e.target.value.replace(/\D/g, '');
+                            const formatted = digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+                            setEditClienteForm({...editClienteForm, telefono: formatted});
+                          }}
                         className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
                     </div>
                     <div className="flex gap-2 mt-2">
