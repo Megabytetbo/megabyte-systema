@@ -94,11 +94,16 @@ export default function Home() {
 
   const guardarEdicionCliente = async () => {
     if (!editingCliente) return;
-    await supabase.from('repairs')
-      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono })
-      .eq('user_id', user.id)
-      .eq('cliente', editingCliente.cliente)
-      .eq('telefono', editingCliente.telefono || '');
+    let query = supabase.from('repairs')
+      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
+      .eq('cliente', editingCliente.cliente);
+    if (editingCliente.telefono) {
+      query = query.eq('telefono', editingCliente.telefono);
+    } else {
+      query = query.is('telefono', null);
+    }
+    const { error } = await query;
+    if (error) { alert('Error al guardar: ' + error.message); return; }
     const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
     setEditingCliente(null);
@@ -743,7 +748,7 @@ export default function Home() {
                         <div className="flex gap-2">
                           <button onClick={() => {
                             setEditingCliente(cliente);
-                            setEditClienteForm({ cliente: cliente.cliente, telefono: cliente.telefono || '' });
+                            setEditClienteForm({ cliente: cliente.cliente, telefono: cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ') || '' });
                           }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted} whitespace-nowrap`}>
                             ✏️ Editar
                           </button>
@@ -770,16 +775,19 @@ export default function Home() {
                   <div className="flex flex-col gap-3">
                     <div>
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Nombre</label>
-                      <input value={editClienteForm.cliente} onChange={e => setEditClienteForm({...editClienteForm, cliente: e.target.value})}
+                      <input value={editClienteForm.cliente}
+                        onChange={e => setEditClienteForm({...editClienteForm, cliente: e.target.value})}
                         className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
                     </div>
                     <div>
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
-                      <input value={editClienteForm.telefono} onChange={e => {
-                            const digits = e.target.value.replace(/\D/g, '');
-                            const formatted = digits.replace(/(\d{3})(?=\d)/g, '$1 ');
-                            setEditClienteForm({...editClienteForm, telefono: formatted});
-                          }}
+                      <input value={editClienteForm.telefono}
+                        onChange={e => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          const formatted = digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+                          setEditClienteForm({...editClienteForm, telefono: formatted});
+                        }}
+                        placeholder="09X XXX XXX"
                         className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
                     </div>
                     <div className="flex gap-2 mt-2">
@@ -952,7 +960,7 @@ export default function Home() {
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`border-t ${t.row} transition-colors`}>
                           <td className="p-4 font-bold text-green-400 whitespace-nowrap">{repair.orden}</td>
-                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`}>{repair.cliente}</td>
+                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
                           <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap`}>{repair.equipo}</td>
                           <td className={`p-4 ${t.muted} max-w-[160px] truncate`}>{repair.falla}</td>
                           <td className="p-4 text-blue-400 font-semibold whitespace-nowrap">$ {repair.costo || 0}</td>
