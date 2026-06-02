@@ -34,6 +34,7 @@ export default function Home() {
   const [configGuardando, setConfigGuardando] = useState(false);
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
   const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showRegistro, setShowRegistro] = useState(false);
   const [registroForm, setRegistroForm] = useState({ nombre: '', email: '', password: '', confirmar: '' });
   const [registrando, setRegistrando] = useState(false);
@@ -713,8 +714,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Sidebar */}
-      <aside className={`w-64 ${t.sidebar} border-r flex flex-col p-5 shrink-0`}>
+      {/* Sidebar desktop */}
+      <aside className={`hidden md:flex w-64 ${t.sidebar} border-r flex-col p-5 shrink-0 fixed h-full z-40`}>
         <div className="flex items-center gap-3 mb-8">
           <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center text-lg shrink-0">🔧</div>
           <div>
@@ -722,21 +723,17 @@ export default function Home() {
             <p className="text-xs text-zinc-500">Sistema técnico</p>
           </div>
         </div>
-
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => (
             <button key={item.id} onClick={() => setSection(item.id)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
-                section === item.id
-                  ? t.navActive
-                  : `${t.muted} ${t.navHover}`
+                section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
               }`}>
               <span>{item.icon}</span>
               {item.label}
             </button>
           ))}
         </nav>
-
         <div className={`border-t ${t.divider} pt-4 mt-4`}>
           <div className="px-3 py-2 mb-2">
             <p className={`text-xs ${t.subtext}`}>Conectado como</p>
@@ -749,8 +746,57 @@ export default function Home() {
         </div>
       </aside>
 
+      {/* Header móvil */}
+      <div className={`md:hidden fixed top-0 left-0 right-0 z-40 ${t.sidebar} border-b ${t.divider} px-4 py-3 flex items-center justify-between`}
+        style={{marginTop: diasTrialRestantes !== null && diasTrialRestantes >= 0 ? '28px' : '0'}}>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-green-500 flex items-center justify-center text-sm">🔧</div>
+          <span className="font-bold text-white text-sm">MegaByte</span>
+        </div>
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={`p-2 rounded-xl ${t.badge} text-lg`}>
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      {/* Menu móvil overlay */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileMenuOpen(false)}>
+          <div className={`${t.sidebar} w-64 h-full p-5 flex flex-col`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center text-lg shrink-0">🔧</div>
+              <div>
+                <h1 className="text-lg font-bold text-white leading-none">MegaByte</h1>
+                <p className="text-xs text-zinc-500">Sistema técnico</p>
+              </div>
+            </div>
+            <nav className="flex flex-col gap-1 flex-1">
+              {navItems.map((item) => (
+                <button key={item.id} onClick={() => { setSection(item.id); setMobileMenuOpen(false); }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+                    section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
+                  }`}>
+                  <span>{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <div className={`border-t ${t.divider} pt-4 mt-4`}>
+              <div className="px-3 py-2 mb-2">
+                <p className={`text-xs ${t.subtext}`}>Conectado como</p>
+                <p className={`text-xs ${t.muted} font-medium truncate`}>{user.email}</p>
+              </div>
+              <button onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all">
+                🚪 Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto p-4 md:p-8 md:ml-64 mt-14 md:mt-0">
 
         {/* ── Dashboard ── */}
         {section === 'dashboard' && (
