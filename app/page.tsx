@@ -988,10 +988,12 @@ export default function Home() {
                           {sub.plan?.toUpperCase()}
                         </span>
                       </td>
-                      <td className={`p-4 ${t.muted} text-sm`}>{sub.fecha_vencimiento || '—'}</td>
+                      <td className={`p-4 ${t.muted} text-sm`}>
+                        {sub.fecha_vencimiento ? new Date(sub.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                      </td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.estado === 'activo' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                          {sub.estado === 'activo' ? '✅ Activo' : '⛔ Inactivo'}
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.estado === 'activo' ? 'bg-green-500/20 text-green-400' : sub.estado === 'trial' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {sub.estado === 'activo' ? '✅ Activo' : sub.estado === 'trial' ? '⏳ En prueba' : '⛔ Inactivo'}
                         </span>
                       </td>
                       <td className="p-4">
