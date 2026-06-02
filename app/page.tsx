@@ -37,6 +37,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [showRegistro, setShowRegistro] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
   const [registroForm, setRegistroForm] = useState({ nombre: '', email: '', password: '', confirmar: '' });
   const [registrando, setRegistrando] = useState(false);
   const [suscripcionActual, setSuscripcionActual] = useState<any | null>(null);
@@ -634,6 +635,113 @@ export default function Home() {
         </div>
       );
     }
+  }
+
+  if (!user && showLanding) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white overflow-y-auto">
+        {/* Header */}
+        <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center text-lg">🔧</div>
+            <span className="font-bold text-white text-lg">MegaByte</span>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
+              className="text-zinc-400 hover:text-white text-sm px-4 py-2 transition-colors">
+              Iniciar sesión
+            </button>
+            <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
+              className="bg-green-500 hover:bg-green-400 text-black text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+              Registrarse
+            </button>
+          </div>
+        </div>
+
+        {/* Hero */}
+        <div className="text-center px-6 py-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-6">
+            <span className="text-3xl">🔧</span>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-4 leading-tight">El sistema de gestión<br/>para talleres técnicos</h1>
+          <p className="text-zinc-400 text-lg mb-8 max-w-md mx-auto">Simple, rápido y desde cualquier dispositivo. Controlá tus reparaciones, clientes y finanzas en un solo lugar.</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
+              className="bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm">
+              Probá gratis 10 días
+            </button>
+            <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
+              className="border border-zinc-700 hover:border-zinc-500 text-zinc-300 px-6 py-3 rounded-xl transition-colors text-sm">
+              Iniciar sesión
+            </button>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="px-6 pb-12 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-12">
+            {[
+              ['📋', 'Reparaciones', 'Seguí cada orden de trabajo'],
+              ['👥', 'Clientes', 'Directorio con historial completo'],
+              ['🖨️', 'Tickets', 'Imprimí con un click'],
+              ['💬', 'WhatsApp', 'Avisos automáticos de estado'],
+              ['💰', 'Finanzas', 'Control de ingresos y saldos'],
+              ['📱', 'Mobile', 'Funciona en cualquier dispositivo'],
+            ].map(([icon, title, desc]) => (
+              <div key={title} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                <div className="text-2xl mb-2">{icon}</div>
+                <p className="text-sm font-medium text-white mb-1">{title}</p>
+                <p className="text-xs text-zinc-500">{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Planes */}
+          <h2 className="text-xl font-bold text-white text-center mb-6">Elegí tu plan</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+              <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-2">Basic</p>
+              <p className="text-3xl font-bold text-white mb-1">$15 <span className="text-base font-normal text-zinc-400">/ mes</span></p>
+              <p className="text-sm text-zinc-500 mb-4">1 taller</p>
+              <div className="flex flex-col gap-2 mb-6">
+                {['Reparaciones ilimitadas', 'Clientes y tickets', 'WhatsApp automático', 'Finanzas'].map(f => (
+                  <div key={f} className="flex items-center gap-2 text-sm text-zinc-300">
+                    <span className="text-green-400">✓</span> {f}
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
+                className="w-full border border-zinc-700 hover:border-zinc-500 text-white py-2.5 rounded-xl text-sm transition-colors">
+                Empezar gratis
+              </button>
+            </div>
+
+            <div className="bg-zinc-900 border-2 border-green-500 rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-black text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Más popular</div>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-2">Pro</p>
+              <p className="text-3xl font-bold text-white mb-1">$22 <span className="text-base font-normal text-zinc-400">/ mes</span></p>
+              <p className="text-sm text-zinc-500 mb-4">Hasta 3 talleres</p>
+              <div className="flex flex-col gap-2 mb-6">
+                {['Todo lo del plan Basic', 'Hasta 3 talleres', 'Soporte prioritario'].map(f => (
+                  <div key={f} className="flex items-center gap-2 text-sm text-zinc-300">
+                    <span className="text-green-400">✓</span> {f}
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
+                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm transition-colors">
+                Empezar gratis
+              </button>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center text-sm text-zinc-500">
+            <p>Sin compromisos · Cancelá cuando quieras · 10 días gratis</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
