@@ -782,6 +782,10 @@ export default function Home() {
                 className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
                 Ingresar
               </button>
+              <button onClick={() => { setShowRecuperar(true); setRecuperarEnviado(false); setRecuperarEmail(''); }}
+                className="w-full text-zinc-500 hover:text-zinc-300 text-xs text-center transition-colors">
+                ¿Olvidaste tu contraseña?
+              </button>
               <button onClick={() => setShowRegistro(true)}
                 className="w-full text-zinc-400 hover:text-white text-sm text-center transition-colors mt-1">
                 ¿No tenés cuenta? <span className="text-green-400 font-medium">Probá 10 días gratis</span>
@@ -826,6 +830,38 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {showRecuperar && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-sm">
+            {!recuperarEnviado ? (
+              <>
+                <h2 className="text-white font-bold text-lg mb-2">Recuperar contraseña</h2>
+                <p className="text-zinc-400 text-sm mb-4">Ingresá tu email y te enviaremos un link para restablecerla.</p>
+                <input type="email" placeholder="correo@ejemplo.com" value={recuperarEmail}
+                  onChange={e => setRecuperarEmail(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm mb-4" />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowRecuperar(false)}
+                    className="flex-1 border border-zinc-700 text-zinc-400 py-2.5 rounded-xl text-sm">Cancelar</button>
+                  <button onClick={handleRecuperar}
+                    className="flex-1 bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm">Enviar</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-4">
+                  <div className="text-4xl mb-3">📧</div>
+                  <h2 className="text-white font-bold text-lg mb-2">Email enviado</h2>
+                  <p className="text-zinc-400 text-sm">Revisá tu bandeja de entrada y seguí el link para restablecer tu contraseña.</p>
+                </div>
+                <button onClick={() => setShowRecuperar(false)}
+                  className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm">Entendido</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     );
   }
 
