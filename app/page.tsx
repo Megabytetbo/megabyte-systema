@@ -32,12 +32,6 @@ export default function Home() {
     switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
-  const [editingCliente, setEditingCliente] = useState<any | null>(null);
-  const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
-  const [notasCliente, setNotasCliente] = useState<any | null>(null);
-  const [notas, setNotas] = useState<any[]>([]);
-  const [nuevaNota, setNuevaNota] = useState('');
-  const [notasConteo, setNotasConteo] = useState<any>({});
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -74,7 +68,6 @@ export default function Home() {
     };
     loadRepairs();
     loadConfig();
-    cargarConteoNotas();
   }, [user]);
 
   // ── Login / Logout ────────────────────────────────────────────────────────
@@ -95,50 +88,6 @@ export default function Home() {
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
     setUser(null);
-  };
-
-  const cargarNotas = async (clienteNombre: string) => {
-    const { data } = await supabase.from('clientes_notas')
-      .select('*').eq('user_id', user.id).eq('cliente', clienteNombre)
-      .order('created_at', { ascending: false });
-    setNotas(data || []);
-  };
-
-  const cargarConteoNotas = async () => {
-    const { data } = await supabase.from('clientes_notas').select('cliente').eq('user_id', user.id);
-    if (data) {
-      const conteo: any = {};
-      data.forEach((n: any) => { conteo[n.cliente] = (conteo[n.cliente] || 0) + 1; });
-      setNotasConteo(conteo);
-    }
-  };
-
-  const agregarNota = async () => {
-    if (!nuevaNota.trim() || !notasCliente) return;
-    await supabase.from('clientes_notas').insert({
-      user_id: user.id, cliente: notasCliente.cliente,
-      telefono: notasCliente.telefono, nota: nuevaNota.trim(),
-    });
-    setNuevaNota('');
-    await cargarNotas(notasCliente.cliente);
-    await cargarConteoNotas();
-  };
-
-  const eliminarNota = async (id: string) => {
-    await supabase.from('clientes_notas').delete().eq('id', id);
-    await cargarNotas(notasCliente.cliente);
-    await cargarConteoNotas();
-  };
-
-  const guardarEdicionCliente = async () => {
-    if (!editingCliente) return;
-    await supabase.from('repairs')
-      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono })
-      .eq('user_id', user.id).eq('cliente', editingCliente.cliente)
-      .eq('telefono', editingCliente.telefono || '');
-    const { data } = await supabase.from('repairs').select('*').eq('user_id', user.id).order('id', { ascending: false });
-    setRepairs(data || []);
-    setEditingCliente(null);
   };
 
   const guardarConfig = async () => {
@@ -725,7 +674,7 @@ export default function Home() {
               <table className="w-full">
                 <thead>
                   <tr className={`border-b ${t.divider}`}>
-                    {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Acciones'].map(h => (
+                    {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
                       <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
                     ))}
                   </tr>
@@ -758,108 +707,39 @@ export default function Home() {
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
                       <td className="p-4">
-                        <div className="flex gap-2 flex-wrap">
-                          <button onClick={() => {
-                            setEditingCliente(cliente);
-                            setEditClienteForm({ cliente: cliente.cliente, telefono: cliente.telefono || '' });
-                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted}`}>
-                            ✏️ Editar
-                          </button>
-                          <button onClick={async () => {
-                            setNotasCliente(cliente);
-                            await cargarNotas(cliente.cliente);
-                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted} flex items-center gap-1`}>
-                            📝 Notas {notasConteo[cliente.cliente] > 0 && <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full ml-1">{notasConteo[cliente.cliente]}</span>}
-                          </button>
-                          <button onClick={() => {
-                            const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
-                            let texto = `Historial de ${cliente.cliente}\n\n`;
-                            historial.forEach((r: any) => {
-                              texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
-                            });
-                            alert(texto);
-                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted}`}>
-                            📋 Historial
-                          </button>
-                          <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
-                            target="_blank"
-                            className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
-                            WhatsApp
-                          </a>
-                          <button onClick={() => {
-                            setEditingRepair(null);
-                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
-                            setSection('reparaciones');
-                            setShowModal(true);
-                          }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
-                            + Orden
-                          </button>
-                        </div>
+                        <button onClick={() => {
+                          const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
+                          let texto = `Historial de ${cliente.cliente}\n\n`;
+                          historial.forEach((r: any) => {
+                            texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
+                          });
+                          alert(texto);
+                        }} className={`${t.badge} hover:bg-zinc-600 px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted}`}>
+                          Ver historial
+                        </button>
+                      </td>
+                      <td className="p-4">
+                        <a href={`https://wa.me/598${cliente.telefono.replace(/\D/g, '').replace(/^0/, '')}`}
+                          target="_blank"
+                          className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
+                          WhatsApp
+                        </a>
+                      </td>
+                      <td className="p-4">
+                        <button onClick={() => {
+                          setEditingRepair(null);
+                          setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
+                          setSection('reparaciones');
+                          setShowModal(true);
+                        }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
+                          + Orden
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
-            {/* Modal editar cliente */}
-            {editingCliente && (
-              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
-                  <h2 className={`text-lg font-bold ${t.text} mb-4`}>Editar cliente</h2>
-                  <div className="flex flex-col gap-3">
-                    <div>
-                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Nombre</label>
-                      <input value={editClienteForm.cliente} onChange={e => setEditClienteForm({...editClienteForm, cliente: e.target.value})}
-                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
-                    </div>
-                    <div>
-                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
-                      <input value={editClienteForm.telefono} onChange={e => setEditClienteForm({...editClienteForm, telefono: e.target.value})}
-                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => setEditingCliente(null)}
-                        className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm font-medium ${t.muted}`}>Cancelar</button>
-                      <button onClick={guardarEdicionCliente}
-                        className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Panel notas cliente */}
-            {notasCliente && (
-              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className={`text-lg font-bold ${t.text}`}>Notas — {notasCliente.cliente}</h2>
-                    <button onClick={() => { setNotasCliente(null); setNuevaNota(''); }}
-                      className={`${t.muted} text-2xl leading-none`}>×</button>
-                  </div>
-                  <div className="flex flex-col gap-2 max-h-52 overflow-y-auto mb-3">
-                    {notas.length === 0 && <p className={`text-sm ${t.subtext} text-center py-4`}>Sin notas aún</p>}
-                    {notas.map((nota: any) => (
-                      <div key={nota.id} className={`${t.badge} border ${t.divider} rounded-xl p-3 flex justify-between items-start gap-2`}>
-                        <div>
-                          <p className={`text-xs ${t.subtext} mb-1`}>{new Date(nota.created_at).toLocaleDateString('es-UY')}</p>
-                          <p className={`text-sm ${t.text}`}>{nota.nota}</p>
-                        </div>
-                        <button onClick={() => eliminarNota(nota.id)} className="text-red-400 hover:text-red-300 text-xl leading-none flex-shrink-0">×</button>
-                      </div>
-                    ))}
-                  </div>
-                  <textarea value={nuevaNota} onChange={e => setNuevaNota(e.target.value)}
-                    placeholder="Escribí una nota..."
-                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm resize-none min-h-[70px] mb-2`} />
-                  <button onClick={agregarNota}
-                    className="w-full bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">
-                    Agregar nota
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
