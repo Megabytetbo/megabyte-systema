@@ -32,6 +32,8 @@ export default function Home() {
     switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
+  const [editingCliente, setEditingCliente] = useState<any | null>(null);
+  const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -88,6 +90,18 @@ export default function Home() {
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
     setUser(null);
+  };
+
+  const guardarEdicionCliente = async () => {
+    if (!editingCliente) return;
+    await supabase.from('repairs')
+      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono })
+      .eq('user_id', user.id)
+      .eq('cliente', editingCliente.cliente)
+      .eq('telefono', editingCliente.telefono || '');
+    const { data } = await supabase.from('repairs').select('*').eq('user_id', user.id).order('id', { ascending: false });
+    setRepairs(data || []);
+    setEditingCliente(null);
   };
 
   const guardarConfig = async () => {
@@ -726,20 +740,54 @@ export default function Home() {
                         </a>
                       </td>
                       <td className="p-4">
-                        <button onClick={() => {
-                          setEditingRepair(null);
-                          setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
-                          setSection('reparaciones');
-                          setShowModal(true);
-                        }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
-                          + Orden
-                        </button>
+                        <div className="flex gap-2">
+                          <button onClick={() => {
+                            setEditingCliente(cliente);
+                            setEditClienteForm({ cliente: cliente.cliente, telefono: cliente.telefono || '' });
+                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted} whitespace-nowrap`}>
+                            ✏️ Editar
+                          </button>
+                          <button onClick={() => {
+                            setEditingRepair(null);
+                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
+                            setSection('reparaciones');
+                            setShowModal(true);
+                          }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
+                            + Orden
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            {editingCliente && (
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+                  <h2 className={`text-lg font-bold ${t.text} mb-4`}>Editar cliente</h2>
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Nombre</label>
+                      <input value={editClienteForm.cliente} onChange={e => setEditClienteForm({...editClienteForm, cliente: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
+                      <input value={editClienteForm.telefono} onChange={e => setEditClienteForm({...editClienteForm, telefono: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => setEditingCliente(null)}
+                        className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
+                      <button onClick={guardarEdicionCliente}
+                        className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
