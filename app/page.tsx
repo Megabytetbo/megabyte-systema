@@ -99,7 +99,7 @@ export default function Home() {
       .eq('user_id', user.id)
       .eq('cliente', editingCliente.cliente)
       .eq('telefono', editingCliente.telefono || '');
-    const { data } = await supabase.from('repairs').select('*').eq('user_id', user.id).order('id', { ascending: false });
+    const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
     setEditingCliente(null);
   };
