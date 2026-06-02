@@ -35,6 +35,7 @@ export default function Home() {
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
   const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [showRegistro, setShowRegistro] = useState(false);
   const [registroForm, setRegistroForm] = useState({ nombre: '', email: '', password: '', confirmar: '' });
   const [registrando, setRegistrando] = useState(false);
@@ -54,6 +55,8 @@ export default function Home() {
       }
     };
     checkUser();
+    const storedToken = localStorage.getItem('megabyte_session_token');
+    if (storedToken) setSessionToken(storedToken);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -61,6 +64,26 @@ export default function Home() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // ── Verificar sesión única cada 30 segundos ───────────────────────────────
+  useEffect(() => {
+    if (!user || !sessionToken) return;
+    const verificarSesion = async () => {
+      const { data } = await supabase.from('sesiones_activas')
+        .select('session_token').eq('user_id', user.id).single();
+      if (data && data.session_token !== sessionToken) {
+        alert('Tu sesión fue iniciada en otro dispositivo. Serás desconectado.');
+        await supabase.auth.signOut();
+        localStorage.removeItem('megabyte_recordar');
+        localStorage.removeItem('megabyte_session_token');
+        setUser(null);
+        setSessionToken(null);
+      }
+    };
+    verificarSesion();
+    const interval = setInterval(verificarSesion, 30000);
+    return () => clearInterval(interval);
+  }, [user, sessionToken]);
 
   // ── Cargar reparaciones y configuracion ──────────────────────────────────
   useEffect(() => {
@@ -122,14 +145,25 @@ export default function Home() {
     if (data.user) {
       if (loginForm.recordar) localStorage.setItem('megabyte_recordar', 'true');
       else localStorage.removeItem('megabyte_recordar');
+      const token = crypto.randomUUID();
+      await supabase.from('sesiones_activas').upsert({
+        user_id: data.user.id, session_token: token, updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      localStorage.setItem('megabyte_session_token', token);
+      setSessionToken(token);
       setUser(data.user);
     }
   };
 
   const handleLogout = async () => {
+    if (user) {
+      await supabase.from('sesiones_activas').delete().eq('user_id', user.id);
+    }
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
+    localStorage.removeItem('megabyte_session_token');
     setUser(null);
+    setSessionToken(null);
   };
 
   const guardarEdicionCliente = async () => {
