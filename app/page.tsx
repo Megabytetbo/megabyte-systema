@@ -94,21 +94,19 @@ export default function Home() {
 
   const guardarEdicionCliente = async () => {
     if (!editingCliente) return;
-    const telefonoOriginalLimpio = (editingCliente.telefono || '').replace(/\D/g, '');
-    const { data: filas } = await supabase.from('repairs')
-      .select('id, telefono').eq('cliente', editingCliente.cliente);
-    if (!filas) return;
-    const ids = filas
-      .filter((r: any) => (r.telefono || '').replace(/\D/g, '') === telefonoOriginalLimpio)
-      .map((r: any) => r.id);
-    if (ids.length === 0) { alert('No se encontraron reparaciones'); return; }
-    const { error } = await supabase.from('repairs')
-      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
-      .in('id', ids);
-    if (error) { alert('Error: ' + error.message); return; }
-    const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
-    setRepairs(data || []);
-    setEditingCliente(null);
+    const telOriginal = (editingCliente.telefono || '').replace(/\D/g, '');
+    const nuevoTel = editClienteForm.telefono || null;
+    const nuevoNombre = editClienteForm.cliente;
+    repairs
+      .filter((r: any) => r.cliente === editingCliente.cliente && (r.telefono || '').replace(/\D/g, '') === telOriginal)
+      .forEach(async (r: any) => {
+        await supabase.from('repairs').update({ cliente: nuevoNombre, telefono: nuevoTel }).eq('id', r.id);
+      });
+    setTimeout(async () => {
+      const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
+      setRepairs(data || []);
+      setEditingCliente(null);
+    }, 500);
   };
 
   const guardarConfig = async () => {
