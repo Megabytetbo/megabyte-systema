@@ -711,7 +711,7 @@ export default function Home() {
                     }, {})
                   ).filter((cliente: any) =>
                     cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
-                    cliente.telefono.includes(searchClientes)
+                    (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`border-t ${t.row} transition-colors`}>
                       <td className={`p-4 font-medium ${t.text}`}>{cliente.cliente}</td>
@@ -738,7 +738,7 @@ export default function Home() {
                         </button>
                       </td>
                       <td className="p-4">
-                        <a href={`https://wa.me/598${cliente.telefono.replace(/\D/g, '').replace(/^0/, '')}`}
+                        <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
                           target="_blank"
                           className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
                           WhatsApp
@@ -748,7 +748,7 @@ export default function Home() {
                         <div className="flex gap-2">
                           <button onClick={() => {
                             setEditingCliente(cliente);
-                            setEditClienteForm({ cliente: cliente.cliente, telefono: cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ') || '' });
+                            setEditClienteForm({ cliente: cliente.cliente, telefono: (cliente.telefono || '').replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ') });
                           }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted} whitespace-nowrap`}>
                             ✏️ Editar
                           </button>
