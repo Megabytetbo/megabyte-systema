@@ -500,6 +500,7 @@ export default function Home() {
         falla: form.falla, telefono: form.telefono,
         contrasena: form.contrasena, trabajo: form.trabajo,
         costo, entrega, saldo, estado: 'Pendiente',
+        user_id: user.id,
         fecha: new Date().toLocaleString('es-UY', {
           hour12: false, day: '2-digit', month: '2-digit',
           year: 'numeric', hour: '2-digit', minute: '2-digit',
