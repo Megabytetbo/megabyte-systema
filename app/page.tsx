@@ -95,18 +95,18 @@ export default function Home() {
   const guardarEdicionCliente = async () => {
     if (!editingCliente) return;
     const telOriginal = (editingCliente.telefono || '').replace(/\D/g, '');
-    const nuevoTel = editClienteForm.telefono || null;
-    const nuevoNombre = editClienteForm.cliente;
-    repairs
-      .filter((r: any) => r.cliente === editingCliente.cliente && (r.telefono || '').replace(/\D/g, '') === telOriginal)
-      .forEach(async (r: any) => {
-        await supabase.from('repairs').update({ cliente: nuevoNombre, telefono: nuevoTel }).eq('id', r.id);
-      });
-    setTimeout(async () => {
-      const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
-      setRepairs(data || []);
-      setEditingCliente(null);
-    }, 500);
+    const repsAEditar = repairs.filter((r: any) =>
+      r.cliente === editingCliente.cliente &&
+      (r.telefono || '').replace(/\D/g, '') === telOriginal
+    );
+    for (const r of repsAEditar) {
+      await supabase.from('repairs')
+        .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
+        .eq('id', r.id);
+    }
+    const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
+    setRepairs(data || []);
+    setEditingCliente(null);
   };
 
   const guardarConfig = async () => {
