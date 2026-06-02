@@ -131,7 +131,7 @@ export default function Home() {
       await supabase.from('suscripciones').update({ nombre_taller: registroForm.nombre })
         .eq('email', registroForm.email);
       try {
-        await supabase.functions.invoke('bienvenida', {
+        await supabase.functions.invoke('Bienvenida', {
           body: { email: registroForm.email, nombre_taller: registroForm.nombre },
         });
       } catch (e) { console.error('Email bienvenida error:', e); }
