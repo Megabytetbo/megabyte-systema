@@ -34,6 +34,8 @@ export default function Home() {
   const [configGuardando, setConfigGuardando] = useState(false);
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
   const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
+  const [suscripcionActual, setSuscripcionActual] = useState<any | null>(null);
+  const [accesoVerificado, setAccesoVerificado] = useState(false);
   const [editingCliente, setEditingCliente] = useState<any | null>(null);
   const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
 
@@ -73,6 +75,14 @@ export default function Home() {
     loadRepairs();
     loadConfig();
     if (config.is_admin) cargarSuscripciones();
+    // Verificar suscripcion del usuario
+    const verificarAcceso = async () => {
+      const { data } = await supabase.from('suscripciones')
+        .select('*').eq('email', user.email).single();
+      setSuscripcionActual(data || null);
+      setAccesoVerificado(true);
+    };
+    verificarAcceso();
   }, [user]);
 
   // ── Login / Logout ────────────────────────────────────────────────────────
@@ -532,6 +542,38 @@ export default function Home() {
   };
 
   // ── Login screen ──────────────────────────────────────────────────────────
+  // ── Verificar acceso por suscripcion ────────────────────────────────────
+  if (user && accesoVerificado && !config.is_admin && suscripcionActual) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const vencimiento = suscripcionActual.fecha_vencimiento ? new Date(suscripcionActual.fecha_vencimiento) : null;
+    const vencido = vencimiento ? vencimiento < hoy : false;
+    const inactivo = suscripcionActual.estado === 'inactivo';
+    const esTrial = suscripcionActual.estado === 'trial';
+    const diasRestantes = vencimiento ? Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+    if (inactivo || (esTrial && vencido) || (suscripcionActual.estado === 'activo' && vencido)) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+          <div className="w-full max-w-sm text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/20 mb-6">
+              <span className="text-3xl">🔒</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Acceso bloqueado</h1>
+            <p className="text-zinc-400 text-sm mb-2">
+              {inactivo ? 'Tu cuenta está inactiva.' : 'Tu período de prueba ha vencido.'}
+            </p>
+            <p className="text-zinc-500 text-xs mb-8">Contactá al administrador para activar tu suscripción.</p>
+            <button onClick={handleLogout}
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-colors text-sm">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
@@ -586,9 +628,22 @@ export default function Home() {
     ...(config.is_admin ? [{ id: 'admin', label: 'Admin', icon: '🛡️' }] : []),
   ];
 
+  // ── Días de trial restantes ──────────────────────────────────────────────
+  const diasTrialRestantes = (() => {
+    if (!suscripcionActual || suscripcionActual.estado !== 'trial' || !suscripcionActual.fecha_vencimiento) return null;
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const venc = new Date(suscripcionActual.fecha_vencimiento);
+    return Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  })();
+
   // ── Main app ──────────────────────────────────────────────────────────────
   return (
     <div className={`min-h-screen ${t.bg} ${t.text} flex`}>
+      {diasTrialRestantes !== null && diasTrialRestantes >= 0 && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black text-center text-xs font-bold py-1.5">
+          ⏳ Período de prueba — {diasTrialRestantes} día{diasTrialRestantes !== 1 ? 's' : ''} restante{diasTrialRestantes !== 1 ? 's' : ''}
+        </div>
+      )}
 
       {/* Sidebar */}
       <aside className={`w-64 ${t.sidebar} border-r flex flex-col p-5 shrink-0`}>
