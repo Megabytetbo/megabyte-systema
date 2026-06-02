@@ -32,6 +32,8 @@ export default function Home() {
     switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
+  const [suscripciones, setSuscripciones] = useState<any[]>([]);
+  const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
   const [editingCliente, setEditingCliente] = useState<any | null>(null);
   const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
 
@@ -70,6 +72,7 @@ export default function Home() {
     };
     loadRepairs();
     loadConfig();
+    if (config.is_admin) cargarSuscripciones();
   }, [user]);
 
   // ── Login / Logout ────────────────────────────────────────────────────────
@@ -107,6 +110,33 @@ export default function Home() {
     const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
     setEditingCliente(null);
+  };
+
+  const cargarSuscripciones = async () => {
+    const { data } = await supabase.from('suscripciones').select('*').order('created_at', { ascending: false });
+    setSuscripciones(data || []);
+  };
+
+  const toggleEstado = async (id: string, estadoActual: string) => {
+    const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+    await supabase.from('suscripciones').update({ estado: nuevoEstado }).eq('id', id);
+    await cargarSuscripciones();
+  };
+
+  const guardarSuscripcion = async (sub: any) => {
+    if (sub.id) {
+      await supabase.from('suscripciones').update({
+        nombre_taller: sub.nombre_taller, email: sub.email,
+        plan: sub.plan, estado: sub.estado, fecha_vencimiento: sub.fecha_vencimiento,
+      }).eq('id', sub.id);
+    } else {
+      await supabase.from('suscripciones').insert({
+        nombre_taller: sub.nombre_taller, email: sub.email,
+        plan: sub.plan, estado: sub.estado, fecha_vencimiento: sub.fecha_vencimiento,
+      });
+    }
+    await cargarSuscripciones();
+    setShowAdminModal(null);
   };
 
   const guardarConfig = async () => {
@@ -553,6 +583,7 @@ export default function Home() {
     { id: 'finanzas', label: 'Finanzas', icon: '💰' },
     { id: 'clientes', label: 'Clientes', icon: '👥' },
     { id: 'configuracion', label: 'Configuración', icon: '⚙️' },
+    ...(config.is_admin ? [{ id: 'admin', label: 'Admin', icon: '🛡️' }] : []),
   ];
 
   // ── Main app ──────────────────────────────────────────────────────────────
@@ -794,6 +825,113 @@ export default function Home() {
                       <button onClick={() => setEditingCliente(null)}
                         className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
                       <button onClick={guardarEdicionCliente}
+                        className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Admin ── */}
+        {section === 'admin' && config.is_admin && (
+          <div>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className={`text-2xl font-bold ${t.text}`}>Panel Admin</h1>
+                <p className={`${t.subtext} text-sm mt-1`}>{suscripciones.length} talleres registrados</p>
+              </div>
+              <button onClick={() => { cargarSuscripciones(); setShowAdminModal({ nombre_taller: '', email: '', plan: 'basic', estado: 'activo', fecha_vencimiento: '' }); }}
+                className="bg-green-500 hover:bg-green-400 text-black font-bold px-4 py-2 rounded-xl text-sm">
+                + Nuevo taller
+              </button>
+            </div>
+            <div className={`${t.card} border rounded-2xl overflow-hidden`}>
+              <table className="w-full">
+                <thead>
+                  <tr className={`border-b ${t.divider}`}>
+                    {['Taller', 'Email', 'Plan', 'Vencimiento', 'Estado', 'Acciones'].map(h => (
+                      <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {suscripciones.map((sub: any) => (
+                    <tr key={sub.id} className={`border-t ${t.row} transition-colors`}>
+                      <td className={`p-4 font-medium ${t.text}`}>{sub.nombre_taller}</td>
+                      <td className={`p-4 ${t.muted} text-sm`}>{sub.email}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.plan === 'pro' ? 'bg-blue-500/20 text-blue-400' : 'bg-zinc-500/20 text-zinc-400'}`}>
+                          {sub.plan?.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className={`p-4 ${t.muted} text-sm`}>{sub.fecha_vencimiento || '—'}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.estado === 'activo' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {sub.estado === 'activo' ? '✅ Activo' : '⛔ Inactivo'}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <button onClick={() => setShowAdminModal({...sub})}
+                            className={`${t.badge} px-3 py-1.5 rounded-lg text-sm ${t.muted}`}>
+                            ✏️ Editar
+                          </button>
+                          <button onClick={() => toggleEstado(sub.id, sub.estado)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-bold ${sub.estado === 'activo' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                            {sub.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {suscripciones.length === 0 && (
+                    <tr><td colSpan={6} className={`p-8 text-center ${t.subtext} text-sm`}>Sin talleres registrados</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {showAdminModal && (
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+                  <h2 className={`text-lg font-bold ${t.text} mb-4`}>{showAdminModal.id ? 'Editar taller' : 'Nuevo taller'}</h2>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { key: 'nombre_taller', label: 'Nombre del taller', placeholder: 'Ej: TechRepair' },
+                      { key: 'email', label: 'Email', placeholder: 'correo@ejemplo.com' },
+                      { key: 'fecha_vencimiento', label: 'Vencimiento', placeholder: 'YYYY-MM-DD' },
+                    ].map(({ key, label, placeholder }) => (
+                      <div key={key}>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
+                        <input value={showAdminModal[key] || ''} placeholder={placeholder}
+                          onChange={e => setShowAdminModal({...showAdminModal, [key]: e.target.value})}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                      </div>
+                    ))}
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Plan</label>
+                      <select value={showAdminModal.plan || 'basic'}
+                        onChange={e => setShowAdminModal({...showAdminModal, plan: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`}>
+                        <option value="basic">Basic</option>
+                        <option value="pro">Pro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Estado</label>
+                      <select value={showAdminModal.estado || 'activo'}
+                        onChange={e => setShowAdminModal({...showAdminModal, estado: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`}>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => setShowAdminModal(null)}
+                        className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
+                      <button onClick={() => guardarSuscripcion(showAdminModal)}
                         className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
                     </div>
                   </div>
