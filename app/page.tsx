@@ -73,11 +73,13 @@ export default function Home() {
     const loadConfig = async () => {
       const { data } = await supabase
         .from('configuracion').select('*').eq('user_id', user.id).single();
-      if (data) setConfig(data);
+      if (data) {
+        setConfig(data);
+        if (data.is_admin) cargarSuscripciones();
+      }
     };
     loadRepairs();
     loadConfig();
-    if (config.is_admin) cargarSuscripciones();
     // Verificar suscripcion del usuario
     const verificarAcceso = async () => {
       const { data } = await supabase.from('suscripciones')
