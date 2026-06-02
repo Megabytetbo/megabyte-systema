@@ -32,6 +32,12 @@ export default function Home() {
     switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
+  const [editingCliente, setEditingCliente] = useState<any | null>(null);
+  const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
+  const [notasCliente, setNotasCliente] = useState<any | null>(null);
+  const [notas, setNotas] = useState<any[]>([]);
+  const [nuevaNota, setNuevaNota] = useState('');
+  const [notasConteo, setNotasConteo] = useState<any>({});
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -68,6 +74,7 @@ export default function Home() {
     };
     loadRepairs();
     loadConfig();
+    cargarConteoNotas();
   }, [user]);
 
   // ── Login / Logout ────────────────────────────────────────────────────────
@@ -88,6 +95,53 @@ export default function Home() {
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
     setUser(null);
+  };
+
+  const cargarNotas = async (clienteNombre: string, clienteTel: string) => {
+    const { data } = await supabase.from('clientes_notas')
+      .select('*').eq('user_id', user.id)
+      .eq('cliente', clienteNombre).order('created_at', { ascending: false });
+    setNotas(data || []);
+  };
+
+  const cargarConteoNotas = async () => {
+    const { data } = await supabase.from('clientes_notas').select('cliente').eq('user_id', user.id);
+    if (data) {
+      const conteo: any = {};
+      data.forEach((n: any) => { conteo[n.cliente] = (conteo[n.cliente] || 0) + 1; });
+      setNotasConteo(conteo);
+    }
+  };
+
+  const agregarNota = async () => {
+    if (!nuevaNota.trim() || !notasCliente) return;
+    await supabase.from('clientes_notas').insert({
+      user_id: user.id,
+      cliente: notasCliente.cliente,
+      telefono: notasCliente.telefono,
+      nota: nuevaNota.trim(),
+    });
+    setNuevaNota('');
+    await cargarNotas(notasCliente.cliente, notasCliente.telefono);
+    await cargarConteoNotas();
+  };
+
+  const eliminarNota = async (id: string) => {
+    await supabase.from('clientes_notas').delete().eq('id', id);
+    await cargarNotas(notasCliente.cliente, notasCliente.telefono);
+    await cargarConteoNotas();
+  };
+
+  const guardarEdicionCliente = async () => {
+    if (!editingCliente) return;
+    await supabase.from('repairs')
+      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono })
+      .eq('user_id', user.id)
+      .eq('cliente', editingCliente.cliente)
+      .eq('telefono', editingCliente.telefono || '');
+    const { data } = await supabase.from('repairs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    setRepairs(data || []);
+    setEditingCliente(null);
   };
 
   const guardarConfig = async () => {
@@ -682,12 +736,11 @@ export default function Home() {
                 <tbody>
                   {Object.values(
                     repairs.reduce((acc: any, repair: any) => {
-                      const key = `${repair.cliente}||${repair.telefono || ''}`;
-                      if (!acc[key]) {
-                        acc[key] = { cliente: repair.cliente, telefono: repair.telefono, cantidad: 0, total: 0 };
+                      if (!acc[repair.telefono]) {
+                        acc[repair.telefono] = { cliente: repair.cliente, telefono: repair.telefono, cantidad: 0, total: 0 };
                       }
-                      acc[key].cantidad += 1;
-                      acc[key].total += Number(repair.costo || 0);
+                      acc[repair.telefono].cantidad += 1;
+                      acc[repair.telefono].total += Number(repair.costo || 0);
                       return acc;
                     }, {})
                   ).filter((cliente: any) =>
