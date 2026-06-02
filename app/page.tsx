@@ -34,6 +34,9 @@ export default function Home() {
   const [configGuardando, setConfigGuardando] = useState(false);
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
   const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
+  const [showRegistro, setShowRegistro] = useState(false);
+  const [registroForm, setRegistroForm] = useState({ nombre: '', email: '', password: '', confirmar: '' });
+  const [registrando, setRegistrando] = useState(false);
   const [suscripcionActual, setSuscripcionActual] = useState<any | null>(null);
   const [accesoVerificado, setAccesoVerificado] = useState(false);
   const [editingCliente, setEditingCliente] = useState<any | null>(null);
@@ -86,6 +89,27 @@ export default function Home() {
   }, [user]);
 
   // ── Login / Logout ────────────────────────────────────────────────────────
+  const handleRegistro = async () => {
+    if (!registroForm.nombre.trim()) { alert('Ingresá el nombre de tu taller'); return; }
+    if (!registroForm.email.trim()) { alert('Ingresá tu email'); return; }
+    if (registroForm.password.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+    if (registroForm.password !== registroForm.confirmar) { alert('Las contraseñas no coinciden'); return; }
+    setRegistrando(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: registroForm.email,
+      password: registroForm.password,
+    });
+    if (error) { alert('Error: ' + error.message); setRegistrando(false); return; }
+    if (data.user) {
+      await supabase.from('suscripciones').update({ nombre_taller: registroForm.nombre })
+        .eq('email', registroForm.email);
+      alert('✅ Cuenta creada. Tenés 10 días de prueba gratis. ¡Bienvenido!');
+      setShowRegistro(false);
+      setRegistroForm({ nombre: '', email: '', password: '', confirmar: '' });
+    }
+    setRegistrando(false);
+  };
+
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: loginForm.email,
@@ -578,7 +602,6 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          {/* Logo */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-4">
               <span className="text-3xl">🔧</span>
@@ -587,32 +610,74 @@ export default function Home() {
             <p className="text-zinc-500 text-sm mt-1">Sistema de gestión técnica</p>
           </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
-            <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
-              <input type="email" placeholder="admin@megabyte.com" value={loginForm.email}
-                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+          {!showRegistro ? (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
+              <div>
+                <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
+                <input type="email" placeholder="admin@megabyte.com" value={loginForm.email}
+                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 font-medium mb-1 block">Contraseña</label>
+                <input type="password" placeholder="••••••••" value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                <input type="checkbox" checked={loginForm.recordar}
+                  onChange={(e) => setLoginForm({ ...loginForm, recordar: e.target.checked })}
+                  className="accent-green-500 w-4 h-4" />
+                Mantener sesión iniciada
+              </label>
+              <button onClick={handleLogin}
+                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+                Ingresar
+              </button>
+              <button onClick={() => setShowRegistro(true)}
+                className="w-full text-zinc-400 hover:text-white text-sm text-center transition-colors mt-1">
+                ¿No tenés cuenta? <span className="text-green-400 font-medium">Probá 10 días gratis</span>
+              </button>
             </div>
-            <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Contraseña</label>
-              <input type="password" placeholder="••••••••" value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+          ) : (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
+              <h2 className="text-white font-bold text-lg">Crear cuenta — 10 días gratis</h2>
+              <div>
+                <label className="text-xs text-zinc-400 font-medium mb-1 block">Nombre del taller</label>
+                <input type="text" placeholder="Ej: TechRepair Montevideo" value={registroForm.nombre}
+                  onChange={(e) => setRegistroForm({ ...registroForm, nombre: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
+                <input type="email" placeholder="correo@ejemplo.com" value={registroForm.email}
+                  onChange={(e) => setRegistroForm({ ...registroForm, email: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 font-medium mb-1 block">Contraseña</label>
+                <input type="password" placeholder="Mínimo 6 caracteres" value={registroForm.password}
+                  onChange={(e) => setRegistroForm({ ...registroForm, password: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400 font-medium mb-1 block">Confirmar contraseña</label>
+                <input type="password" placeholder="Repetí la contraseña" value={registroForm.confirmar}
+                  onChange={(e) => setRegistroForm({ ...registroForm, confirmar: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+              </div>
+              <button onClick={handleRegistro} disabled={registrando}
+                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+                {registrando ? 'Creando cuenta...' : 'Crear cuenta gratis'}
+              </button>
+              <button onClick={() => setShowRegistro(false)}
+                className="w-full text-zinc-400 hover:text-white text-sm text-center transition-colors">
+                ← Volver al inicio de sesión
+              </button>
             </div>
-            <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
-              <input type="checkbox" checked={loginForm.recordar}
-                onChange={(e) => setLoginForm({ ...loginForm, recordar: e.target.checked })}
-                className="accent-green-500 w-4 h-4" />
-              Mantener sesión iniciada
-            </label>
-            <button onClick={handleLogin}
-              className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
-              Ingresar
-            </button>
-          </div>
+          )}
         </div>
       </div>
     );
