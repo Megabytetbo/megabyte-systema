@@ -94,16 +94,18 @@ export default function Home() {
 
   const guardarEdicionCliente = async () => {
     if (!editingCliente) return;
-    let query = supabase.from('repairs')
+    const telefonoOriginalLimpio = (editingCliente.telefono || '').replace(/\D/g, '');
+    const { data: filas } = await supabase.from('repairs')
+      .select('id, telefono').eq('cliente', editingCliente.cliente);
+    if (!filas) return;
+    const ids = filas
+      .filter((r: any) => (r.telefono || '').replace(/\D/g, '') === telefonoOriginalLimpio)
+      .map((r: any) => r.id);
+    if (ids.length === 0) { alert('No se encontraron reparaciones'); return; }
+    const { error } = await supabase.from('repairs')
       .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
-      .eq('cliente', editingCliente.cliente);
-    if (editingCliente.telefono) {
-      query = query.eq('telefono', editingCliente.telefono);
-    } else {
-      query = query.is('telefono', null);
-    }
-    const { error } = await query;
-    if (error) { alert('Error al guardar: ' + error.message); return; }
+      .in('id', ids);
+    if (error) { alert('Error: ' + error.message); return; }
     const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
     setEditingCliente(null);
