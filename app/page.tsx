@@ -1025,7 +1025,7 @@ export default function Home() {
                     {[
                       { key: 'nombre_taller', label: 'Nombre del taller', placeholder: 'Ej: TechRepair' },
                       { key: 'email', label: 'Email', placeholder: 'correo@ejemplo.com' },
-                      { key: 'fecha_vencimiento', label: 'Vencimiento', placeholder: 'YYYY-MM-DD' },
+
                     ].map(({ key, label, placeholder }) => (
                       <div key={key}>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
@@ -1034,6 +1034,12 @@ export default function Home() {
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
                       </div>
                     ))}
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Vencimiento</label>
+                      <input type="date" value={showAdminModal.fecha_vencimiento || ''}
+                        onChange={e => setShowAdminModal({...showAdminModal, fecha_vencimiento: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                    </div>
                     <div>
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Plan</label>
                       <select value={showAdminModal.plan || 'basic'}
