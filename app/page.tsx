@@ -682,11 +682,12 @@ export default function Home() {
                 <tbody>
                   {Object.values(
                     repairs.reduce((acc: any, repair: any) => {
-                      if (!acc[repair.telefono]) {
-                        acc[repair.telefono] = { cliente: repair.cliente, telefono: repair.telefono, cantidad: 0, total: 0 };
+                      const key = `${repair.cliente}||${repair.telefono || ''}`;
+                      if (!acc[key]) {
+                        acc[key] = { cliente: repair.cliente, telefono: repair.telefono, cantidad: 0, total: 0 };
                       }
-                      acc[repair.telefono].cantidad += 1;
-                      acc[repair.telefono].total += Number(repair.costo || 0);
+                      acc[key].cantidad += 1;
+                      acc[key].total += Number(repair.costo || 0);
                       return acc;
                     }, {})
                   ).filter((cliente: any) =>
