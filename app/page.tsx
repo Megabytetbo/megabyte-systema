@@ -130,6 +130,11 @@ export default function Home() {
     if (data.user) {
       await supabase.from('suscripciones').update({ nombre_taller: registroForm.nombre })
         .eq('email', registroForm.email);
+      try {
+        await supabase.functions.invoke('bienvenida', {
+          body: { email: registroForm.email, nombre_taller: registroForm.nombre },
+        });
+      } catch (e) { console.error('Email bienvenida error:', e); }
       alert('✅ Cuenta creada. Tenés 10 días de prueba gratis. ¡Bienvenido!');
       setShowRegistro(false);
       setRegistroForm({ nombre: '', email: '', password: '', confirmar: '' });
