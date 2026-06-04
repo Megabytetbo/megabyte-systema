@@ -23,6 +23,7 @@ export default function Home() {
   const [form, setForm] = useState({
     cliente: '', tipo: '', modelo: '', falla: '',
     telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '',
+    garantia: '', garantiaCustom: '',
   });
   const [config, setConfig] = useState<any>({
     nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
