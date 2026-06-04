@@ -38,12 +38,27 @@ export default function Home() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [showRegistro, setShowRegistro] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
+  const [showNuevaPassword, setShowNuevaPassword] = useState(false);
+  const [nuevaPassword, setNuevaPassword] = useState('');
+  const [nuevaPasswordConfirm, setNuevaPasswordConfirm] = useState('');
+  const [showRecuperar, setShowRecuperar] = useState(false);
+  const [recuperarEmail, setRecuperarEmail] = useState('');
+  const [recuperarEnviado, setRecuperarEnviado] = useState(false);
   const [registroForm, setRegistroForm] = useState({ nombre: '', email: '', password: '', confirmar: '' });
   const [registrando, setRegistrando] = useState(false);
   const [suscripcionActual, setSuscripcionActual] = useState<any | null>(null);
   const [accesoVerificado, setAccesoVerificado] = useState(false);
   const [editingCliente, setEditingCliente] = useState<any | null>(null);
   const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
+
+  // ── Detectar reset de contraseña ─────────────────────────────────────────
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      setShowNuevaPassword(true);
+      setShowLanding(false);
+    }
+  }, []);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -140,6 +155,27 @@ export default function Home() {
       setRegistroForm({ nombre: '', email: '', password: '', confirmar: '' });
     }
     setRegistrando(false);
+  };
+
+  const handleRecuperar = async () => {
+    if (!recuperarEmail.trim()) { alert('Ingresá tu email'); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(recuperarEmail, {
+      redirectTo: window.location.origin,
+    });
+    if (error) { alert('Error: ' + error.message); return; }
+    setRecuperarEnviado(true);
+  };
+
+  const handleNuevaPassword = async () => {
+    if (nuevaPassword.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+    if (nuevaPassword !== nuevaPasswordConfirm) { alert('Las contraseñas no coinciden'); return; }
+    const { error } = await supabase.auth.updateUser({ password: nuevaPassword });
+    if (error) { alert('Error: ' + error.message); return; }
+    alert('✅ Contraseña actualizada correctamente');
+    setShowNuevaPassword(false);
+    setNuevaPassword('');
+    setNuevaPasswordConfirm('');
+    window.location.hash = '';
   };
 
   const handleLogin = async () => {
@@ -640,6 +676,40 @@ export default function Home() {
         </div>
       );
     }
+  }
+
+  if (showNuevaPassword) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-4">
+              <span className="text-3xl">🔧</span>
+            </div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">MegaByte</h1>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
+            <h2 className="text-white font-bold text-lg">Nueva contraseña</h2>
+            <div>
+              <label className="text-xs text-zinc-400 font-medium mb-1 block">Nueva contraseña</label>
+              <input type="password" placeholder="Mínimo 6 caracteres" value={nuevaPassword}
+                onChange={e => setNuevaPassword(e.target.value)}
+                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-400 font-medium mb-1 block">Confirmar contraseña</label>
+              <input type="password" placeholder="Repetí la contraseña" value={nuevaPasswordConfirm}
+                onChange={e => setNuevaPasswordConfirm(e.target.value)}
+                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+            </div>
+            <button onClick={handleNuevaPassword}
+              className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+              Guardar contraseña
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!user && showLanding) {
