@@ -1676,9 +1676,11 @@ export default function Home() {
                                 <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
                                 <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
                                 <button onClick={() => {
-                                  setModalEntrega(repair);
-                                  setEntregaForm({ costo: repair.costo || '', entrega: repair.entrega || '', garantia: repair.garantia || '', garantiaCustom: '' });
                                   setOpenMenu(null);
+                                  setTimeout(() => {
+                                    setEntregaForm({ costo: repair.costo || '', entrega: repair.entrega || '', garantia: repair.garantia || '', garantiaCustom: '' });
+                                    setModalEntrega(repair);
+                                  }, 50);
                                 }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
                                 <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
                                 <a href={`https://wa.me/598${(repair.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
