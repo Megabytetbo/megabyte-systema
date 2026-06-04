@@ -1622,16 +1622,13 @@ export default function Home() {
 
                   <div className="p-6">
                     <div className="grid grid-cols-2 gap-4">
-                      {[
-                        { key: 'cliente', label: 'Cliente', placeholder: 'Nombre del cliente' },
-                      ].map(({ key, label, placeholder }) => (
-                        <div key={key}>
-                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
-                          <input placeholder={placeholder} value={(form as any)[key]}
-                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
-                        </div>
-                      ))}
+                      {/* Fila 1: Cliente - Teléfono */}
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Cliente</label>
+                        <input placeholder="Nombre del cliente" value={form.cliente}
+                          onChange={(e) => setForm({ ...form, cliente: e.target.value })}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                      </div>
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
                         <input placeholder="09X XXX XXX" value={form.telefono}
@@ -1642,20 +1639,7 @@ export default function Home() {
                           }}
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                       </div>
-                      {[
-                        { key: 'modelo', label: 'Modelo', placeholder: 'Ej: iPhone 13, Lenovo V15' },
-                        { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
-                        { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
-                        { key: 'costo', label: 'Costo total ($)', placeholder: '0' },
-                        { key: 'entrega', label: 'Entrega ($)', placeholder: '0' },
-                      ].map(({ key, label, placeholder }) => (
-                        <div key={key}>
-                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
-                          <input placeholder={placeholder} value={(form as any)[key]}
-                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
-                        </div>
-                      ))}
+                      {/* Fila 2: Tipo de equipo - Modelo */}
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tipo de equipo</label>
                         <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
@@ -1668,6 +1652,26 @@ export default function Home() {
                           <option value="Otro">Otro</option>
                         </select>
                       </div>
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Modelo</label>
+                        <input placeholder="Ej: iPhone 13, Lenovo V15" value={form.modelo}
+                          onChange={(e) => setForm({ ...form, modelo: e.target.value })}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                      </div>
+                      {/* Fila 3: Falla - Contraseña */}
+                      {[
+                        { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
+                        { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
+                        { key: 'costo', label: 'Costo total ($)', placeholder: '0' },
+                        { key: 'entrega', label: 'Entrega ($)', placeholder: '0' },
+                      ].map(({ key, label, placeholder }) => (
+                        <div key={key}>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
+                          <input placeholder={placeholder} value={(form as any)[key]}
+                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                        </div>
+                      ))}
                     </div>
 
                     <div className="mt-4">
