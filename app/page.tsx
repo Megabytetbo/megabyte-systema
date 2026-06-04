@@ -279,6 +279,66 @@ export default function Home() {
     setModalEntrega(null);
   };
 
+  const exportarPDF = () => {
+    const nombre = config.nombre_negocio || 'Mi Taller';
+    const fecha = new Date().toLocaleDateString('es-UY');
+    const totalReparaciones = repairs.length;
+    const totalCobradoExp = repairs.reduce((acc, r) => acc + Number(r.entrega || 0), 0);
+
+    const filas = repairs.map((r: any) => `
+      <tr>
+        <td>${r.orden || '-'}</td>
+        <td>${r.fecha ? r.fecha.split(',')[0] : '-'}</td>
+        <td>${r.cliente || '-'}</td>
+        <td>${r.equipo || '-'}</td>
+        <td>${r.falla || '-'}</td>
+        <td>${r.estado || '-'}</td>
+        <td>$ ${r.costo || 0}</td>
+      </tr>
+    `).join('');
+
+    const html = \`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reparaciones - \${nombre}</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 11px; color: #111; padding: 20px; }
+          h1 { font-size: 18px; margin: 0 0 4px; }
+          .sub { color: #666; font-size: 12px; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          th { background: #111; color: white; padding: 6px 8px; text-align: left; font-size: 10px; text-transform: uppercase; }
+          td { padding: 5px 8px; border-bottom: 1px solid #eee; }
+          tr:nth-child(even) td { background: #f9f9f9; }
+          .resumen { margin-top: 20px; padding: 12px; background: #f3f4f6; border-radius: 8px; }
+          .resumen p { margin: 3px 0; font-size: 12px; }
+          @media print { @page { margin: 15mm; } }
+        </style>
+      </head>
+      <body>
+        <h1>\${nombre}</h1>
+        <div class="sub">Exportación de reparaciones — \${fecha}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Orden</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th>Falla</th><th>Estado</th><th>Costo</th>
+            </tr>
+          </thead>
+          <tbody>\${filas}</tbody>
+        </table>
+        <div class="resumen">
+          <p><strong>Total reparaciones:</strong> \${totalReparaciones}</p>
+          <p><strong>Total cobrado:</strong> $ \${totalCobradoExp}</p>
+        </div>
+        <script>window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };</script>
+      </body>
+      </html>
+    \`;
+    const ventana = window.open('', '_blank', 'width=900,height=700');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
   const guardarConfig = async () => {
     setConfigGuardando(true);
     const { data: existing } = await supabase
@@ -1524,13 +1584,19 @@ export default function Home() {
                 <h1 className={`text-2xl font-bold ${t.text}`}>Reparaciones</h1>
                 <p className={`${t.subtext} text-sm mt-1`}>{repairs.length} órdenes en total</p>
               </div>
-              <button onClick={() => {
-                setEditingRepair(null);
-                setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
-                setShowModal(true);
-              }} className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
-                + Nueva Orden
-              </button>
+              <div className="flex gap-2">
+                <button onClick={exportarPDF}
+                  className={`${t.badge} border ${t.divider} px-4 py-2.5 rounded-xl text-sm font-medium ${t.muted} transition-colors`}>
+                  📄 Exportar PDF
+                </button>
+                <button onClick={() => {
+                  setEditingRepair(null);
+                  setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
+                  setShowModal(true);
+                }} className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
+                  + Nueva Orden
+                </button>
+              </div>
             </div>
 
             <div className={`${t.card} border rounded-2xl overflow-hidden`}>
