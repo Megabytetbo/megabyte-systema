@@ -1347,7 +1347,7 @@ export default function Home() {
         {/* ── Admin ── */}
         {section === 'admin' && config.is_admin && (
           <div>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className={`text-2xl font-bold ${t.text}`}>Panel Admin</h1>
                 <p className={`${t.subtext} text-sm mt-1`}>{suscripciones.length} talleres registrados</p>
@@ -1357,6 +1357,34 @@ export default function Home() {
                 + Nuevo taller
               </button>
             </div>
+
+            {/* Estadísticas generales */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {(() => {
+                const hoy = new Date(); hoy.setHours(0,0,0,0);
+                const activos = suscripciones.filter((s: any) => s.estado === 'activo').length;
+                const trials = suscripciones.filter((s: any) => s.estado === 'trial').length;
+                const inactivos = suscripciones.filter((s: any) => s.estado === 'inactivo').length;
+                const ingresosBasic = suscripciones.filter((s: any) => s.estado === 'activo' && s.plan === 'basic').length * 15;
+                const ingresosPro = suscripciones.filter((s: any) => s.estado === 'activo' && s.plan === 'pro').length * 22;
+                const ingresosMes = ingresosBasic + ingresosPro;
+                return [
+                  { label: 'Activos', value: activos, color: 'text-green-400', icon: '✅' },
+                  { label: 'En trial', value: trials, color: 'text-amber-400', icon: '⏳' },
+                  { label: 'Inactivos', value: inactivos, color: 'text-red-400', icon: '⛔' },
+                  { label: 'Ingresos est. mes', value: `$ ${ingresosMes}`, color: 'text-blue-400', icon: '💰' },
+                ].map(stat => (
+                  <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className={`text-xs ${t.subtext} font-medium`}>{stat.label}</p>
+                      <span className="text-lg">{stat.icon}</span>
+                    </div>
+                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                  </div>
+                ));
+              })()}
+            </div>
+
             <div className={`${t.card} border rounded-2xl overflow-hidden`}>
               <table className="w-full">
                 <thead>
