@@ -821,6 +821,7 @@ export default function Home() {
 
   if (!user) {
     return (
+      <>
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
@@ -937,6 +938,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      </>
     );
   }
 
