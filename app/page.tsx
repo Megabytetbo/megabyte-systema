@@ -35,6 +35,9 @@ export default function Home() {
   const [configGuardando, setConfigGuardando] = useState(false);
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
   const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [adminFiltro, setAdminFiltro] = useState('todos');
+  const [adminOrden, setAdminOrden] = useState('vencimiento');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modalEntrega, setModalEntrega] = useState<any | null>(null);
   const [entregaForm, setEntregaForm] = useState({ costo: '', entrega: '', garantia: '', garantiaCustom: '' });
@@ -1386,6 +1389,24 @@ export default function Home() {
             </div>
 
             <div className={`${t.card} border rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} flex flex-wrap gap-3`}>
+                <input type="text" placeholder="🔍 Buscar por nombre o email..."
+                  value={adminSearch} onChange={e => setAdminSearch(e.target.value)}
+                  className={`flex-1 min-w-[180px] border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                <select value={adminFiltro} onChange={e => setAdminFiltro(e.target.value)}
+                  className={`border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                  <option value="todos">Todos</option>
+                  <option value="activo">Activos</option>
+                  <option value="trial">En trial</option>
+                  <option value="inactivo">Inactivos</option>
+                </select>
+                <select value={adminOrden} onChange={e => setAdminOrden(e.target.value)}
+                  className={`border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                  <option value="vencimiento">Por vencimiento</option>
+                  <option value="nombre">Por nombre</option>
+                  <option value="estado">Por estado</option>
+                </select>
+              </div>
               <table className="w-full">
                 <thead>
                   <tr className={`border-b ${t.divider}`}>
@@ -1395,7 +1416,25 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {suscripciones.map((sub: any) => (
+                  {suscripciones
+                    .filter((sub: any) => {
+                      const matchSearch = adminSearch === '' ||
+                        sub.nombre_taller?.toLowerCase().includes(adminSearch.toLowerCase()) ||
+                        sub.email?.toLowerCase().includes(adminSearch.toLowerCase());
+                      const matchFiltro = adminFiltro === 'todos' || sub.estado === adminFiltro;
+                      return matchSearch && matchFiltro;
+                    })
+                    .sort((a: any, b: any) => {
+                      if (adminOrden === 'nombre') return (a.nombre_taller || '').localeCompare(b.nombre_taller || '');
+                      if (adminOrden === 'estado') return (a.estado || '').localeCompare(b.estado || '');
+                      if (adminOrden === 'vencimiento') {
+                        if (!a.fecha_vencimiento) return 1;
+                        if (!b.fecha_vencimiento) return -1;
+                        return new Date(a.fecha_vencimiento).getTime() - new Date(b.fecha_vencimiento).getTime();
+                      }
+                      return 0;
+                    })
+                    .map((sub: any) => (
                     <tr key={sub.id} className={`border-t ${t.row} transition-colors`}>
                       <td className={`p-4 font-medium ${t.text}`}>{sub.nombre_taller}</td>
                       <td className={`p-4 ${t.muted} text-sm`}>{sub.email}</td>
