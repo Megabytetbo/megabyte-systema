@@ -94,8 +94,15 @@ export default function Home() {
 
   // ── Verificar sesión única cada 30 segundos ───────────────────────────────
   useEffect(() => {
-    if (!user || !sessionToken || config.is_admin) return;
+    if (!user || !sessionToken) return;
+    // Si ya sabemos que es admin, no verificar
+    if (config.is_admin === true) return;
+    // Si config aún no cargó (is_admin undefined), esperar
+    if (config.is_admin === undefined) return;
     const verificarSesion = async () => {
+      // Re-verificar is_admin directo desde Supabase por si acaso
+      const { data: cfg } = await supabase.from('configuracion').select('is_admin').eq('user_id', user.id).single();
+      if (cfg?.is_admin === true) return;
       const { data } = await supabase.from('sesiones_activas')
         .select('session_token').eq('user_id', user.id).single();
       if (data && data.session_token !== sessionToken) {
@@ -110,7 +117,7 @@ export default function Home() {
     verificarSesion();
     const interval = setInterval(verificarSesion, 30000);
     return () => clearInterval(interval);
-  }, [user, sessionToken]);
+  }, [user, sessionToken, config.is_admin]);
 
   // ── Cargar reparaciones y configuracion ──────────────────────────────────
   useEffect(() => {
