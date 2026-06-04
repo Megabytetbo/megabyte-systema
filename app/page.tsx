@@ -279,6 +279,63 @@ export default function Home() {
     setModalEntrega(null);
   };
 
+  const exportarReparacionesPDF = () => {
+    const nombre = config.nombre_negocio || 'Mi Taller';
+    const fecha = new Date().toLocaleDateString('es-UY');
+    const totalCobrado = repairs.reduce((acc: number, r: any) => acc + Number(r.entrega || 0), 0);
+    const filas = repairs.map((r: any) => `
+      <tr>
+        <td>${r.orden || '-'}</td>
+        <td>${r.fecha ? r.fecha.split(',')[0] : '-'}</td>
+        <td>${r.cliente || '-'}</td>
+        <td>${r.equipo || '-'}</td>
+        <td>${r.estado || '-'}</td>
+        <td>$ ${r.costo || 0}</td>
+      </tr>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reparaciones</title>
+      <style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px}h1{font-size:18px;margin:0 0 4px}.sub{color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#111;color:white;padding:6px 8px;text-align:left;font-size:10px}td{padding:5px 8px;border-bottom:1px solid #eee}tr:nth-child(even)td{background:#f9f9f9}.res{margin-top:16px;padding:10px;background:#f3f4f6;border-radius:6px;font-size:12px}@media print{@page{margin:15mm}}</style>
+      </head><body>
+      <h1>${nombre}</h1><div class="sub">Reparaciones exportadas — ${fecha}</div>
+      <table><thead><tr><th>Orden</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th>Estado</th><th>Costo</th></tr></thead>
+      <tbody>${filas}</tbody></table>
+      <div class="res"><strong>Total:</strong> ${repairs.length} reparaciones &nbsp;|&nbsp; <strong>Cobrado:</strong> $ ${totalCobrado}</div>
+      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}</script>
+      </body></html>`;
+    const v = window.open('', '_blank', 'width=900,height=700');
+    if (v) { v.document.write(html); v.document.close(); }
+  };
+
+  const exportarClientesPDF = () => {
+    const nombre = config.nombre_negocio || 'Mi Taller';
+    const fecha = new Date().toLocaleDateString('es-UY');
+    const clientesMap: any = {};
+    repairs.forEach((r: any) => {
+      const key = `${r.cliente}||${r.telefono || ''}`;
+      if (!clientesMap[key]) clientesMap[key] = { cliente: r.cliente, telefono: r.telefono, cantidad: 0, total: 0 };
+      clientesMap[key].cantidad += 1;
+      clientesMap[key].total += Number(r.costo || 0);
+    });
+    const clientes = Object.values(clientesMap);
+    const filas = clientes.map((c: any) => `
+      <tr>
+        <td>${c.cliente || '-'}</td>
+        <td>${(c.telefono || '').replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+        <td>${c.cantidad}</td>
+        <td>$ ${c.total}</td>
+      </tr>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Clientes</title>
+      <style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px}h1{font-size:18px;margin:0 0 4px}.sub{color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#111;color:white;padding:6px 8px;text-align:left;font-size:10px}td{padding:5px 8px;border-bottom:1px solid #eee}tr:nth-child(even)td{background:#f9f9f9}.res{margin-top:16px;padding:10px;background:#f3f4f6;border-radius:6px;font-size:12px}@media print{@page{margin:15mm}}</style>
+      </head><body>
+      <h1>${nombre}</h1><div class="sub">Directorio de clientes — ${fecha}</div>
+      <table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Reparaciones</th><th>Total</th></tr></thead>
+      <tbody>${filas}</tbody></table>
+      <div class="res"><strong>Total clientes:</strong> ${clientes.length}</div>
+      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}</script>
+      </body></html>`;
+    const v = window.open('', '_blank', 'width=900,height=700');
+    if (v) { v.document.write(html); v.document.close(); }
+  };
+
   const guardarConfig = async () => {
     setConfigGuardando(true);
     const { data: existing } = await supabase
@@ -1503,6 +1560,30 @@ export default function Home() {
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none ${!config[switchKey] ? 'opacity-40 cursor-not-allowed' : ''}`} />
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Exportar datos */}
+                <div className={`border-t ${t.divider} pt-6`}>
+                  <h3 className={`text-sm font-bold ${t.text} mb-1`}>Exportar datos</h3>
+                  <p className={`text-xs ${t.subtext} mb-4`}>Descargá un respaldo de tus datos en PDF</p>
+                  <div className="flex flex-col gap-2">
+                    <button onClick={exportarReparacionesPDF}
+                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-green-500 transition-colors`}>
+                      <span className="text-lg">📄</span>
+                      <div className="text-left">
+                        <p className={`font-medium ${t.text}`}>Exportar reparaciones</p>
+                        <p className={`text-xs ${t.subtext}`}>Lista completa de órdenes</p>
+                      </div>
+                    </button>
+                    <button onClick={exportarClientesPDF}
+                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-green-500 transition-colors`}>
+                      <span className="text-lg">👥</span>
+                      <div className="text-left">
+                        <p className={`font-medium ${t.text}`}>Exportar clientes</p>
+                        <p className={`text-xs ${t.subtext}`}>Directorio con historial</p>
+                      </div>
+                    </button>
                   </div>
                 </div>
 
