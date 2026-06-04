@@ -628,6 +628,7 @@ export default function Home() {
       cliente: repair.cliente || '', tipo: partes[0] || '', modelo: partes[1] || '',
       falla: repair.falla || '', telefono: repair.telefono || '',
       contrasena: repair.contrasena || '', trabajo: repair.trabajo || '',
+      garantia: repair.garantia || '', garantiaCustom: '',
       costo: String(repair.costo || ''), entrega: String(repair.entrega || ''), saldo: String(repair.saldo || ''),
     });
     setEditingRepair(repair);
