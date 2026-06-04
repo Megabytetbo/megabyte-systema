@@ -1121,66 +1121,6 @@ export default function Home() {
               ))}
             </div>
 
-            {modalEntrega && (
-              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className={`text-base font-bold ${t.text}`}>Entregar orden {modalEntrega.orden}</p>
-                      <p className={`text-xs ${t.subtext} mt-0.5`}>{modalEntrega.cliente} — {modalEntrega.equipo}</p>
-                    </div>
-                    <button onClick={() => setModalEntrega(null)} className={`${t.muted} text-xl leading-none`}>×</button>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Costo total ($)</label>
-                        <input type="number" value={entregaForm.costo}
-                          onChange={e => setEntregaForm({...entregaForm, costo: e.target.value})}
-                          className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
-                      </div>
-                      <div>
-                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Entrega ($)</label>
-                        <input type="number" value={entregaForm.entrega}
-                          onChange={e => setEntregaForm({...entregaForm, entrega: e.target.value})}
-                          className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
-                      </div>
-                    </div>
-                    <div className={`${t.badge} rounded-xl p-3 flex justify-between items-center`}>
-                      <span className={`text-sm ${t.subtext}`}>Saldo pendiente</span>
-                      <span className={`text-base font-bold ${t.text}`}>$ {Math.max(0, Number(entregaForm.costo || 0) - Number(entregaForm.entrega || 0))}</span>
-                    </div>
-                    <div>
-                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Garantía</label>
-                      <select value={entregaForm.garantia}
-                        onChange={e => setEntregaForm({...entregaForm, garantia: e.target.value})}
-                        className={`w-full border ${t.select} p-3 rounded-xl outline-none text-sm`}>
-                        <option value="">Sin garantía</option>
-                        <option value="30 días">30 días</option>
-                        <option value="3 meses">3 meses</option>
-                        <option value="otro">Otro...</option>
-                      </select>
-                    </div>
-                    {entregaForm.garantia === 'otro' && (
-                      <div>
-                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Especificar garantía</label>
-                        <input placeholder="Ej: 6 meses, 1 año..." value={entregaForm.garantiaCustom}
-                          onChange={e => setEntregaForm({...entregaForm, garantiaCustom: e.target.value})}
-                          className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
-                      </div>
-                    )}
-                    <div className="flex gap-2 mt-1">
-                      <button onClick={() => setModalEntrega(null)}
-                        className={`flex-1 ${t.badge} border ${t.divider} py-2.5 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
-                      <button onClick={confirmarEntrega}
-                        className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2.5 rounded-xl text-sm font-bold">
-                        Confirmar entrega
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -1805,6 +1745,68 @@ export default function Home() {
           </>
         )}
       </main>
+
+      {/* Modal entrega - nivel global */}
+      {modalEntrega && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4">
+          <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className={`text-base font-bold ${t.text}`}>Entregar orden {modalEntrega.orden}</p>
+                <p className={`text-xs ${t.subtext} mt-0.5`}>{modalEntrega.cliente} — {modalEntrega.equipo}</p>
+              </div>
+              <button onClick={() => setModalEntrega(null)} className={`${t.muted} text-xl leading-none`}>×</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Costo total ($)</label>
+                  <input type="number" value={entregaForm.costo}
+                    onChange={e => setEntregaForm({...entregaForm, costo: e.target.value})}
+                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                </div>
+                <div>
+                  <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Entrega ($)</label>
+                  <input type="number" value={entregaForm.entrega}
+                    onChange={e => setEntregaForm({...entregaForm, entrega: e.target.value})}
+                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                </div>
+              </div>
+              <div className={`${t.badge} rounded-xl p-3 flex justify-between items-center`}>
+                <span className={`text-sm ${t.subtext}`}>Saldo pendiente</span>
+                <span className={`text-base font-bold ${t.text}`}>$ {Math.max(0, Number(entregaForm.costo || 0) - Number(entregaForm.entrega || 0))}</span>
+              </div>
+              <div>
+                <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Garantía</label>
+                <select value={entregaForm.garantia}
+                  onChange={e => setEntregaForm({...entregaForm, garantia: e.target.value})}
+                  className={`w-full border ${t.select} p-3 rounded-xl outline-none text-sm`}>
+                  <option value="">Sin garantía</option>
+                  <option value="30 días">30 días</option>
+                  <option value="3 meses">3 meses</option>
+                  <option value="otro">Otro...</option>
+                </select>
+              </div>
+              {entregaForm.garantia === 'otro' && (
+                <div>
+                  <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Especificar garantía</label>
+                  <input placeholder="Ej: 6 meses, 1 año..." value={entregaForm.garantiaCustom}
+                    onChange={e => setEntregaForm({...entregaForm, garantiaCustom: e.target.value})}
+                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                </div>
+              )}
+              <div className="flex gap-2 mt-1">
+                <button onClick={() => setModalEntrega(null)}
+                  className={`flex-1 ${t.badge} border ${t.divider} py-2.5 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
+                <button onClick={confirmarEntrega}
+                  className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2.5 rounded-xl text-sm font-bold">
+                  Confirmar entrega
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
