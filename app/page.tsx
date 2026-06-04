@@ -266,12 +266,16 @@ export default function Home() {
     const entrega = Number(entregaForm.entrega || 0);
     const saldo = costo - entrega;
     const garantia = entregaForm.garantia === 'otro' ? entregaForm.garantiaCustom : entregaForm.garantia;
+    const fecha_entrega = new Date().toLocaleString('es-UY', {
+      hour12: false, day: '2-digit', month: '2-digit',
+      year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
     await supabase.from('repairs').update({
-      costo, entrega, saldo, estado: 'Entregado', garantia,
+      costo, entrega, saldo, estado: 'Entregado', garantia, fecha_entrega,
     }).eq('id', modalEntrega.id);
     const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
-    generateTicketEntrega({ ...modalEntrega, costo, entrega, saldo, garantia });
+    generateTicketEntrega({ ...modalEntrega, costo, entrega, saldo, garantia, fecha_entrega });
     setModalEntrega(null);
   };
 
@@ -550,7 +554,7 @@ export default function Home() {
         <div class="linea"></div>
 
         <div class="bloque">
-          <div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div>
+          <div class="fila"><span class="label">Entrega:</span><span>${repair.fecha_entrega || repair.fecha}</span></div>
           ${repair.garantia ? `<div class="fila"><span class="label">Garantía:</span><span>${repair.garantia}</span></div>` : ''}
         </div>
         <div class="linea"></div>
