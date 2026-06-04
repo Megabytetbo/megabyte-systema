@@ -95,14 +95,9 @@ export default function Home() {
   // ── Verificar sesión única cada 30 segundos ───────────────────────────────
   useEffect(() => {
     if (!user || !sessionToken) return;
-    // Si ya sabemos que es admin, no verificar
-    if (config.is_admin === true) return;
-    // Si config aún no cargó (is_admin undefined), esperar
-    if (config.is_admin === undefined) return;
+    if (localStorage.getItem('megabyte_is_admin') === 'true') return;
     const verificarSesion = async () => {
-      // Re-verificar is_admin directo desde Supabase por si acaso
-      const { data: cfg } = await supabase.from('configuracion').select('is_admin').eq('user_id', user.id).single();
-      if (cfg?.is_admin === true) return;
+      if (localStorage.getItem('megabyte_is_admin') === 'true') return;
       const { data } = await supabase.from('sesiones_activas')
         .select('session_token').eq('user_id', user.id).single();
       if (data && data.session_token !== sessionToken) {
@@ -117,7 +112,7 @@ export default function Home() {
     verificarSesion();
     const interval = setInterval(verificarSesion, 30000);
     return () => clearInterval(interval);
-  }, [user, sessionToken, config.is_admin]);
+  }, [user, sessionToken]);
 
   // ── Cargar reparaciones y configuracion ──────────────────────────────────
   useEffect(() => {
@@ -133,7 +128,12 @@ export default function Home() {
         .from('configuracion').select('*').eq('user_id', user.id).single();
       if (data) {
         setConfig(data);
-        if (data.is_admin) cargarSuscripciones();
+        if (data.is_admin) {
+          cargarSuscripciones();
+          localStorage.setItem('megabyte_is_admin', 'true');
+        } else {
+          localStorage.removeItem('megabyte_is_admin');
+        }
       }
     };
     loadRepairs();
@@ -222,6 +222,7 @@ export default function Home() {
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
     localStorage.removeItem('megabyte_session_token');
+    localStorage.removeItem('megabyte_is_admin');
     setUser(null);
     setSessionToken(null);
   };
