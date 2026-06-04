@@ -528,13 +528,12 @@ export default function Home() {
 
         <div class="bloque">
           <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
-          <div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div>
-          <div class="fila label"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
         </div>
         <div class="linea"></div>
 
         <div class="bloque">
           <div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div>
+          ${repair.garantia ? `<div class="fila"><span class="label">Garantía:</span><span>${repair.garantia}</span></div>` : ''}
         </div>
         <div class="linea"></div>
 
@@ -583,6 +582,7 @@ export default function Home() {
         contrasena: form.contrasena, trabajo: form.trabajo,
         costo, entrega, saldo, estado: 'Pendiente',
         user_id: user.id,
+        garantia: form.garantia === 'otro' ? form.garantiaCustom : form.garantia,
         fecha: new Date().toLocaleString('es-UY', {
           hour12: false, day: '2-digit', month: '2-digit',
           year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -593,7 +593,7 @@ export default function Home() {
       if (data) setRepairs([data[0], ...repairs]);
     }
 
-    setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
+    setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
     setEditingRepair(null);
     setShowModal(false);
   };
@@ -1214,7 +1214,7 @@ export default function Home() {
                           </button>
                           <button onClick={() => {
                             setEditingRepair(null);
-                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
+                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
                             setSection('reparaciones');
                             setShowModal(true);
                           }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
@@ -1502,7 +1502,7 @@ export default function Home() {
               </div>
               <button onClick={() => {
                 setEditingRepair(null);
-                setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '' });
+                setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
                 setShowModal(true);
               }} className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
                 + Nueva Orden
@@ -1672,6 +1672,27 @@ export default function Home() {
                             className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                         </div>
                       ))}
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Garantía</label>
+                        <select value={(form as any).garantia || ''} onChange={e => setForm({...form, garantia: e.target.value} as any)}
+                          className={`w-full border ${t.select} p-3 rounded-xl outline-none transition-colors text-sm`}>
+                          <option value="">Sin garantía</option>
+                          <option value="30 días">30 días</option>
+                          <option value="3 meses">3 meses</option>
+                          <option value="otro">Otro...</option>
+                        </select>
+                      </div>
+                      {(form as any).garantia === 'otro' && (
+                        <div>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Especificar garantía</label>
+                          <input placeholder="Ej: 6 meses, 1 año..." value={(form as any).garantiaCustom || ''}
+                            onChange={e => setForm({...form, garantiaCustom: e.target.value} as any)}
+                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-4">
