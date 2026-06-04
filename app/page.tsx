@@ -91,7 +91,7 @@ export default function Home() {
 
   // ── Verificar sesión única cada 30 segundos ───────────────────────────────
   useEffect(() => {
-    if (!user || !sessionToken) return;
+    if (!user || !sessionToken || config.is_admin) return;
     const verificarSesion = async () => {
       const { data } = await supabase.from('sesiones_activas')
         .select('session_token').eq('user_id', user.id).single();
