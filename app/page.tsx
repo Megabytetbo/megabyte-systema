@@ -74,7 +74,12 @@ export default function Home() {
     const storedToken = localStorage.getItem('megabyte_session_token');
     if (storedToken) setSessionToken(storedToken);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowNuevaPassword(true);
+        setShowLanding(false);
+        return;
+      }
       setUser(session?.user ?? null);
     });
 
