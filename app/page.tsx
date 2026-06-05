@@ -779,10 +779,9 @@ export default function Home() {
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-4">
-              <span className="text-3xl">🔧</span>
+            <div className="flex justify-center mb-6">
+              <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-16 w-auto object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">MegaByte</h1>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
             <h2 className="text-white font-bold text-lg">Nueva contraseña</h2>
@@ -814,8 +813,7 @@ export default function Home() {
         {/* Header */}
         <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center text-lg">🔧</div>
-            <span className="font-bold text-white text-lg">MegaByte</span>
+            <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-9 w-auto object-contain" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
@@ -831,8 +829,8 @@ export default function Home() {
 
         {/* Hero */}
         <div className="text-center px-6 py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-6">
-            <span className="text-3xl">🔧</span>
+          <div className="flex justify-center mb-8">
+            <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-24 w-auto object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-4 leading-tight">El sistema de gestión<br/>para talleres técnicos</h1>
           <p className="text-zinc-400 text-lg mb-8 max-w-md mx-auto">Simple, rápido y desde cualquier dispositivo. Controlá tus reparaciones, clientes y finanzas en un solo lugar.</p>
@@ -921,10 +919,9 @@ export default function Home() {
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-green-500 mb-4">
-              <span className="text-3xl">🔧</span>
+            <div className="flex justify-center mb-6">
+              <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-20 w-auto object-contain" />
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">MegaByte</h1>
             <p className="text-zinc-500 text-sm mt-1">Sistema de gestión técnica</p>
           </div>
 
@@ -1068,11 +1065,7 @@ export default function Home() {
       {/* Sidebar desktop */}
       <aside className={`hidden md:flex w-64 ${t.sidebar} border-r flex-col p-5 shrink-0 fixed h-full z-40`}>
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center text-lg shrink-0">🔧</div>
-          <div>
-            <h1 className="text-lg font-bold text-white leading-none">MegaByte</h1>
-            <p className="text-xs text-zinc-500">Sistema técnico</p>
-          </div>
+          <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-9 w-auto object-contain" />
         </div>
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => (
@@ -1101,8 +1094,7 @@ export default function Home() {
       <div className={`md:hidden fixed top-0 left-0 right-0 z-40 ${t.sidebar} border-b ${t.divider} px-4 py-3 flex items-center justify-between`}
         style={{marginTop: diasTrialRestantes !== null && diasTrialRestantes >= 0 ? '28px' : '0'}}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-green-500 flex items-center justify-center text-sm">🔧</div>
-          <span className="font-bold text-white text-sm">MegaByte</span>
+          <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-7 w-auto object-contain" />
         </div>
         <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className={`p-2 rounded-xl ${t.badge} text-lg`}>
@@ -1115,11 +1107,7 @@ export default function Home() {
         <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileMenuOpen(false)}>
           <div className={`${t.sidebar} w-64 h-full p-5 flex flex-col`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-9 h-9 rounded-xl bg-green-500 flex items-center justify-center text-lg shrink-0">🔧</div>
-              <div>
-                <h1 className="text-lg font-bold text-white leading-none">MegaByte</h1>
-                <p className="text-xs text-zinc-500">Sistema técnico</p>
-              </div>
+              <img src="/MegaTallerPro-horizontal.png" alt="MegaTallerPro" className="h-9 w-auto object-contain" />
             </div>
             <nav className="flex flex-col gap-1 flex-1">
               {navItems.map((item) => (
