@@ -1109,7 +1109,6 @@ export default function Home() {
             <div className="flex items-center justify-center mb-8">
               <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="w-48 h-auto object-contain" style={{filter:"brightness(0) saturate(100%) invert(59%) sepia(97%) saturate(401%) hue-rotate(93deg) brightness(101%) contrast(96%)"}} />
             </div>
-            </div>
             <nav className="flex flex-col gap-1 flex-1">
               {navItems.map((item) => (
                 <button key={item.id} onClick={() => { setSection(item.id); setMobileMenuOpen(false); }}
