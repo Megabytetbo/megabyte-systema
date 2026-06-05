@@ -1065,7 +1065,7 @@ export default function Home() {
       {/* Sidebar desktop */}
       <aside className={`hidden md:flex w-64 ${t.sidebar} border-r flex-col p-5 shrink-0 fixed h-full z-40`}>
         <div className="flex items-center justify-center mb-8">
-          <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="h-14 w-auto object-contain" style={{filter:"invert(1) sepia(1) saturate(5) hue-rotate(90deg)"}} />
+          <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="w-48 h-auto object-contain" style={{filter:"brightness(0) saturate(100%) invert(59%) sepia(97%) saturate(401%) hue-rotate(93deg) brightness(101%) contrast(96%)"}} />
         </div>
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => (
@@ -1107,7 +1107,8 @@ export default function Home() {
         <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileMenuOpen(false)}>
           <div className={`${t.sidebar} w-64 h-full p-5 flex flex-col`} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-center mb-8">
-              <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="h-14 w-auto object-contain" style={{filter:"invert(1) sepia(1) saturate(5) hue-rotate(90deg)"}} />
+              <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="w-48 h-auto object-contain" style={{filter:"brightness(0) saturate(100%) invert(59%) sepia(97%) saturate(401%) hue-rotate(93deg) brightness(101%) contrast(96%)"}} />
+            </div>
             </div>
             <nav className="flex flex-col gap-1 flex-1">
               {navItems.map((item) => (
