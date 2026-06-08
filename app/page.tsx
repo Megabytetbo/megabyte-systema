@@ -1220,7 +1220,7 @@ export default function Home() {
                 <p className={`${t.subtext} text-sm mt-1`}>Directorio de clientes</p>
               </div>
             </div>
-            <div className={`border ${t.divider} rounded-2xl overflow-hidden`}>
+            <div className={`rounded-2xl overflow-hidden`}>
               <div className={`p-4 border-b ${t.divider} ${t.card}`}>
                 <input type="text" placeholder="🔍  Buscar por nombre o teléfono..."
                   value={searchClientes} onChange={(e) => setSearchClientes(e.target.value)}
@@ -1672,7 +1672,7 @@ export default function Home() {
               </button>
             </div>
 
-            <div className={`border ${t.divider} rounded-2xl overflow-hidden`}>
+            <div className={`rounded-2xl overflow-hidden`}>
               <div className={`p-4 border-b ${t.divider} ${t.card}`}>
                 <input type="text" placeholder="🔍  Buscar por cliente, equipo o número de orden..."
                   value={search} onChange={(e) => setSearch(e.target.value)}
