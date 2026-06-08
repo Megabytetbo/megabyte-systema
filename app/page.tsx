@@ -1698,7 +1698,7 @@ export default function Home() {
                           <td className={`p-4 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.entrega || 0}</td>
                           <td className={`p-4 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.saldo || 0}</td>
                           <td className={`p-4 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{repair.fecha}</td>
-                          <td className="p-4">
+                          <td className={`p-4 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                             <select value={repair.estado}
                               onChange={async (e) => {
                                 const nuevoEstado = e.target.value;
