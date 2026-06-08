@@ -734,11 +734,16 @@ export default function Home() {
     'Entregado': 'bg-green-500/20 text-green-400 border border-green-500/30',
   };
 
-  const estadoSelectColor: any = {
-    'Pendiente': 'bg-yellow-500 text-black',
-    'En reparación': 'bg-blue-500 text-white',
-    'Reparado': 'bg-purple-500 text-white',
-    'Entregado': 'bg-green-600 text-white',
+  const estadoSelectColor: any = darkMode ? {
+    'Pendiente': 'bg-yellow-500/20 text-yellow-400',
+    'En reparación': 'bg-blue-500/20 text-blue-400',
+    'Reparado': 'bg-purple-500/20 text-purple-400',
+    'Entregado': 'bg-green-500/20 text-green-400',
+  } : {
+    'Pendiente': 'bg-amber-100 text-amber-800',
+    'En reparación': 'bg-blue-100 text-blue-800',
+    'Reparado': 'bg-purple-100 text-purple-800',
+    'Entregado': 'bg-green-100 text-green-800',
   };
 
   // ── Login screen ──────────────────────────────────────────────────────────
@@ -1727,7 +1732,7 @@ export default function Home() {
                                   window.open(`https://wa.me/598${numero}?text=${mensaje}`, '_blank');
                                 }
                               }}
-                              className={`px-2 py-1.5 rounded-lg text-xs font-bold border-0 outline-none cursor-pointer ${estadoSelectColor[repair.estado] || 'bg-zinc-700 text-white'}`}>
+                              className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer min-w-[110px] ${estadoSelectColor[repair.estado] || (darkMode ? 'bg-zinc-700 text-white' : 'bg-slate-100 text-slate-700')}`}>
                               <option>Pendiente</option>
                               <option>En reparación</option>
                               <option>Reparado</option>
