@@ -1225,7 +1225,7 @@ export default function Home() {
                 <thead>
                   <tr className={`border-b ${t.divider}`}>
                     {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
-                      <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
+                      <th key={h} className={`text-left px-3 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1245,18 +1245,18 @@ export default function Home() {
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`border-t ${t.row} transition-colors`}>
-                      <td className={`p-4 font-medium ${t.text}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
-                      <td className={`p-4 ${t.muted}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
-                      <td className="p-4">
+                      <td className={`px-3 py-2.5 font-medium ${t.text}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 ${t.muted}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className="px-3 py-2.5">
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
                           {cliente.cantidad}
                         </span>
                       </td>
-                      <td className="p-4 text-blue-400 font-bold">$ {cliente.total}</td>
-                      <td className={`p-4 font-bold text-sm ${getNivelCliente(cliente.cantidad).color}`}>
+                      <td className="px-3 py-2.5 text-blue-400 font-bold">$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 font-bold text-sm ${getNivelCliente(cliente.cantidad).color}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
-                      <td className="p-4">
+                      <td className="px-3 py-2.5">
                         <button onClick={() => {
                           const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
                           let texto = `Historial de ${cliente.cliente}\n\n`;
@@ -1268,14 +1268,14 @@ export default function Home() {
                           Ver historial
                         </button>
                       </td>
-                      <td className="p-4">
+                      <td className="px-3 py-2.5">
                         <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
                           target="_blank"
                           className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
                           WhatsApp
                         </a>
                       </td>
-                      <td className="p-4">
+                      <td className="px-3 py-2.5">
                         <div className="flex gap-2">
                           <button onClick={() => {
                             setEditingCliente(cliente);
