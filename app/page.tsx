@@ -400,13 +400,13 @@ export default function Home() {
 
   // Clases dinámicas según tema
   const t = darkMode ? {
-    bg: 'bg-[#0a0a0f]', sidebar: 'bg-[#111118] border-white/[0.06]', card: 'bg-[#111118] border-white/[0.06]',
-    input: 'bg-[#1a1a24] border-white/[0.08] text-white placeholder-zinc-600 focus:border-green-500',
+    bg: 'bg-zinc-950', sidebar: 'bg-zinc-900 border-zinc-800', card: 'bg-zinc-900 border-zinc-800',
+    input: 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-600 focus:border-green-500',
     text: 'text-white', subtext: 'text-zinc-500', muted: 'text-zinc-400',
-    row: 'border-white/[0.05] hover:bg-white/[0.03]', navHover: 'hover:text-white hover:bg-white/[0.06]',
-    navActive: 'bg-green-500/[0.15] text-green-400', divider: 'border-white/[0.06]',
-    modal: 'bg-[#111118] border-white/[0.08]', menuBg: 'bg-[#1a1a24] border-white/[0.08]',
-    menuItem: 'hover:bg-white/[0.06]', badge: 'bg-white/[0.06]', select: 'bg-[#1a1a24] border-white/[0.08] text-white',
+    row: 'border-zinc-800 hover:bg-zinc-800/40', navHover: 'hover:text-white hover:bg-zinc-800',
+    navActive: 'bg-green-500/10 text-green-400', divider: 'border-zinc-800',
+    modal: 'bg-zinc-900 border-zinc-800', menuBg: 'bg-zinc-800 border-zinc-700',
+    menuItem: 'hover:bg-zinc-700', badge: 'bg-zinc-800', select: 'bg-zinc-800 border-zinc-700 text-white',
     tableHead: 'text-zinc-500',
   } : {
     bg: 'bg-gray-50', sidebar: 'bg-white border-gray-200', card: 'bg-white border-gray-200',
@@ -1064,7 +1064,7 @@ export default function Home() {
 
       {/* Sidebar desktop */}
       <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-5 px-3 shrink-0 fixed h-full z-40`}>
-        <div className="flex items-center justify-center px-2 mb-6 pb-5 border-b border-white/[0.06]">
+        <div className="flex items-center justify-center px-2 mb-6 pb-5 border-b border-zinc-800">
           <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="w-44 h-auto object-contain" style={{filter:"brightness(0) saturate(100%) invert(59%) sepia(97%) saturate(401%) hue-rotate(93deg) brightness(101%) contrast(96%)"}} />
         </div>
         <nav className="flex flex-col gap-0.5 flex-1">
@@ -1650,7 +1650,7 @@ export default function Home() {
 
         {/* ── Reparaciones ── */}
         {section === 'reparaciones' && (
-          <>
+          <div className="min-w-0">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className={`text-2xl font-bold ${t.text}`}>Reparaciones</h1>
@@ -1690,14 +1690,14 @@ export default function Home() {
                       )
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`${t.card} transition-colors`}>
-                          <td className={`p-4 font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.orden}</td>
-                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
-                          <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.equipo}</td>
-                          <td className={`p-4 ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.falla}</td>
-                          <td className={`p-4 text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>$ {repair.costo || 0}</td>
-                          <td className={`p-4 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>$ {repair.entrega || 0}</td>
-                          <td className={`p-4 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>$ {repair.saldo || 0}</td>
-                          <td className={`p-4 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.fecha}</td>
+                          <td className={`p-4 font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{repair.orden}</td>
+                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{repair.equipo}</td>
+                          <td className={`p-4 ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{repair.falla}</td>
+                          <td className={`p-4 text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.costo || 0}</td>
+                          <td className={`p-4 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.entrega || 0}</td>
+                          <td className={`p-4 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.saldo || 0}</td>
+                          <td className={`p-4 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{repair.fecha}</td>
                           <td className="p-4">
                             <select value={repair.estado}
                               onChange={async (e) => {
@@ -1732,7 +1732,7 @@ export default function Home() {
                               <option>Entregado</option>
                             </select>
                           </td>
-                          <td className={`p-4 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>
+                          <td className={`p-4 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                             {openMenu === repair.id && (
                               <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
                             )}
@@ -1878,7 +1878,7 @@ export default function Home() {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
 
