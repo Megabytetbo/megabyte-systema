@@ -1215,17 +1215,18 @@ export default function Home() {
                 <p className={`${t.subtext} text-sm mt-1`}>Directorio de clientes</p>
               </div>
             </div>
-            <div className={`${t.card} border rounded-2xl overflow-hidden`}>
-              <div className={`p-4 border-b ${t.divider}`}>
+            <div className={`border ${t.divider} rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} ${t.card}`}>
                 <input type="text" placeholder="🔍  Buscar por nombre o teléfono..."
                   value={searchClientes} onChange={(e) => setSearchClientes(e.target.value)}
                   className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
               </div>
-              <table className="w-full">
+              <div className={`overflow-x-auto ${t.bg}`}>
+              <table className="w-full border-separate border-spacing-y-1.5">
                 <thead>
-                  <tr className={`border-b ${t.divider}`}>
+                  <tr>
                     {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
-                      <th key={h} className={`text-left px-3 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
+                      <th key={h} className={`text-left px-3 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1244,19 +1245,19 @@ export default function Home() {
                     cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
-                    <tr key={index} className={`border-t ${t.row} transition-colors`}>
-                      <td className={`px-3 py-2.5 font-medium ${t.text}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
-                      <td className={`px-3 py-2.5 ${t.muted}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
-                      <td className="px-3 py-2.5">
+                    <tr key={index} className={`${t.card} transition-colors`}>
+                      <td className={`px-3 py-2.5 font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
                           {cliente.cantidad}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-blue-400 font-bold">$ {cliente.total}</td>
-                      <td className={`px-3 py-2.5 font-bold text-sm ${getNivelCliente(cliente.cantidad).color}`}>
+                      <td className={`px-3 py-2.5 text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 font-bold text-sm ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <button onClick={() => {
                           const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
                           let texto = `Historial de ${cliente.cliente}\n\n`;
@@ -1268,14 +1269,14 @@ export default function Home() {
                           Ver historial
                         </button>
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
                           target="_blank"
                           className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
                           WhatsApp
                         </a>
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className={`px-3 py-2.5 rounded-r-xl border-r border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <div className="flex gap-2">
                           <button onClick={() => {
                             setEditingCliente(cliente);
@@ -1297,6 +1298,7 @@ export default function Home() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {editingCliente && (
