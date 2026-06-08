@@ -1215,17 +1215,18 @@ export default function Home() {
                 <p className={`${t.subtext} text-sm mt-1`}>Directorio de clientes</p>
               </div>
             </div>
-            <div className={`${t.card} border rounded-2xl overflow-hidden`}>
-              <div className={`p-4 border-b ${t.divider}`}>
+            <div className={`border ${t.divider} rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} ${t.card}`}>
                 <input type="text" placeholder="🔍  Buscar por nombre o teléfono..."
                   value={searchClientes} onChange={(e) => setSearchClientes(e.target.value)}
                   className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
               </div>
+              <div className={`overflow-x-auto ${t.bg}`}>
               <table className="w-full border-separate border-spacing-y-0.5">
                 <thead>
-                  <tr className={`border-b ${t.divider}`}>
+                  <tr>
                     {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
-                      <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
+                      <th key={h} className={`text-left px-3 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1297,6 +1298,7 @@ export default function Home() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {editingCliente && (
