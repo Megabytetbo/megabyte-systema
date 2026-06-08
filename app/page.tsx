@@ -1725,7 +1725,7 @@ export default function Home() {
                                   window.open(`https://wa.me/598${numero}?text=${mensaje}`, '_blank');
                                 }
                               }}
-                              className={`px-2 py-1.5 rounded-lg text-xs font-bold border-0 outline-none cursor-pointer ${estadoSelectColor[repair.estado] || 'bg-zinc-700 text-white'}`}>
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border-0 outline-none cursor-pointer whitespace-nowrap min-w-[110px] ${estadoSelectColor[repair.estado] || 'bg-zinc-700 text-white'}`}>
                               <option>Pendiente</option>
                               <option>En reparación</option>
                               <option>Reparado</option>
