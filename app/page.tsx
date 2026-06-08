@@ -1673,11 +1673,11 @@ export default function Home() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full border-separate border-spacing-y-1.5">
                   <thead>
-                    <tr className={`border-b ${t.divider}`}>
+                    <tr>
                       {['Orden', 'Cliente', 'Equipo', 'Falla', 'Costo', 'Entrega', 'Saldo', 'Fecha', 'Estado', ''].map(h => (
-                        <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
+                        <th key={h} className={`text-left px-4 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1689,15 +1689,15 @@ export default function Home() {
                         String(repair.orden).replace('#', '').includes(search)
                       )
                       .map((repair: any, index: number) => (
-                        <tr key={index} className={`border-t ${t.row} transition-colors`}>
-                          <td className="p-4 font-bold text-green-400 whitespace-nowrap">{repair.orden}</td>
-                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
-                          <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap`}>{repair.equipo}</td>
-                          <td className={`p-4 ${t.muted} max-w-[160px] truncate`}>{repair.falla}</td>
-                          <td className="p-4 text-blue-400 font-semibold whitespace-nowrap">$ {repair.costo || 0}</td>
-                          <td className="p-4 text-green-400 font-semibold whitespace-nowrap">$ {repair.entrega || 0}</td>
-                          <td className="p-4 text-yellow-400 font-semibold whitespace-nowrap">$ {repair.saldo || 0}</td>
-                          <td className={`p-4 ${t.subtext} text-sm whitespace-nowrap`}>{repair.fecha}</td>
+                        <tr key={index} className={`${t.card} transition-colors`}>
+                          <td className={`p-4 font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.orden}</td>
+                          <td className={`p-4 font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`p-4 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.equipo}</td>
+                          <td className={`p-4 ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.falla}</td>
+                          <td className={`p-4 text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>$ {repair.costo || 0}</td>
+                          <td className={`p-4 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>$ {repair.entrega || 0}</td>
+                          <td className={`p-4 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>$ {repair.saldo || 0}</td>
+                          <td className={`p-4 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>{repair.fecha}</td>
                           <td className="p-4">
                             <select value={repair.estado}
                               onChange={async (e) => {
@@ -1732,7 +1732,7 @@ export default function Home() {
                               <option>Entregado</option>
                             </select>
                           </td>
-                          <td className="p-4 relative">
+                          <td className={`p-4 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-white/[0.06]' : 'border-gray-200'}`}>
                             {openMenu === repair.id && (
                               <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
                             )}
