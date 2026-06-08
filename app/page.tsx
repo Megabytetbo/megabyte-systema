@@ -400,23 +400,23 @@ export default function Home() {
 
   // Clases dinámicas según tema
   const t = darkMode ? {
-    bg: 'bg-zinc-950', sidebar: 'bg-zinc-900 border-zinc-800', card: 'bg-zinc-900 border-zinc-800',
-    input: 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-green-500',
+    bg: 'bg-[#0a0a0f]', sidebar: 'bg-[#111118] border-white/[0.06]', card: 'bg-[#111118] border-white/[0.06]',
+    input: 'bg-[#1a1a24] border-white/[0.08] text-white placeholder-zinc-600 focus:border-green-500',
     text: 'text-white', subtext: 'text-zinc-500', muted: 'text-zinc-400',
-    row: 'border-zinc-800 hover:bg-zinc-800/40', navHover: 'hover:text-white hover:bg-zinc-800',
-    navActive: 'bg-green-500 text-black', divider: 'border-zinc-800',
-    modal: 'bg-zinc-900 border-zinc-800', menuBg: 'bg-zinc-800 border-zinc-700',
-    menuItem: 'hover:bg-zinc-700', badge: 'bg-zinc-800', select: 'bg-zinc-800 border-zinc-700 text-white',
+    row: 'border-white/[0.05] hover:bg-white/[0.03]', navHover: 'hover:text-white hover:bg-white/[0.06]',
+    navActive: 'bg-green-500/[0.15] text-green-400', divider: 'border-white/[0.06]',
+    modal: 'bg-[#111118] border-white/[0.08]', menuBg: 'bg-[#1a1a24] border-white/[0.08]',
+    menuItem: 'hover:bg-white/[0.06]', badge: 'bg-white/[0.06]', select: 'bg-[#1a1a24] border-white/[0.08] text-white',
     tableHead: 'text-zinc-500',
   } : {
-    bg: 'bg-gray-100', sidebar: 'bg-white border-gray-200', card: 'bg-white border-gray-200',
-    input: 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-green-500',
+    bg: 'bg-gray-50', sidebar: 'bg-white border-gray-200', card: 'bg-white border-gray-200',
+    input: 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-green-500',
     text: 'text-gray-900', subtext: 'text-gray-500', muted: 'text-gray-500',
-    row: 'border-gray-200 hover:bg-gray-50', navHover: 'hover:text-gray-900 hover:bg-gray-100',
-    navActive: 'bg-green-500 text-black', divider: 'border-gray-200',
+    row: 'border-gray-100 hover:bg-gray-50', navHover: 'hover:text-gray-900 hover:bg-gray-100',
+    navActive: 'bg-green-500/10 text-green-600', divider: 'border-gray-100',
     modal: 'bg-white border-gray-200', menuBg: 'bg-white border-gray-200',
-    menuItem: 'hover:bg-gray-100', badge: 'bg-gray-100', select: 'bg-gray-50 border-gray-300 text-gray-900',
-    tableHead: 'text-gray-500',
+    menuItem: 'hover:bg-gray-100', badge: 'bg-gray-100', select: 'bg-gray-50 border-gray-200 text-gray-900',
+    tableHead: 'text-gray-400',
   };
 
   // ── TICKET HTML para impresora térmica 80mm ──────────────────────────────
@@ -1063,25 +1063,25 @@ export default function Home() {
       )}
 
       {/* Sidebar desktop */}
-      <aside className={`hidden md:flex w-64 ${t.sidebar} border-r flex-col p-5 shrink-0 fixed h-full z-40`}>
-        <div className="flex items-center justify-center mb-8">
-          <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="w-48 h-auto object-contain" style={{filter:"brightness(0) saturate(100%) invert(59%) sepia(97%) saturate(401%) hue-rotate(93deg) brightness(101%) contrast(96%)"}} />
+      <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-5 px-3 shrink-0 fixed h-full z-40`}>
+        <div className="flex items-center justify-center px-2 mb-6 pb-5 border-b border-white/[0.06]">
+          <img src="/MegaTallerPro_transparente.png" alt="MegaTallerPro" className="w-44 h-auto object-contain" style={{filter:"brightness(0) saturate(100%) invert(59%) sepia(97%) saturate(401%) hue-rotate(93deg) brightness(101%) contrast(96%)"}} />
         </div>
-        <nav className="flex flex-col gap-1 flex-1">
+        <nav className="flex flex-col gap-0.5 flex-1">
           {navItems.map((item) => (
             <button key={item.id} onClick={() => setSection(item.id)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
                 section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
               }`}>
-              <span>{item.icon}</span>
+              <span className="text-base">{item.icon}</span>
               {item.label}
             </button>
           ))}
         </nav>
         <div className={`border-t ${t.divider} pt-4 mt-4`}>
-          <div className="px-3 py-2 mb-2">
-            <p className={`text-xs ${t.subtext}`}>Conectado como</p>
-            <p className={`text-xs ${t.muted} font-medium truncate`}>{user.email}</p>
+          <div className="px-3 py-2 mb-1">
+            <p className={`text-xs ${t.subtext} mb-0.5`}>Conectado como</p>
+            <p className={`text-xs font-medium truncate ${t.muted}`}>{user.email}</p>
           </div>
           <button onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all">
@@ -1135,7 +1135,7 @@ export default function Home() {
       )}
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto p-4 md:p-8 md:ml-64 mt-14 md:mt-0">
+      <main className="flex-1 overflow-auto p-4 md:p-8 md:ml-60 mt-14 md:mt-0">
 
         {/* ── Dashboard ── */}
         {section === 'dashboard' && (
@@ -1145,38 +1145,32 @@ export default function Home() {
               <p className={`${t.subtext} text-sm mt-1`}>Resumen general del taller</p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
               {[
-                { label: 'Total reparaciones', value: repairs.length, color: 'text-green-400', icon: '🔧' },
-                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', icon: '⏳' },
-                { label: 'En reparación', value: repairs.filter(r => r.estado === 'En reparación').length, color: 'text-blue-400', icon: '⚙️' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', icon: '✅' },
+                { label: 'Total reparaciones', value: repairs.length, color: 'text-green-400', accent: 'bg-green-500/10' },
+                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', accent: 'bg-yellow-500/10' },
+                { label: 'En reparación', value: repairs.filter(r => r.estado === 'En reparación').length, color: 'text-blue-400', accent: 'bg-blue-500/10' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', accent: 'bg-green-500/10' },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className={`text-xs ${t.subtext} font-medium`}>{stat.label}</p>
-                    <span className="text-lg">{stat.icon}</span>
-                  </div>
-                  <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                  <p className={`text-3xl font-semibold ${stat.color}`}>{stat.value}</p>
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               {[
-                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400', icon: '💵' },
-                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400', icon: '✅' },
-                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400', icon: '⏳' },
-                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400', icon: '📈' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', icon: '📱', small: true },
-                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', icon: '⭐', small: true },
+                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
+                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400' },
+                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
+                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
+                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', small: true },
+                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className={`text-xs ${t.subtext} font-medium`}>{stat.label}</p>
-                    <span className="text-lg">{stat.icon}</span>
-                  </div>
-                  <p className={`font-bold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
+                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                  <p className={`font-semibold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -1191,24 +1185,21 @@ export default function Home() {
               <h1 className={`text-2xl font-bold ${t.text}`}>Finanzas</h1>
               <p className={`${t.subtext} text-sm mt-1`}>Estado financiero del taller</p>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {[
-                { label: 'Reparaciones totales', value: repairs.length, color: 'text-green-400', icon: '🔧' },
-                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', icon: '⏳' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', icon: '✅' },
-                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400', icon: '💵' },
-                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400', icon: '💳' },
-                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400', icon: '⚠️' },
-                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400', icon: '📈' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', icon: '📱', small: true },
-                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', icon: '⭐', small: true },
+                { label: 'Reparaciones totales', value: repairs.length, color: 'text-green-400' },
+                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500' },
+                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
+                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400' },
+                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
+                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
+                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', small: true },
+                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className={`text-xs ${t.subtext} font-medium`}>{stat.label}</p>
-                    <span className="text-lg">{stat.icon}</span>
-                  </div>
-                  <p className={`font-bold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
+                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                  <p className={`font-semibold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
                 </div>
               ))}
             </div>
@@ -1368,17 +1359,14 @@ export default function Home() {
                 const ingresosPro = suscripciones.filter((s: any) => s.estado === 'activo' && s.plan === 'pro').length * 22;
                 const ingresosMes = ingresosBasic + ingresosPro;
                 return [
-                  { label: 'Activos', value: activos, color: 'text-green-400', icon: '✅' },
-                  { label: 'En trial', value: trials, color: 'text-amber-400', icon: '⏳' },
-                  { label: 'Inactivos', value: inactivos, color: 'text-red-400', icon: '⛔' },
-                  { label: 'Ingresos est. mes', value: `$ ${ingresosMes}`, color: 'text-blue-400', icon: '💰' },
+                  { label: 'Activos', value: activos, color: 'text-green-400' },
+                  { label: 'En trial', value: trials, color: 'text-amber-400' },
+                  { label: 'Inactivos', value: inactivos, color: 'text-red-400' },
+                  { label: 'Ingresos est. mes', value: `$ ${ingresosMes}`, color: 'text-blue-400' },
                 ].map(stat => (
                   <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className={`text-xs ${t.subtext} font-medium`}>{stat.label}</p>
-                      <span className="text-lg">{stat.icon}</span>
-                    </div>
-                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                    <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
                   </div>
                 ));
               })()}
