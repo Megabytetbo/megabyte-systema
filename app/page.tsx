@@ -813,7 +813,7 @@ export default function Home() {
         {/* Header */}
         <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-12 w-auto object-contain" />
+            <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-16 w-auto object-contain" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
