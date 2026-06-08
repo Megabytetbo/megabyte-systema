@@ -1245,19 +1245,19 @@ export default function Home() {
                     cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
-                    <tr key={index} className={`border-t ${t.row} transition-colors`}>
-                      <td className={`p-4 font-medium ${t.text}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
-                      <td className={`p-4 ${t.muted}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
-                      <td className="p-4">
+                    <tr key={index} className={`${t.card} transition-colors`}>
+                      <td className={`px-3 py-2.5 font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
                           {cliente.cantidad}
                         </span>
                       </td>
-                      <td className="p-4 text-blue-400 font-bold">$ {cliente.total}</td>
-                      <td className={`p-4 font-bold text-sm ${getNivelCliente(cliente.cantidad).color}`}>
+                      <td className={`px-3 py-2.5 text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 font-bold text-sm ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
-                      <td className="p-4">
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <button onClick={() => {
                           const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
                           let texto = `Historial de ${cliente.cliente}\n\n`;
@@ -1269,14 +1269,14 @@ export default function Home() {
                           Ver historial
                         </button>
                       </td>
-                      <td className="p-4">
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
                           target="_blank"
                           className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
                           WhatsApp
                         </a>
                       </td>
-                      <td className="p-4">
+                      <td className={`px-3 py-2.5 rounded-r-xl border-r border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
                         <div className="flex gap-2">
                           <button onClick={() => {
                             setEditingCliente(cliente);
