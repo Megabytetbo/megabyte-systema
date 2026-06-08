@@ -1665,14 +1665,14 @@ export default function Home() {
               </button>
             </div>
 
-            <div className={`${t.card} border rounded-2xl overflow-hidden`}>
-              <div className={`p-4 border-b ${t.divider}`}>
+            <div className={`border ${t.divider} rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} ${t.card}`}>
                 <input type="text" placeholder="🔍  Buscar por cliente, equipo o número de orden..."
                   value={search} onChange={(e) => setSearch(e.target.value)}
                   className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
               </div>
 
-              <div className="overflow-x-auto">
+              <div className={`overflow-x-auto ${t.bg}`}>
                 <table className="w-full border-separate border-spacing-y-1.5">
                   <thead>
                     <tr>
@@ -1698,7 +1698,7 @@ export default function Home() {
                           <td className={`p-4 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.entrega || 0}</td>
                           <td className={`p-4 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>$ {repair.saldo || 0}</td>
                           <td className={`p-4 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>{repair.fecha}</td>
-                          <td className={`p-4 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
+                          <td className="p-4">
                             <select value={repair.estado}
                               onChange={async (e) => {
                                 const nuevoEstado = e.target.value;
