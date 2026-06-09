@@ -1078,7 +1078,9 @@ export default function Home() {
   const diasTrialRestantes = (() => {
     if (!suscripcionActual || suscripcionActual.estado !== 'trial' || !suscripcionActual.fecha_vencimiento) return null;
     const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    const venc = new Date(suscripcionActual.fecha_vencimiento);
+    // Parsear fecha como local (no UTC) para evitar desfase de zona horaria
+    const [y, m, d] = suscripcionActual.fecha_vencimiento.split('-').map(Number);
+    const venc = new Date(y, m - 1, d);
     return Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
   })();
 
