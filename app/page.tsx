@@ -835,7 +835,7 @@ export default function Home() {
         {/* Hero */}
         <div className="text-center px-6 py-16">
           <div className="flex justify-center mb-8">
-            <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-28 w-auto object-contain" />
+            <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-44 w-auto object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-4 leading-tight">El sistema de gestión<br/>para talleres técnicos</h1>
           <p className="text-zinc-400 text-lg mb-8 max-w-md mx-auto">Simple, rápido y desde cualquier dispositivo. Controlá tus reparaciones, clientes y finanzas en un solo lugar.</p>
