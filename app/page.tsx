@@ -954,7 +954,7 @@ export default function Home() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
               <div>
                 <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
-                <input type="email" placeholder="admin@megabyte.com" value={loginForm.email}
+                <input type="email" placeholder="ejemplo@correo.com" value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                   className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
