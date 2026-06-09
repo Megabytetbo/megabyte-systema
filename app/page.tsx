@@ -1251,15 +1251,15 @@ export default function Home() {
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
-                      <td className={`px-3 py-2 font-medium ${t.text} text-xs capitalize rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
-                      <td className={`px-3 py-2 ${t.muted} text-xs border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className={`px-3 py-2.5 font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                         <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
                           {cliente.cantidad}
                         </span>
                       </td>
-                      <td className={`px-3 py-2 text-blue-400 text-xs font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {cliente.total}</td>
-                      <td className={`px-3 py-2 font-bold text-xs ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                      <td className={`px-3 py-2.5 text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 font-bold text-sm ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
@@ -1697,14 +1697,14 @@ export default function Home() {
                       )
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
-                          <td className={`px-3 py-2 font-bold text-green-400 text-xs whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
-                          <td className={`px-3 py-2 font-medium ${t.text} text-xs whitespace-nowrap capitalize border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
-                          <td className={`px-3 py-2 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.equipo}</td>
-                          <td className={`px-3 py-2 ${t.muted} text-xs max-w-[160px] truncate border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.falla}</td>
-                          <td className={`px-3 py-2 text-blue-400 text-xs font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
-                          <td className={`px-3 py-2 text-green-400 text-xs font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
-                          <td className={`px-3 py-2 text-yellow-400 text-xs font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
-                          <td className={`px-3 py-2 ${t.subtext} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.fecha}</td>
+                          <td className={`px-3 py-2.5 font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
+                          <td className={`px-3 py-2.5 font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`px-3 py-2.5 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.equipo}</td>
+                          <td className={`px-3 py-2.5 ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.falla}</td>
+                          <td className={`px-3 py-2.5 text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
+                          <td className={`px-3 py-2.5 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
+                          <td className={`px-3 py-2.5 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
+                          <td className={`px-3 py-2.5 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.fecha}</td>
                           <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                             <select value={repair.estado}
                               onChange={async (e) => {
@@ -1794,7 +1794,7 @@ export default function Home() {
                       {/* Fila 1: Cliente - Teléfono */}
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Cliente</label>
-                        <input placeholder="Nombre del cliente" autoCapitalize="words" value={form.cliente}
+                        <input placeholder="Nombre del cliente" value={form.cliente}
                           onChange={(e) => setForm({ ...form, cliente: e.target.value })}
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                       </div>
