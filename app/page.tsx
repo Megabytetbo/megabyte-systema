@@ -141,7 +141,7 @@ export default function Home() {
     // Verificar suscripcion del usuario
     const verificarAcceso = async () => {
       const { data } = await supabase.from('suscripciones')
-        .select('*').eq('email', user.email).single();
+        .select('*').eq('email', user.email).order('created_at', { ascending: false }).limit(1).maybeSingle();
       setSuscripcionActual(data || null);
       setAccesoVerificado(true);
     };
@@ -161,14 +161,19 @@ export default function Home() {
     });
     if (error) { alert('Error: ' + error.message); setRegistrando(false); return; }
     if (data.user) {
-      await supabase.from('suscripciones').insert({
-        user_id: data.user.id,
-        email: registroForm.email,
-        nombre_taller: registroForm.nombre,
-        plan: 'basic',
-        estado: 'trial',
-        // fecha_vencimiento se calcula en Supabase: CURRENT_DATE + 6 days
-      });
+      // Verificar si ya existe antes de insertar
+      const { data: existente } = await supabase.from('suscripciones')
+        .select('id').eq('email', registroForm.email).maybeSingle();
+      if (!existente) {
+        await supabase.from('suscripciones').insert({
+          user_id: data.user.id,
+          email: registroForm.email,
+          nombre_taller: registroForm.nombre,
+          plan: 'basic',
+          estado: 'trial',
+          // fecha_vencimiento se calcula en Supabase: CURRENT_DATE + 5 days
+        });
+      }
       try {
         await supabase.functions.invoke('Bienvenida', {
           body: { email: registroForm.email, nombre_taller: registroForm.nombre },
