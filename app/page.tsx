@@ -778,9 +778,21 @@ export default function Home() {
             <p className="text-zinc-400 text-sm mb-2">
               {inactivo ? 'Tu cuenta está inactiva.' : 'Tu período de prueba ha vencido.'}
             </p>
-            <p className="text-zinc-500 text-xs mb-8">Contactá al administrador para activar tu suscripción.</p>
+            <p className="text-zinc-500 text-xs mb-6">Elegí un plan para continuar usando MegaTallerPro.</p>
+            <div className="flex flex-col gap-3 mb-4">
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/0ce122ab-9082-4a78-b4d9-e5b86b0368ef"
+                target="_blank"
+                className="w-full border border-zinc-700 hover:border-green-500 text-white font-bold py-3 rounded-xl transition-colors text-sm text-center">
+                Plan Basic — $15/mes
+              </a>
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/185bbb96-124d-4670-8a45-71db9a52b688"
+                target="_blank"
+                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm text-center">
+                Plan Pro — $22/mes ⭐
+              </a>
+            </div>
             <button onClick={handleLogout}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-colors text-sm">
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-xl transition-colors text-xs">
               Cerrar sesión
             </button>
           </div>
@@ -894,10 +906,11 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
-                className="w-full border border-zinc-700 hover:border-zinc-500 text-white py-2.5 rounded-xl text-sm transition-colors">
-                Empezar gratis
-              </button>
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/0ce122ab-9082-4a78-b4d9-e5b86b0368ef"
+                target="_blank"
+                className="w-full border border-zinc-700 hover:border-green-500 text-white py-2.5 rounded-xl text-sm transition-colors text-center block">
+                Suscribirse — $15/mes
+              </a>
             </div>
 
             <div className="bg-zinc-900 border-2 border-green-500 rounded-2xl p-6 relative">
@@ -912,10 +925,11 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm transition-colors">
-                Empezar gratis
-              </button>
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/185bbb96-124d-4670-8a45-71db9a52b688"
+                target="_blank"
+                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm transition-colors text-center block">
+                Suscribirse — $22/mes
+              </a>
             </div>
           </div>
 
