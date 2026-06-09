@@ -1697,13 +1697,13 @@ export default function Home() {
                       )
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
-                          <td className={`px-3 py-2.5 font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
-                          <td className={`px-3 py-2.5 font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
-                          <td className={`px-3 py-2.5 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.equipo}</td>
-                          <td className={`px-3 py-2.5 ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.falla}</td>
-                          <td className={`px-3 py-2.5 text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
-                          <td className={`px-3 py-2.5 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
-                          <td className={`px-3 py-2.5 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
+                          <td className={`px-3 py-2.5 text-xs font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`px-3 py-2.5 text-xs ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.equipo}</td>
+                          <td className={`px-3 py-2.5 text-xs ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.falla}</td>
+                          <td className={`px-3 py-2.5 text-xs text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
                           <td className={`px-3 py-2.5 ${t.subtext} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.fecha}</td>
                           <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                             <select value={repair.estado}
