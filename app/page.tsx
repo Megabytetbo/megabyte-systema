@@ -852,7 +852,7 @@ export default function Home() {
           <div className="flex gap-3 justify-center flex-wrap">
             <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
               className="bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm">
-              Probá gratis 10 días
+              Probá gratis 5 días
             </button>
             <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
               className="border border-zinc-700 hover:border-zinc-500 text-zinc-300 px-6 py-3 rounded-xl transition-colors text-sm">
@@ -921,7 +921,7 @@ export default function Home() {
 
           {/* Footer */}
           <div className="text-center text-sm text-zinc-500">
-            <p>Sin compromisos · Cancelá cuando quieras · 10 días gratis</p>
+            <p>Sin compromisos · Cancelá cuando quieras · 5 días gratis</p>
           </div>
         </div>
       </div>
@@ -972,12 +972,12 @@ export default function Home() {
               </button>
               <button onClick={() => setShowRegistro(true)}
                 className="w-full text-zinc-400 hover:text-white text-sm text-center transition-colors mt-1">
-                ¿No tenés cuenta? <span className="text-green-400 font-medium">Probá 10 días gratis</span>
+                ¿No tenés cuenta? <span className="text-green-400 font-medium">Probá 5 días gratis</span>
               </button>
             </div>
           ) : (
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
-              <h2 className="text-white font-bold text-lg">Crear cuenta — 10 días gratis</h2>
+              <h2 className="text-white font-bold text-lg">Crear cuenta — 5 días gratis</h2>
               <div>
                 <label className="text-xs text-zinc-400 font-medium mb-1 block">Nombre del taller</label>
                 <input type="text" placeholder="Ej: TechRepair Montevideo" value={registroForm.nombre}
