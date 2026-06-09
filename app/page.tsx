@@ -1251,14 +1251,14 @@ export default function Home() {
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
                     <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
-                      <td className={`px-3 py-2.5 font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
-                      <td className={`px-3 py-2.5 ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className={`px-3 py-2.5 text-xs font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 text-xs ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
-                        <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-sm font-bold">
+                        <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-xs font-bold">
                           {cliente.cantidad}
                         </span>
                       </td>
-                      <td className={`px-3 py-2.5 text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 text-xs text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {cliente.total}</td>
                       <td className={`px-3 py-2.5 font-bold text-xs ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
@@ -1270,14 +1270,14 @@ export default function Home() {
                             texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
                           });
                           alert(texto);
-                        }} className={`${t.badge} hover:bg-zinc-600 px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted}`}>
+                        }} className={`${t.badge} hover:bg-zinc-600 px-3 py-1.5 rounded-lg text-xs transition-colors ${t.muted}`}>
                           Ver historial
                         </button>
                       </td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                         <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
                           target="_blank"
-                          className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-sm font-bold transition-colors">
+                          className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-xs font-bold transition-colors">
                           WhatsApp
                         </a>
                       </td>
@@ -1286,7 +1286,7 @@ export default function Home() {
                           <button onClick={() => {
                             setEditingCliente(cliente);
                             setEditClienteForm({ cliente: cliente.cliente, telefono: (cliente.telefono || '').replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ') });
-                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-sm transition-colors ${t.muted} whitespace-nowrap`}>
+                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-xs transition-colors ${t.muted} whitespace-nowrap`}>
                             ✏️ Editar
                           </button>
                           <button onClick={() => {
@@ -1294,7 +1294,7 @@ export default function Home() {
                             setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
                             setSection('reparaciones');
                             setShowModal(true);
-                          }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-sm font-bold transition-colors whitespace-nowrap">
+                          }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-xs font-bold transition-colors whitespace-nowrap">
                             + Orden
                           </button>
                         </div>
