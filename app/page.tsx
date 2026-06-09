@@ -1259,7 +1259,7 @@ export default function Home() {
                         </span>
                       </td>
                       <td className={`px-3 py-2.5 text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {cliente.total}</td>
-                      <td className={`px-3 py-2.5 font-bold text-sm ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                      <td className={`px-3 py-2.5 font-bold text-xs ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
@@ -1704,7 +1704,7 @@ export default function Home() {
                           <td className={`px-3 py-2.5 text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
                           <td className={`px-3 py-2.5 text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
                           <td className={`px-3 py-2.5 text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
-                          <td className={`px-3 py-2.5 ${t.subtext} text-sm whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.fecha}</td>
+                          <td className={`px-3 py-2.5 ${t.subtext} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.fecha}</td>
                           <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                             <select value={repair.estado}
                               onChange={async (e) => {
