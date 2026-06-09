@@ -161,17 +161,13 @@ export default function Home() {
     });
     if (error) { alert('Error: ' + error.message); setRegistrando(false); return; }
     if (data.user) {
-      const hoy = new Date();
-      const vencimiento = new Date(hoy);
-      vencimiento.setDate(hoy.getDate() + 5);
-      const fechaVenc = vencimiento.toISOString().split('T')[0];
       await supabase.from('suscripciones').insert({
         user_id: data.user.id,
         email: registroForm.email,
         nombre_taller: registroForm.nombre,
         plan: 'basic',
         estado: 'trial',
-        fecha_vencimiento: fechaVenc,
+        // fecha_vencimiento se calcula en Supabase: CURRENT_DATE + 6 days
       });
       try {
         await supabase.functions.invoke('Bienvenida', {
