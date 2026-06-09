@@ -1795,7 +1795,11 @@ export default function Home() {
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Cliente</label>
                         <input placeholder="Nombre del cliente" value={form.cliente}
-                          onChange={(e) => setForm({ ...form, cliente: e.target.value })}
+                          autoCapitalize="words"
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
+                            setForm({ ...form, cliente: val });
+                          }}
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                       </div>
                       <div>
