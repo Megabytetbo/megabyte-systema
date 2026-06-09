@@ -1250,7 +1250,7 @@ export default function Home() {
                     cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
-                    <tr key={index} className={`${t.card} transition-colors`}>
+                    <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
                       <td className={`px-3 py-2.5 font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
                       <td className={`px-3 py-2.5 ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
@@ -1696,7 +1696,7 @@ export default function Home() {
                         String(repair.orden).replace('#', '').includes(search)
                       )
                       .map((repair: any, index: number) => (
-                        <tr key={index} className={`${t.card} transition-colors`}>
+                        <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
                           <td className={`px-3 py-2.5 font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
                           <td className={`px-3 py-2.5 font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
                           <td className={`px-3 py-2.5 ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.equipo}</td>
