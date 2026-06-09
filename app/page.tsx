@@ -161,14 +161,24 @@ export default function Home() {
     });
     if (error) { alert('Error: ' + error.message); setRegistrando(false); return; }
     if (data.user) {
-      await supabase.from('suscripciones').update({ nombre_taller: registroForm.nombre })
-        .eq('email', registroForm.email);
+      const hoy = new Date();
+      const vencimiento = new Date(hoy);
+      vencimiento.setDate(hoy.getDate() + 5);
+      const fechaVenc = vencimiento.toISOString().split('T')[0];
+      await supabase.from('suscripciones').insert({
+        user_id: data.user.id,
+        email: registroForm.email,
+        nombre_taller: registroForm.nombre,
+        plan: 'basic',
+        estado: 'trial',
+        fecha_vencimiento: fechaVenc,
+      });
       try {
         await supabase.functions.invoke('Bienvenida', {
           body: { email: registroForm.email, nombre_taller: registroForm.nombre },
         });
       } catch (e) { console.error('Email bienvenida error:', e); }
-      alert('✅ Cuenta creada. Tenés 10 días de prueba gratis. ¡Bienvenido!');
+      alert('✅ Cuenta creada. Tenés 5 días de prueba gratis. ¡Bienvenido!');
       setShowRegistro(false);
       setRegistroForm({ nombre: '', email: '', password: '', confirmar: '' });
     }
