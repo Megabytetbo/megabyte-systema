@@ -66,7 +66,7 @@ export default function Home() {
   const [calcNewNum, setCalcNewNum] = useState(false);
   const [pCosto, setPCosto] = useState('');
   const [pMano, setPMano] = useState('');
-  const [pGanancia, setPGanancia] = useState('30');
+  const [pGanancia, setPGanancia] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('calc_ganancia') || '30') : '30');
   const [pDescuento, setPDescuento] = useState('');
   const [pEntrega, setPEntrega] = useState('');
   const [ivaBase, setIvaBase] = useState('');
@@ -1859,7 +1859,7 @@ export default function Home() {
                     <div key={f.label}>
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{f.label}</label>
                       <input type="number" min="0" value={f.val} placeholder="0"
-                        onChange={e => f.set(e.target.value)}
+                        onChange={e => { f.set(e.target.value); if (f.label === 'Ganancia (%)') localStorage.setItem('calc_ganancia', e.target.value); }}
                         className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
                     </div>
                   ))}
