@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from './supabase';
 
 export default function Home() {
@@ -74,6 +74,7 @@ export default function Home() {
   const [ivaPais, setIvaPais] = useState('22');
   const [ivaCustom, setIvaCustom] = useState('');
   const [calcFocused, setCalcFocused] = useState(false);
+  const calcValRef = useRef('0');
 
   // ── Detectar reset de contraseña ─────────────────────────────────────────
   useEffect(() => {
@@ -744,7 +745,14 @@ export default function Home() {
       else if (e.key === '*') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:*"]')?.click(); }
       else if (e.key === '/') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:/"]')?.click(); }
       else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="equals"]')?.click(); }
-      else if (e.key === 'Backspace') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="clear"]')?.click(); }
+      else if (e.key === 'Backspace') {
+        e.preventDefault();
+        const cv = calcValRef.current;
+        const nv = cv.length > 1 ? cv.slice(0, -1) : '0';
+        calcValRef.current = nv;
+        setCalcVal(nv);
+        setCalcDisplay(nv === '0' ? '0' : parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
+      }
       else if (e.key === '.') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="dot"]')?.click(); }
       else if (e.key === '%') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="percent"]')?.click(); }
     };
@@ -1750,8 +1758,14 @@ export default function Home() {
           const doCalcBtn = (action: string) => {
             const sym: any = {'+':'+','-':'−','*':'×','/':'÷'};
             if (action === 'clear') {
+              calcValRef.current = '0';
               setCalcVal('0'); setCalcPrev(null); setCalcOper(null); setCalcNewNum(false);
               setCalcDisplay('0'); setCalcExpr('');
+            } else if (action === 'backspace') {
+              if (calcNewNum) return;
+              const nv = calcVal.length > 1 ? calcVal.slice(0, -1) : '0';
+              setCalcVal(nv);
+              setCalcDisplay(nv === '0' ? '0' : parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
             } else if (action === 'sign') {
               const v = String(-parseFloat(calcVal));
               setCalcVal(v); setCalcDisplay(v);
@@ -1764,6 +1778,7 @@ export default function Home() {
             } else if (action.startsWith('num:')) {
               const n = action.split(':')[1];
               const nv = calcNewNum ? n : (calcVal === '0' ? n : calcVal + n);
+              calcValRef.current = nv;
               setCalcVal(nv); setCalcNewNum(false);
               setCalcDisplay(parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
             } else if (action.startsWith('op:')) {
