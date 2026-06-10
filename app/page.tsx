@@ -1810,7 +1810,7 @@ export default function Home() {
                 <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mb-3 border-2 transition-colors ${calcFocused ? 'border-green-500' : 'border-transparent'}`}>
                   <div className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}>{calcExpr}</div>
                   <div className={`text-3xl font-mono font-semibold ${t.text} text-right`}>
-                    {calcDisplay}{calcFocused ? <span className="animate-pulse">|</span> : null}
+                    {calcDisplay}
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-1.5">
