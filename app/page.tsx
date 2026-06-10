@@ -728,6 +728,31 @@ export default function Home() {
   repairs.forEach((r) => { clientesCount[r.cliente] = (clientesCount[r.cliente] || 0) + Number(r.costo || 0); });
   const clienteVIP = Object.keys(clientesCount).sort((a, b) => clientesCount[b] - clientesCount[a])[0] || 'Sin datos';
 
+  // ── Datos para gráficas de finanzas ─────────────────────────────────────
+  const mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const ingresosPorMes = Array(12).fill(0);
+  const cobradoPorMes = Array(12).fill(0);
+  repairs.forEach((r) => {
+    if (r.fecha) {
+      const parts = r.fecha.split('/');
+      const mes = parts.length === 3 ? parseInt(parts[1]) - 1 : new Date(r.fecha).getMonth();
+      if (mes >= 0 && mes < 12) {
+        ingresosPorMes[mes] += Number(r.costo || 0);
+        cobradoPorMes[mes] += Number(r.entrega || 0);
+      }
+    }
+  });
+  const mesesConDatos = mesesLabels.map((l, i) => ({ label: l, facturado: ingresosPorMes[i], cobrado: cobradoPorMes[i] }))
+    .filter(m => m.facturado > 0 || m.cobrado > 0);
+  const estadosData = [
+    { label: 'Pendiente', count: repairs.filter(r => r.estado === 'Pendiente').length, color: '#EF9F27' },
+    { label: 'En reparación', count: repairs.filter(r => r.estado === 'En reparación').length, color: '#378ADD' },
+    { label: 'Reparado', count: repairs.filter(r => r.estado === 'Reparado').length, color: '#639922' },
+    { label: 'Entregado', count: repairs.filter(r => r.estado === 'Entregado').length, color: '#888780' },
+  ].filter(e => e.count > 0);
+  const equiposData = Object.entries(equiposCount)
+    .sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+
   const getNivelCliente = (cantidad: number) => {
     if (cantidad >= 5) return { texto: 'VIP ⭐', color: 'text-yellow-400' };
     if (cantidad >= 3) return { texto: 'Frecuente', color: 'text-blue-400' };
@@ -1231,6 +1256,97 @@ export default function Home() {
                 </div>
               ))}
             </div>
+
+            {/* Gráficas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              {/* Ingresos por mes */}
+              <div className={`${t.card} border rounded-2xl p-5`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-1 uppercase tracking-wider`}>Ingresos por mes</p>
+                <div className="flex gap-4 mb-3">
+                  <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-400"></span>Facturado</span>
+                  <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-green-500"></span>Cobrado</span>
+                </div>
+                <div style={{position:'relative', height:'180px'}}>
+                  <canvas id="chartMeses"></canvas>
+                </div>
+              </div>
+              {/* Estado de reparaciones */}
+              <div className={`${t.card} border rounded-2xl p-5`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-1 uppercase tracking-wider`}>Estado de reparaciones</p>
+                <div className="flex flex-wrap gap-3 mb-3">
+                  {estadosData.map(e => (
+                    <span key={e.label} className="flex items-center gap-1.5 text-xs text-zinc-400">
+                      <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{backgroundColor: e.color}}></span>
+                      {e.label} {e.count}
+                    </span>
+                  ))}
+                </div>
+                <div style={{position:'relative', height:'180px'}}>
+                  <canvas id="chartEstados"></canvas>
+                </div>
+              </div>
+            </div>
+            {/* Equipos más reparados */}
+            <div className={`${t.card} border rounded-2xl p-5 mt-4`}>
+              <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Equipos más reparados</p>
+              <div style={{position:'relative', height: `${Math.max(equiposData.length * 40 + 20, 100)}px`}}>
+                <canvas id="chartEquipos"></canvas>
+              </div>
+            </div>
+
+            {/* Script Chart.js */}
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" dangerouslySetInnerHTML={{__html:''}}></script>
+            <script dangerouslySetInnerHTML={{__html: `
+              (function() {
+                function renderCharts() {
+                  if (typeof Chart === 'undefined') { setTimeout(renderCharts, 100); return; }
+                  Chart.helpers && Chart.helpers.each && Chart.helpers.each(Chart.instances, i => i.destroy());
+                  ['chartMeses','chartEstados','chartEquipos'].forEach(id => {
+                    const c = document.getElementById(id);
+                    if (c && c._chart) { c._chart.destroy(); }
+                    const existing = Chart.getChart(id);
+                    if (existing) existing.destroy();
+                  });
+                  const isDark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+                  const tickColor = isDark ? '#888' : '#aaa';
+                  const mesesData = ${JSON.stringify(mesesConDatos)};
+                  const estadosData = ${JSON.stringify(estadosData)};
+                  const equiposData = ${JSON.stringify(equiposData)};
+                  const c1 = document.getElementById('chartMeses');
+                  if (c1) new Chart(c1, {
+                    type: 'bar',
+                    data: {
+                      labels: mesesData.map(m => m.label),
+                      datasets: [
+                        { label: 'Facturado', data: mesesData.map(m => m.facturado), backgroundColor: '#378ADD', borderRadius: 4 },
+                        { label: 'Cobrado',   data: mesesData.map(m => m.cobrado),   backgroundColor: '#639922', borderRadius: 4 },
+                      ]
+                    },
+                    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+                      scales:{ x:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor},border:{display:false}},
+                                y:{ticks:{color:tickColor,font:{size:11},callback:v=>'$'+v},grid:{color:gridColor},border:{display:false}} } }
+                  });
+                  const c2 = document.getElementById('chartEstados');
+                  if (c2) new Chart(c2, {
+                    type: 'doughnut',
+                    data: { labels: estadosData.map(e=>e.label), datasets:[{ data: estadosData.map(e=>e.count), backgroundColor: estadosData.map(e=>e.color), borderWidth:0, hoverOffset:6 }] },
+                    options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{display:false}} }
+                  });
+                  const c3 = document.getElementById('chartEquipos');
+                  if (c3) new Chart(c3, {
+                    type: 'bar',
+                    data: { labels: equiposData.map(e=>e[0]), datasets:[{ data: equiposData.map(e=>e[1]), backgroundColor:'#534AB7', borderRadius:4 }] },
+                    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+                      scales:{ x:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor},border:{display:false}},
+                                y:{ticks:{color:tickColor,font:{size:11}},grid:{display:false},border:{display:false}} } }
+                  });
+                }
+                if (document.readyState === 'complete') renderCharts();
+                else window.addEventListener('load', renderCharts);
+                setTimeout(renderCharts, 500);
+              })();
+            `}}></script>
           </div>
         )}
 
