@@ -57,6 +57,23 @@ export default function Home() {
   const [editingCliente, setEditingCliente] = useState<any | null>(null);
   const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
 
+  // ── Estado calculadoras ───────────────────────────────────────────────────
+  const [calcDisplay, setCalcDisplay] = useState('0');
+  const [calcExpr, setCalcExpr] = useState('');
+  const [calcVal, setCalcVal] = useState('0');
+  const [calcPrev, setCalcPrev] = useState<number | null>(null);
+  const [calcOper, setCalcOper] = useState<string | null>(null);
+  const [calcNewNum, setCalcNewNum] = useState(false);
+  const [pCosto, setPCosto] = useState('');
+  const [pMano, setPMano] = useState('');
+  const [pGanancia, setPGanancia] = useState('30');
+  const [pDescuento, setPDescuento] = useState('');
+  const [pEntrega, setPEntrega] = useState('');
+  const [ivaBase, setIvaBase] = useState('');
+  const [ivaFinal, setIvaFinal] = useState('');
+  const [ivaPais, setIvaPais] = useState('22');
+  const [ivaCustom, setIvaCustom] = useState('');
+
   // ── Detectar reset de contraseña ─────────────────────────────────────────
   useEffect(() => {
     const hash = window.location.hash;
@@ -1695,7 +1712,70 @@ export default function Home() {
         )}
 
         {/* ── Calculadora ── */}
-        {section === 'calculadora' && (
+        {section === 'calculadora' && (() => {
+          const fmt = (v: number) => '$ ' + Math.round(v).toLocaleString('es-UY');
+          const tasaIva = ivaPais !== '0' ? parseFloat(ivaPais) : (parseFloat(ivaCustom) || 0);
+          const presSubtotal = (parseFloat(pCosto)||0) + (parseFloat(pMano)||0);
+          const presConG = presSubtotal * (1 + (parseFloat(pGanancia)||0) / 100);
+          const presConD = presConG * (1 - (parseFloat(pDescuento)||0) / 100);
+          const presSaldo = Math.max(0, presConD - (parseFloat(pEntrega)||0));
+          const ivaBaseN = parseFloat(ivaBase) || 0;
+          const ivaFinalN = parseFloat(ivaFinal) || 0;
+          const ivaMonto = ivaBaseN ? ivaBaseN * (tasaIva / 100) : 0;
+          const ivaFinalCalc = ivaBaseN ? ivaBaseN + ivaMonto : 0;
+          const ivaBaseCalc = ivaFinalN ? ivaFinalN / (1 + tasaIva / 100) : 0;
+          const ivaMontoDesde = ivaFinalN ? ivaFinalN - ivaBaseCalc : 0;
+
+          const doCalcBtn = (action: string) => {
+            const sym: any = {'+':'+','-':'−','*':'×','/':'÷'};
+            if (action === 'clear') {
+              setCalcVal('0'); setCalcPrev(null); setCalcOper(null); setCalcNewNum(false);
+              setCalcDisplay('0'); setCalcExpr('');
+            } else if (action === 'sign') {
+              const v = String(-parseFloat(calcVal));
+              setCalcVal(v); setCalcDisplay(v);
+            } else if (action === 'percent') {
+              const v = String(parseFloat(calcVal) / 100);
+              setCalcVal(v); setCalcDisplay(v);
+            } else if (action === 'dot') {
+              if (calcNewNum) { setCalcVal('0.'); setCalcNewNum(false); setCalcDisplay('0.'); }
+              else if (!calcVal.includes('.')) { setCalcVal(calcVal + '.'); setCalcDisplay(calcVal + '.'); }
+            } else if (action.startsWith('num:')) {
+              const n = action.split(':')[1];
+              const nv = calcNewNum ? n : (calcVal === '0' ? n : calcVal + n);
+              setCalcVal(nv); setCalcNewNum(false);
+              setCalcDisplay(parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
+            } else if (action.startsWith('op:')) {
+              const op = action.split(':')[1];
+              let prev = calcPrev;
+              let cv = calcVal;
+              if (prev !== null && !calcNewNum) {
+                const cur = parseFloat(cv);
+                let res = op === '+' ? prev+cur : op === '-' ? prev-cur : op === '*' ? prev*cur : cur !== 0 ? prev/cur : NaN;
+                cv = isNaN(res) ? 'NaN' : String(+res.toFixed(10));
+                setCalcVal(cv);
+                setCalcDisplay(isNaN(parseFloat(cv)) ? 'Error' : parseFloat(cv).toLocaleString('es-UY', {maximumFractionDigits:8}));
+                prev = parseFloat(cv);
+              } else {
+                prev = parseFloat(cv);
+              }
+              setCalcPrev(prev); setCalcOper(op); setCalcNewNum(true);
+              setCalcExpr(prev!.toLocaleString('es-UY') + ' ' + sym[op]);
+            } else if (action === 'equals') {
+              if (calcPrev === null || calcOper === null) return;
+              const cur = parseFloat(calcVal);
+              let res: number;
+              if (calcOper==='+') res=calcPrev+cur;
+              else if (calcOper==='-') res=calcPrev-cur;
+              else if (calcOper==='*') res=calcPrev*cur;
+              else res = cur !== 0 ? calcPrev/cur : NaN;
+              const rv = isNaN(res) ? 'NaN' : String(+res.toFixed(10));
+              setCalcVal(rv); setCalcNewNum(true); setCalcPrev(null); setCalcOper(null); setCalcExpr('');
+              setCalcDisplay(isNaN(parseFloat(rv)) ? 'Error' : parseFloat(rv).toLocaleString('es-UY', {maximumFractionDigits:8}));
+            }
+          };
+
+          return (
           <div>
             <div className="mb-8">
               <h1 className={`text-2xl font-bold ${t.text}`}>Calculadora</h1>
@@ -1707,8 +1787,8 @@ export default function Home() {
               <div className={`${t.card} border rounded-2xl p-5`}>
                 <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Calculadora</p>
                 <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mb-3`}>
-                  <div id="calcExpr" className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}></div>
-                  <div id="calcDisplay" className={`text-3xl font-mono font-semibold ${t.text} text-right`}>0</div>
+                  <div className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}>{calcExpr}</div>
+                  <div className={`text-3xl font-mono font-semibold ${t.text} text-right`}>{calcDisplay}</div>
                 </div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
@@ -1730,19 +1810,10 @@ export default function Home() {
                     { label: '+', action: 'op:+', cls: 'text-blue-400' },
                     { label: '0', action: 'num:0', cls: 'col-span-2' },
                     { label: '.', action: 'dot', cls: '' },
-                    { label: '=', action: 'equals', cls: 'bg-green-500 text-black font-bold border-green-500' },
+                    { label: '=', action: 'equals', cls: 'bg-green-500 !text-black font-bold border-green-500' },
                   ].map((btn) => (
                     <button key={btn.action}
-                      onClick={() => {
-                        const w = window as any;
-                        if (btn.action === 'clear') w.calcClear();
-                        else if (btn.action === 'sign') w.calcSign();
-                        else if (btn.action === 'percent') w.calcPercent();
-                        else if (btn.action === 'dot') w.calcDot();
-                        else if (btn.action === 'equals') w.calcEquals(false);
-                        else if (btn.action.startsWith('op:')) w.calcOp(btn.action.split(':')[1]);
-                        else if (btn.action.startsWith('num:')) w.calcNum(btn.action.split(':')[1]);
-                      }}
+                      onClick={() => doCalcBtn(btn.action)}
                       className={`${btn.cls} ${btn.action === 'num:0' ? 'col-span-2' : ''} ${t.card} border rounded-xl py-3 text-sm font-medium hover:opacity-80 transition-opacity`}>
                       {btn.label}
                     </button>
@@ -1754,31 +1825,31 @@ export default function Home() {
               <div className={`${t.card} border rounded-2xl p-5`}>
                 <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Presupuesto de reparación</p>
                 <div className="flex flex-col gap-3">
-                  {[
-                    { id: 'pCosto', label: 'Costo de piezas ($)' },
-                    { id: 'pMano', label: 'Mano de obra ($)' },
-                    { id: 'pGanancia', label: 'Ganancia (%)', def: '30' },
-                    { id: 'pDescuento', label: 'Descuento (%)' },
-                    { id: 'pEntrega', label: 'Entrega / seña ($)' },
-                  ].map(f => (
-                    <div key={f.id}>
+                  {([
+                    { label: 'Costo de piezas ($)', val: pCosto, set: setPCosto },
+                    { label: 'Mano de obra ($)', val: pMano, set: setPMano },
+                    { label: 'Ganancia (%)', val: pGanancia, set: setPGanancia },
+                    { label: 'Descuento (%)', val: pDescuento, set: setPDescuento },
+                    { label: 'Entrega / seña ($)', val: pEntrega, set: setPEntrega },
+                  ] as any[]).map((f: any) => (
+                    <div key={f.label}>
                       <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{f.label}</label>
-                      <input id={f.id} type="number" min="0" defaultValue={f.def || ''} placeholder="0"
-                        onChange={() => (window as any).calcPres()}
+                      <input type="number" min="0" value={f.val} placeholder="0"
+                        onChange={e => f.set(e.target.value)}
                         className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
                     </div>
                   ))}
                 </div>
                 <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
                   {[
-                    { id: 'rSubtotal', label: 'Subtotal', color: t.subtext },
-                    { id: 'rConGanancia', label: 'Con ganancia', color: 'text-blue-400' },
-                    { id: 'rConDescuento', label: 'Con descuento', color: 'text-green-400' },
-                    { id: 'rSaldo', label: 'Saldo pendiente', color: 'text-red-400', big: true },
+                    { label: 'Subtotal', val: fmt(presSubtotal), color: t.subtext },
+                    { label: 'Con ganancia', val: fmt(presConG), color: 'text-blue-400' },
+                    { label: 'Con descuento', val: fmt(presConD), color: 'text-green-400' },
+                    { label: 'Saldo pendiente', val: fmt(presSaldo), color: 'text-red-400', big: true },
                   ].map(r => (
-                    <div key={r.id} className="flex justify-between items-center">
+                    <div key={r.label} className="flex justify-between items-center">
                       <span className={`text-xs ${r.color}`}>{r.label}</span>
-                      <span id={r.id} className={`font-semibold ${r.color} ${r.big ? 'text-lg' : 'text-sm'}`}>$ 0</span>
+                      <span className={`font-semibold ${r.color} ${r.big ? 'text-lg' : 'text-sm'}`}>{r.val}</span>
                     </div>
                   ))}
                 </div>
@@ -1790,7 +1861,7 @@ export default function Home() {
                 <div className="flex flex-col gap-3">
                   <div>
                     <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>País</label>
-                    <select id="ivaPais" onChange={() => (window as any).calcIvaUpdate()}
+                    <select value={ivaPais} onChange={e => setIvaPais(e.target.value)}
                       className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
                       <option value="22">Uruguay — 22%</option>
                       <option value="21">Argentina — 21%</option>
@@ -1798,140 +1869,54 @@ export default function Home() {
                       <option value="19">Colombia — 19%</option>
                       <option value="16">México — 16%</option>
                       <option value="12">Ecuador — 12%</option>
-                      <option value="15">Perú — 18%</option>
                       <option value="18">Perú — 18%</option>
-                      <option value="12">Bolivia — 13%</option>
                       <option value="13">Bolivia — 13%</option>
                       <option value="10">Paraguay — 10%</option>
-                      <option value="22">España — 21%</option>
                       <option value="21">España — 21%</option>
                       <option value="0">Personalizado</option>
                     </select>
                   </div>
-                  <div id="ivaCustomRow" className="hidden">
-                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tasa personalizada (%)</label>
-                    <input id="ivaCustom" type="number" min="0" max="100" placeholder="0"
-                      onChange={() => (window as any).calcIva()}
-                      className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
-                  </div>
+                  {ivaPais === '0' && (
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tasa personalizada (%)</label>
+                      <input type="number" min="0" max="100" value={ivaCustom} placeholder="0"
+                        onChange={e => setIvaCustom(e.target.value)}
+                        className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                    </div>
+                  )}
                   <div>
                     <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Precio base (sin IVA)</label>
-                    <input id="ivaBase" type="number" min="0" placeholder="0"
-                      onChange={() => (window as any).calcIva()}
+                    <input type="number" min="0" value={ivaBase} placeholder="0"
+                      onChange={e => { setIvaBase(e.target.value); setIvaFinal(''); }}
                       className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
                   </div>
                   <div>
                     <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Precio final (con IVA)</label>
-                    <input id="ivaFinal" type="number" min="0" placeholder="0"
-                      onChange={() => (window as any).calcIvaDesde()}
+                    <input type="number" min="0" value={ivaFinal} placeholder="0"
+                      onChange={e => { setIvaFinal(e.target.value); setIvaBase(''); }}
                       className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
                   </div>
                 </div>
                 <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
                   {[
-                    { id: 'ivaRTasa', label: 'Tasa aplicada', color: t.subtext },
-                    { id: 'ivaRMonto', label: 'Monto de IVA', color: 'text-yellow-400' },
-                    { id: 'ivaRFinal', label: 'Precio con IVA', color: 'text-green-400', big: true },
-                    { id: 'ivaRBase', label: 'Precio sin IVA', color: 'text-blue-400', big: true },
+                    { label: 'Tasa aplicada', val: tasaIva + '%', color: t.subtext },
+                    { label: 'Monto de IVA', val: ivaBaseN ? fmt(ivaMonto) : ivaFinalN ? fmt(ivaMontoDesde) : '—', color: 'text-yellow-400' },
+                    { label: 'Precio con IVA', val: ivaBaseN ? fmt(ivaFinalCalc) : ivaFinalN ? fmt(ivaFinalN) : '—', color: 'text-green-400', big: true },
+                    { label: 'Precio sin IVA', val: ivaBaseN ? fmt(ivaBaseN) : ivaFinalN ? fmt(ivaBaseCalc) : '—', color: 'text-blue-400', big: true },
                   ].map(r => (
-                    <div key={r.id} className="flex justify-between items-center">
+                    <div key={r.label} className="flex justify-between items-center">
                       <span className={`text-xs ${r.color}`}>{r.label}</span>
-                      <span id={r.id} className={`font-semibold ${r.color} ${r.big ? 'text-lg' : 'text-sm'}`}>—</span>
+                      <span className={`font-semibold ${r.color} ${r.big ? 'text-lg' : 'text-sm'}`}>{r.val}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            <script dangerouslySetInnerHTML={{__html: `
-              (function() {
-                var cv = '0', cp = null, cop = null, cnew = false;
-                function upd() {
-                  var d = document.getElementById('calcDisplay');
-                  if (!d) return;
-                  var v = parseFloat(cv);
-                  d.textContent = isNaN(v) ? 'Error' : v.toLocaleString('es-UY', { maximumFractionDigits: 8 });
-                }
-                window.calcNum = function(n) {
-                  if (cnew) { cv = n; cnew = false; } else { cv = cv === '0' ? n : cv + n; }
-                  upd();
-                };
-                window.calcDot = function() {
-                  if (cnew) { cv = '0.'; cnew = false; } else if (!cv.includes('.')) cv += '.';
-                  upd();
-                };
-                window.calcOp = function(op) {
-                  var sym = {'+':'+','-':'−','*':'×','/':'÷'};
-                  if (cp !== null && !cnew) window.calcEquals(true);
-                  cp = parseFloat(cv); cop = op; cnew = true;
-                  var el = document.getElementById('calcExpr');
-                  if (el) el.textContent = cp.toLocaleString('es-UY') + ' ' + sym[op];
-                };
-                window.calcEquals = function(silent) {
-                  if (cp === null || cop === null) return;
-                  var cur = parseFloat(cv), res;
-                  if (cop==='+') res=cp+cur; else if (cop==='-') res=cp-cur;
-                  else if (cop==='*') res=cp*cur; else if (cop==='/') res=cur!==0?cp/cur:NaN;
-                  cv = isNaN(res) ? 'NaN' : String(+res.toFixed(10));
-                  if (!silent) { var el=document.getElementById('calcExpr'); if(el) el.textContent=''; cp=null; cop=null; }
-                  cnew = true; upd();
-                };
-                window.calcClear = function() {
-                  cv='0'; cp=null; cop=null; cnew=false;
-                  var el=document.getElementById('calcExpr'); if(el) el.textContent='';
-                  upd();
-                };
-                window.calcSign = function() { cv = String(-parseFloat(cv)); upd(); };
-                window.calcPercent = function() { cv = String(parseFloat(cv)/100); upd(); };
-
-                window.calcPres = function() {
-                  var g = function(id) { var el=document.getElementById(id); return el ? parseFloat(el.value)||0 : 0; };
-                  var costo=g('pCosto'), mano=g('pMano'), gan=g('pGanancia'), desc=g('pDescuento'), entr=g('pEntrega');
-                  var sub=costo+mano, conG=sub*(1+gan/100), conD=conG*(1-desc/100), saldo=Math.max(0,conD-entr);
-                  var fmt=function(v){return '$ '+Math.round(v).toLocaleString('es-UY');};
-                  var ids=['rSubtotal','rConGanancia','rConDescuento','rSaldo'], vals=[sub,conG,conD,saldo];
-                  for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.textContent=fmt(vals[i]);}
-                };
-
-                window.calcIvaUpdate = function() {
-                  var sel=document.getElementById('ivaPais');
-                  var row=document.getElementById('ivaCustomRow');
-                  if (!sel||!row) return;
-                  row.style.display = sel.value==='0' ? 'block' : 'none';
-                  window.calcIva();
-                };
-                window.calcIva = function() {
-                  var sel=document.getElementById('ivaPais');
-                  var tasa = sel && sel.value!=='0' ? parseFloat(sel.value) : (parseFloat((document.getElementById('ivaCustom')||{value:'0'}).value)||0);
-                  var base = parseFloat((document.getElementById('ivaBase')||{value:'0'}).value)||0;
-                  if (!base) { ['ivaRTasa','ivaRMonto','ivaRFinal','ivaRBase'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='—';}); return; }
-                  var monto=base*(tasa/100), final=base+monto;
-                  var fmt=function(v){return '$ '+Math.round(v).toLocaleString('es-UY');};
-                  var t=document.getElementById('ivaRTasa'); if(t) t.textContent=tasa+'%';
-                  var m=document.getElementById('ivaRMonto'); if(m) m.textContent=fmt(monto);
-                  var f=document.getElementById('ivaRFinal'); if(f) f.textContent=fmt(final);
-                  var b=document.getElementById('ivaRBase'); if(b) b.textContent=fmt(base);
-                  var fin=document.getElementById('ivaFinal'); if(fin&&document.activeElement!==fin) fin.value=Math.round(final).toString();
-                };
-                window.calcIvaDesde = function() {
-                  var sel=document.getElementById('ivaPais');
-                  var tasa = sel && sel.value!=='0' ? parseFloat(sel.value) : (parseFloat((document.getElementById('ivaCustom')||{value:'0'}).value)||0);
-                  var final = parseFloat((document.getElementById('ivaFinal')||{value:'0'}).value)||0;
-                  if (!final) return;
-                  var base=final/(1+tasa/100), monto=final-base;
-                  var fmt=function(v){return '$ '+Math.round(v).toLocaleString('es-UY');};
-                  var t=document.getElementById('ivaRTasa'); if(t) t.textContent=tasa+'%';
-                  var m=document.getElementById('ivaRMonto'); if(m) m.textContent=fmt(monto);
-                  var f=document.getElementById('ivaRFinal'); if(f) f.textContent=fmt(final);
-                  var b=document.getElementById('ivaRBase'); if(b) b.textContent=fmt(base);
-                  var bas=document.getElementById('ivaBase'); if(bas&&document.activeElement!==bas) bas.value=Math.round(base).toString();
-                };
-              })();
-            `}} />
           </div>
-        )}
+          );
+        })()}
 
-        {/* ── Configuración ── */}
+                {/* ── Configuración ── */}
         {section === 'configuracion' && (
           <div>
             <div className="mb-8">
