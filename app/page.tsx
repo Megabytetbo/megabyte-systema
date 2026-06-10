@@ -731,6 +731,26 @@ export default function Home() {
     setShowModal(true);
   };
 
+  // ── Teclado calculadora ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (section !== 'calculadora') return;
+    const handleKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); document.querySelector<HTMLButtonElement>(`button[data-calc="num:${e.key}"]`)?.click(); }
+      else if (e.key === '+') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:+"]')?.click(); }
+      else if (e.key === '-') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:-"]')?.click(); }
+      else if (e.key === '*') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:*"]')?.click(); }
+      else if (e.key === '/') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:/"]')?.click(); }
+      else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="equals"]')?.click(); }
+      else if (e.key === 'Backspace') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="clear"]')?.click(); }
+      else if (e.key === '.') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="dot"]')?.click(); }
+      else if (e.key === '%') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="percent"]')?.click(); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [section]);
+
   // ── Gráficas de finanzas ─────────────────────────────────────────────────
   useEffect(() => {
     if (section !== 'finanzas') return;
@@ -1813,6 +1833,7 @@ export default function Home() {
                     { label: '=', action: 'equals', cls: 'bg-green-500 !text-black font-bold border-green-500' },
                   ].map((btn) => (
                     <button key={btn.action}
+                      data-calc={btn.action}
                       onClick={() => doCalcBtn(btn.action)}
                       className={`${btn.cls} ${btn.action === 'num:0' ? 'col-span-2' : ''} ${t.card} border rounded-xl py-3 text-sm font-medium hover:opacity-80 transition-opacity`}>
                       {btn.label}
