@@ -1733,7 +1733,7 @@ export default function Home() {
 
         {/* ── Calculadora ── */}
         {section === 'calculadora' && (() => {
-          const fmt = (v: number) => '$ ' + Math.round(v).toLocaleString('es-UY');
+          const fmt = (v: number) => '$ ' + v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           const tasaIva = ivaPais !== '0' ? parseFloat(ivaPais) : (parseFloat(ivaCustom) || 0);
           const presSubtotal = (parseFloat(pCosto)||0) + (parseFloat(pMano)||0);
           const presConG = presSubtotal * (1 + (parseFloat(pGanancia)||0) / 100);
@@ -1921,9 +1921,9 @@ export default function Home() {
                 <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
                   {[
                     { label: 'Tasa aplicada', val: tasaIva + '%', color: t.subtext },
+                    { label: 'Precio sin IVA', val: ivaBaseN ? fmt(ivaBaseN) : ivaFinalN ? fmt(ivaBaseCalc) : '—', color: 'text-blue-400', big: true },
                     { label: 'Monto de IVA', val: ivaBaseN ? fmt(ivaMonto) : ivaFinalN ? fmt(ivaMontoDesde) : '—', color: 'text-yellow-400' },
                     { label: 'Precio con IVA', val: ivaBaseN ? fmt(ivaFinalCalc) : ivaFinalN ? fmt(ivaFinalN) : '—', color: 'text-green-400', big: true },
-                    { label: 'Precio sin IVA', val: ivaBaseN ? fmt(ivaBaseN) : ivaFinalN ? fmt(ivaBaseCalc) : '—', color: 'text-blue-400', big: true },
                   ].map(r => (
                     <div key={r.label} className="flex justify-between items-center">
                       <span className={`text-xs ${r.color}`}>{r.label}</span>
