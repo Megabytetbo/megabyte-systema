@@ -73,6 +73,7 @@ export default function Home() {
   const [ivaFinal, setIvaFinal] = useState('');
   const [ivaPais, setIvaPais] = useState('22');
   const [ivaCustom, setIvaCustom] = useState('');
+  const [calcFocused, setCalcFocused] = useState(false);
 
   // ── Detectar reset de contraseña ─────────────────────────────────────────
   useEffect(() => {
@@ -1804,11 +1805,13 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
               {/* Calculadora básica */}
-              <div tabIndex={0} className={`${t.card} border rounded-2xl p-5 outline-none focus:ring-2 focus:ring-blue-500`}>
+              <div tabIndex={0} onFocus={() => setCalcFocused(true)} onBlur={() => setCalcFocused(false)} className={`${t.card} border rounded-2xl p-5 outline-none`}>
                 <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Calculadora</p>
-                <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mb-3`}>
+                <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mb-3 border-2 transition-colors ${calcFocused ? 'border-green-500' : 'border-transparent'}`}>
                   <div className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}>{calcExpr}</div>
-                  <div className={`text-3xl font-mono font-semibold ${t.text} text-right`}>{calcDisplay}</div>
+                  <div className={`text-3xl font-mono font-semibold ${t.text} text-right`}>
+                    {calcDisplay}{calcFocused ? <span className="animate-pulse">|</span> : null}
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
