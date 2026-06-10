@@ -714,6 +714,96 @@ export default function Home() {
     setShowModal(true);
   };
 
+  // ── Gráficas de finanzas ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (section !== 'finanzas') return;
+    const loadCharts = () => {
+      if (typeof window === 'undefined') return;
+      const win = window as any;
+      const renderCharts = () => {
+        const Chart = win.Chart;
+        if (!Chart) return;
+        ['chartMeses','chartEstados','chartEquipos'].forEach(id => {
+          const existing = Chart.getChart(id);
+          if (existing) existing.destroy();
+        });
+        const isDark = document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        const tickColor = isDark ? '#888' : '#aaa';
+
+        const mesesLabelsL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const ing = Array(12).fill(0);
+        const cob = Array(12).fill(0);
+        repairs.forEach((r: any) => {
+          if (r.fecha) {
+            const parts = r.fecha.split('/');
+            const mes = parts.length === 3 ? parseInt(parts[1]) - 1 : new Date(r.fecha).getMonth();
+            if (mes >= 0 && mes < 12) {
+              ing[mes] += Number(r.costo || 0);
+              cob[mes] += Number(r.entrega || 0);
+            }
+          }
+        });
+        const mesesFiltrados = mesesLabelsL.map((l, i) => ({ label: l, facturado: ing[i], cobrado: cob[i] }))
+          .filter(m => m.facturado > 0 || m.cobrado > 0);
+
+        const estadosList = [
+          { label: 'Pendiente', count: repairs.filter((r: any) => r.estado === 'Pendiente').length, color: '#EF9F27' },
+          { label: 'En reparación', count: repairs.filter((r: any) => r.estado === 'En reparación').length, color: '#378ADD' },
+          { label: 'Reparado', count: repairs.filter((r: any) => r.estado === 'Reparado').length, color: '#639922' },
+          { label: 'Entregado', count: repairs.filter((r: any) => r.estado === 'Entregado').length, color: '#888780' },
+        ].filter(e => e.count > 0);
+
+        const eqCount: any = {};
+        repairs.forEach((r: any) => { eqCount[r.equipo] = (eqCount[r.equipo] || 0) + 1; });
+        const equiposList = Object.entries(eqCount).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+
+        const c1 = document.getElementById('chartMeses');
+        if (c1) new Chart(c1, {
+          type: 'bar',
+          data: {
+            labels: mesesFiltrados.map((m: any) => m.label),
+            datasets: [
+              { label: 'Facturado', data: mesesFiltrados.map((m: any) => m.facturado), backgroundColor: '#378ADD', borderRadius: 4 },
+              { label: 'Cobrado', data: mesesFiltrados.map((m: any) => m.cobrado), backgroundColor: '#639922', borderRadius: 4 },
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false } },
+                      y: { ticks: { color: tickColor, font: { size: 11 }, callback: (v: any) => '$' + v }, grid: { color: gridColor }, border: { display: false } } } }
+        });
+
+        const c2 = document.getElementById('chartEstados');
+        if (c2) new Chart(c2, {
+          type: 'doughnut',
+          data: { labels: estadosList.map((e: any) => e.label), datasets: [{ data: estadosList.map((e: any) => e.count), backgroundColor: estadosList.map((e: any) => e.color), borderWidth: 0, hoverOffset: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+        });
+
+        const c3 = document.getElementById('chartEquipos');
+        if (c3) new Chart(c3, {
+          type: 'bar',
+          data: { labels: equiposList.map((e: any) => e[0]), datasets: [{ data: equiposList.map((e: any) => e[1]), backgroundColor: '#534AB7', borderRadius: 4 }] },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false } },
+                      y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false }, border: { display: false } } } }
+        });
+      };
+
+      if (win.Chart) {
+        setTimeout(renderCharts, 50);
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+        script.onload = () => setTimeout(renderCharts, 50);
+        document.head.appendChild(script);
+      }
+    };
+    const timer = setTimeout(loadCharts, 100);
+    return () => clearTimeout(timer);
+  }, [section, repairs]);
+
   // ── Estadísticas ──────────────────────────────────────────────────────────
   const totalCobrado = repairs.reduce((acc, r) => acc + Number(r.entrega || 0), 0);
   const totalPendiente = repairs.reduce((acc, r) => acc + Number(r.saldo || 0), 0);
@@ -1294,59 +1384,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Script Chart.js */}
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" dangerouslySetInnerHTML={{__html:''}}></script>
-            <script dangerouslySetInnerHTML={{__html: `
-              (function() {
-                function renderCharts() {
-                  if (typeof Chart === 'undefined') { setTimeout(renderCharts, 100); return; }
-                  Chart.helpers && Chart.helpers.each && Chart.helpers.each(Chart.instances, i => i.destroy());
-                  ['chartMeses','chartEstados','chartEquipos'].forEach(id => {
-                    const c = document.getElementById(id);
-                    if (c && c._chart) { c._chart.destroy(); }
-                    const existing = Chart.getChart(id);
-                    if (existing) existing.destroy();
-                  });
-                  const isDark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
-                  const tickColor = isDark ? '#888' : '#aaa';
-                  const mesesData = ${JSON.stringify(mesesConDatos)};
-                  const estadosData = ${JSON.stringify(estadosData)};
-                  const equiposData = ${JSON.stringify(equiposData)};
-                  const c1 = document.getElementById('chartMeses');
-                  if (c1) new Chart(c1, {
-                    type: 'bar',
-                    data: {
-                      labels: mesesData.map(m => m.label),
-                      datasets: [
-                        { label: 'Facturado', data: mesesData.map(m => m.facturado), backgroundColor: '#378ADD', borderRadius: 4 },
-                        { label: 'Cobrado',   data: mesesData.map(m => m.cobrado),   backgroundColor: '#639922', borderRadius: 4 },
-                      ]
-                    },
-                    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-                      scales:{ x:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor},border:{display:false}},
-                                y:{ticks:{color:tickColor,font:{size:11},callback:v=>'$'+v},grid:{color:gridColor},border:{display:false}} } }
-                  });
-                  const c2 = document.getElementById('chartEstados');
-                  if (c2) new Chart(c2, {
-                    type: 'doughnut',
-                    data: { labels: estadosData.map(e=>e.label), datasets:[{ data: estadosData.map(e=>e.count), backgroundColor: estadosData.map(e=>e.color), borderWidth:0, hoverOffset:6 }] },
-                    options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{display:false}} }
-                  });
-                  const c3 = document.getElementById('chartEquipos');
-                  if (c3) new Chart(c3, {
-                    type: 'bar',
-                    data: { labels: equiposData.map(e=>e[0]), datasets:[{ data: equiposData.map(e=>e[1]), backgroundColor:'#534AB7', borderRadius:4 }] },
-                    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-                      scales:{ x:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor},border:{display:false}},
-                                y:{ticks:{color:tickColor,font:{size:11}},grid:{display:false},border:{display:false}} } }
-                  });
-                }
-                if (document.readyState === 'complete') renderCharts();
-                else window.addEventListener('load', renderCharts);
-                setTimeout(renderCharts, 500);
-              })();
-            `}}></script>
           </div>
         )}
 
