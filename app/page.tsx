@@ -71,10 +71,6 @@ export default function Home() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) setUser(session.user);
-      else {
-        const recordar = localStorage.getItem('megabyte_recordar');
-        if (!recordar) await supabase.auth.signOut();
-      }
     };
     checkUser();
     const storedToken = localStorage.getItem('megabyte_session_token');
