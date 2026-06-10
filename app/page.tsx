@@ -1804,7 +1804,7 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
               {/* Calculadora básica */}
-              <div className={`${t.card} border rounded-2xl p-5`}>
+              <div tabIndex={0} className={`${t.card} border rounded-2xl p-5 outline-none focus:ring-2 focus:ring-blue-500`}>
                 <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Calculadora</p>
                 <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mb-3`}>
                   <div className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}>{calcExpr}</div>
