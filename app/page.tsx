@@ -41,7 +41,7 @@ export default function Home() {
   const [adminOrden, setAdminOrden] = useState('vencimiento');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modalEntrega, setModalEntrega] = useState<any | null>(null);
-  const [entregaForm, setEntregaForm] = useState({ costo: '', entrega: '', garantia: '', garantiaCustom: '' });
+  const [entregaForm, setEntregaForm] = useState({ costo: '', entrega: '', garantia: '', garantiaCustom: '', seReparo: true });
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [showRegistro, setShowRegistro] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
@@ -334,7 +334,7 @@ export default function Home() {
       year: 'numeric', hour: '2-digit', minute: '2-digit',
     });
     await supabase.from('repairs').update({
-      costo, entrega, saldo, estado: 'Entregado', garantia, fecha_entrega,
+      costo, entrega, saldo, estado: 'Entregado', garantia, fecha_entrega, se_reparo: entregaForm.seReparo,
     }).eq('id', modalEntrega.id);
     const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
@@ -2231,7 +2231,7 @@ export default function Home() {
                               <option>Pendiente</option>
                               <option>En reparación</option>
                               <option>Reparado</option>
-                              <option>Entregado</option>
+                              <option value="Entregado">Entregado {repair.se_reparo === false ? '❌' : '✅'}</option>
                             </select>
                           </td>
                           <td className={`px-3 py-2.5 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
@@ -2256,7 +2256,7 @@ export default function Home() {
                                 <button onClick={() => {
                                   setOpenMenu(null);
                                   setTimeout(() => {
-                                    setEntregaForm({ costo: repair.costo || '', entrega: repair.entrega || '', garantia: repair.garantia || '', garantiaCustom: '' });
+                                    setEntregaForm({ costo: repair.costo || '', entrega: repair.entrega || '', garantia: repair.garantia || '', garantiaCustom: '', seReparo: repair.se_reparo !== false });
                                     setModalEntrega(repair);
                                   }, 50);
                                 }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
@@ -2400,6 +2400,19 @@ export default function Home() {
               <button onClick={() => setModalEntrega(null)} className={`${t.muted} text-xl leading-none`}>×</button>
             </div>
             <div className="flex flex-col gap-3">
+              <div>
+                <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>¿Se reparó el equipo?</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setEntregaForm({...entregaForm, seReparo: true})}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${entregaForm.seReparo ? 'bg-green-500/15 border-green-500 text-green-400' : `${t.badge} border ${t.divider} ${t.muted}`}`}>
+                    ✅ Reparado
+                  </button>
+                  <button type="button" onClick={() => setEntregaForm({...entregaForm, seReparo: false})}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${!entregaForm.seReparo ? 'bg-red-500/15 border-red-500 text-red-400' : `${t.badge} border ${t.divider} ${t.muted}`}`}>
+                    ❌ No reparado
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Costo total ($)</label>
