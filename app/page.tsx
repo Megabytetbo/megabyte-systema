@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 
 export default function Home() {
   const [repairs, setRepairs] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [searchClientes, setSearchClientes] = useState('');
   const [openMenu, setOpenMenu] = useState<number | null>(null);
@@ -138,6 +139,12 @@ export default function Home() {
       if (data) setRepairs(data);
       if (error) console.error(error);
     };
+    const loadClientes = async () => {
+      const { data, error } = await supabase
+        .from('clientes').select('*').order('id', { ascending: false });
+      if (data) setClientes(data);
+      if (error) console.error(error);
+    };
     const loadConfig = async () => {
       const { data } = await supabase
         .from('configuracion').select('*').eq('user_id', user.id).single();
@@ -152,6 +159,7 @@ export default function Home() {
       }
     };
     loadRepairs();
+    loadClientes();
     loadConfig();
     // Verificar suscripcion del usuario
     const verificarAcceso = async () => {
@@ -267,6 +275,24 @@ export default function Home() {
     }
     const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
     setRepairs(data || []);
+
+    // Actualizar también la tabla persistente de clientes
+    const { data: actualizado, error: errUpdate } = await supabase
+      .from('clientes')
+      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
+      .eq('user_id', user.id)
+      .eq('cliente', editingCliente.cliente)
+      .select();
+    if (!errUpdate && (!actualizado || actualizado.length === 0)) {
+      // El cliente no existía aún en la tabla persistente (datos viejos): lo creamos
+      await supabase.from('clientes').upsert(
+        { user_id: user.id, cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null },
+        { onConflict: 'user_id,cliente' }
+      );
+    }
+    const { data: clientesData } = await supabase.from('clientes').select('*').order('id', { ascending: false });
+    setClientes(clientesData || []);
+
     setEditingCliente(null);
   };
 
@@ -690,7 +716,10 @@ export default function Home() {
           : r));
       }
     } else {
-      const numeroOrden = repairs.length + 1;
+      const numerosExistentes = repairs
+        .map((r: any) => parseInt((r.orden || '').replace('#', ''), 10))
+        .filter((n: number) => !isNaN(n));
+      const numeroOrden = numerosExistentes.length > 0 ? Math.max(...numerosExistentes) + 1 : 1;
       const nuevoRepair = {
         orden: `#${numeroOrden.toString().padStart(4, '0')}`,
         cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
@@ -707,6 +736,21 @@ export default function Home() {
       const { data, error } = await supabase.from('repairs').insert([nuevoRepair]).select();
       if (error) { console.error(error); alert(error.message); return; }
       if (data) setRepairs([data[0], ...repairs]);
+
+      // Guardar/actualizar cliente en tabla persistente
+      const { data: clienteData, error: clienteError } = await supabase
+        .from('clientes')
+        .upsert(
+          { user_id: user.id, cliente: form.cliente, telefono: form.telefono || null },
+          { onConflict: 'user_id,cliente' }
+        )
+        .select();
+      if (!clienteError && clienteData && clienteData[0]) {
+        const yaExiste = clientes.some((c: any) => c.id === clienteData[0].id);
+        setClientes(yaExiste
+          ? clientes.map((c: any) => c.id === clienteData[0].id ? clienteData[0] : c)
+          : [clienteData[0], ...clientes]);
+      }
     }
 
     setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
@@ -1459,17 +1503,30 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.values(
-                    repairs.reduce((acc: any, repair: any) => {
-                      const key = `${repair.cliente}||${repair.telefono || ''}`;
-                      if (!acc[key]) {
-                        acc[key] = { cliente: repair.cliente, telefono: repair.telefono, cantidad: 0, total: 0 };
+                  {(() => {
+                    const statsMap: any = {};
+                    repairs.forEach((repair: any) => {
+                      const key = repair.cliente;
+                      if (!statsMap[key]) statsMap[key] = { cantidad: 0, total: 0, telefono: repair.telefono };
+                      statsMap[key].cantidad += 1;
+                      statsMap[key].total += Number(repair.costo || 0);
+                      if (!statsMap[key].telefono && repair.telefono) statsMap[key].telefono = repair.telefono;
+                    });
+                    const vistos = new Set<string>();
+                    const lista: any[] = [];
+                    clientes.forEach((c: any) => {
+                      const stats = statsMap[c.cliente] || { cantidad: 0, total: 0, telefono: c.telefono };
+                      lista.push({ cliente: c.cliente, telefono: c.telefono || stats.telefono, cantidad: stats.cantidad, total: stats.total });
+                      vistos.add(c.cliente);
+                    });
+                    // Incluir clientes que aún no estén en la tabla persistente (datos antiguos)
+                    Object.keys(statsMap).forEach((nombre) => {
+                      if (!vistos.has(nombre)) {
+                        lista.push({ cliente: nombre, telefono: statsMap[nombre].telefono, cantidad: statsMap[nombre].cantidad, total: statsMap[nombre].total });
                       }
-                      acc[key].cantidad += 1;
-                      acc[key].total += Number(repair.costo || 0);
-                      return acc;
-                    }, {})
-                  ).filter((cliente: any) =>
+                    });
+                    return lista;
+                  })().filter((cliente: any) =>
                     cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
@@ -1487,7 +1544,7 @@ export default function Home() {
                       </td>
                       <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                         <button onClick={() => {
-                          const historial = repairs.filter((r: any) => r.telefono === cliente.telefono);
+                          const historial = repairs.filter((r: any) => r.cliente === cliente.cliente);
                           let texto = `Historial de ${cliente.cliente}\n\n`;
                           historial.forEach((r: any) => {
                             texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
