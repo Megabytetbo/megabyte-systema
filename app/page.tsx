@@ -982,12 +982,12 @@ export default function Home() {
             </p>
             <p className="text-zinc-500 text-xs mb-6">Elegí un plan para continuar usando MegaTallerPro.</p>
             <div className="flex flex-col gap-3 mb-4">
-              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/0ce122ab-9082-4a78-b4d9-e5b86b0368ef"
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/b2721abc-1fff-4b32-a8a4-aecf84944aa7"
                 target="_blank"
                 className="w-full border border-zinc-700 hover:border-green-500 text-white font-bold py-3 rounded-xl transition-colors text-sm text-center">
                 Plan Basic — $15/mes
               </a>
-              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/185bbb96-124d-4670-8a45-71db9a52b688"
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
                 target="_blank"
                 className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm text-center">
                 Plan Pro — $22/mes ⭐
@@ -1108,7 +1108,7 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/0ce122ab-9082-4a78-b4d9-e5b86b0368ef"
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/b2721abc-1fff-4b32-a8a4-aecf84944aa7"
                 target="_blank"
                 className="w-full border border-zinc-700 hover:border-green-500 text-white py-2.5 rounded-xl text-sm transition-colors text-center block">
                 Suscribirse — $15/mes
@@ -1127,7 +1127,7 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/185bbb96-124d-4670-8a45-71db9a52b688"
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
                 target="_blank"
                 className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm transition-colors text-center block">
                 Suscribirse — $22/mes
