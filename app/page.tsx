@@ -1838,6 +1838,7 @@ export default function Home() {
               calcValRef.current = nv;
               setCalcVal(nv); setCalcNewNum(false);
               setCalcDisplay(parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
+              if (calcNewNum && calcOper === null && calcExpr.includes('=')) setCalcExpr('');
             } else if (action.startsWith('op:')) {
               const op = action.split(':')[1];
               let prev = calcPrev;
@@ -1863,7 +1864,8 @@ export default function Home() {
               else if (calcOper==='*') res=calcPrev*cur;
               else res = cur !== 0 ? calcPrev/cur : NaN;
               const rv = isNaN(res) ? 'NaN' : String(+res.toFixed(10));
-              setCalcVal(rv); setCalcNewNum(true); setCalcPrev(null); setCalcOper(null); setCalcExpr('');
+              setCalcExpr(`${calcPrev.toLocaleString('es-UY')} ${sym[calcOper]} ${cur.toLocaleString('es-UY')} =`);
+              setCalcVal(rv); setCalcNewNum(true); setCalcPrev(null); setCalcOper(null);
               setCalcDisplay(isNaN(parseFloat(rv)) ? 'Error' : parseFloat(rv).toLocaleString('es-UY', {maximumFractionDigits:8}));
             }
           };
