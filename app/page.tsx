@@ -12,7 +12,13 @@ export default function Home() {
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [loginForm, setLoginForm] = useState({ email: '', password: '', recordar: false });
+  const [loginForm, setLoginForm] = useState(() => {
+    if (typeof window === 'undefined') return { email: '', password: '', recordar: false };
+    const recordar = localStorage.getItem('megabyte_recordar') === 'true';
+    const email = recordar ? (localStorage.getItem('megabyte_email') || '') : '';
+    const password = recordar ? (localStorage.getItem('megabyte_password') || '') : '';
+    return { email, password, recordar };
+  });
   const [section, setSection] = useState('reparaciones');
   const [editingRepair, setEditingRepair] = useState<any | null>(null);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -237,8 +243,15 @@ export default function Home() {
     });
     if (error) { alert('Usuario o contraseña incorrectos'); return; }
     if (data.user) {
-      if (loginForm.recordar) localStorage.setItem('megabyte_recordar', 'true');
-      else localStorage.removeItem('megabyte_recordar');
+      if (loginForm.recordar) {
+        localStorage.setItem('megabyte_recordar', 'true');
+        localStorage.setItem('megabyte_email', loginForm.email);
+        localStorage.setItem('megabyte_password', loginForm.password);
+      } else {
+        localStorage.removeItem('megabyte_recordar');
+        localStorage.removeItem('megabyte_email');
+        localStorage.removeItem('megabyte_password');
+      }
       const token = crypto.randomUUID();
       await supabase.from('sesiones_activas').upsert({
         user_id: data.user.id, session_token: token, updated_at: new Date().toISOString()
@@ -255,6 +268,8 @@ export default function Home() {
     }
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
+    localStorage.removeItem('megabyte_email');
+    localStorage.removeItem('megabyte_password');
     localStorage.removeItem('megabyte_session_token');
     localStorage.removeItem('megabyte_is_admin');
     setUser(null);
