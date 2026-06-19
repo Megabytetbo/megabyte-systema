@@ -50,6 +50,12 @@ export default function Home() {
   const [entregaForm, setEntregaForm] = useState({ costo: '', entrega: '', garantia: '', garantiaCustom: '', seReparo: true });
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [showRegistro, setShowRegistro] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{role: 'user' | 'bot', text: string}[]>([
+    { role: 'bot', text: '¡Hola! 👋 Soy el asistente de MegaTallerPro. ¿En qué te puedo ayudar?' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
   const [showNuevaPassword, setShowNuevaPassword] = useState(false);
   const [nuevaPassword, setNuevaPassword] = useState('');
@@ -948,6 +954,30 @@ export default function Home() {
   const equiposData = Object.entries(equiposCount)
     .sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
 
+  // ── Chatbot landing ──────────────────────────────────────────────────────
+  const sendChatMessage = async () => {
+    const text = chatInput.trim();
+    if (!text || chatLoading) return;
+    const newMsgs = [...chatMessages, { role: 'user' as const, text }];
+    setChatMessages(newMsgs);
+    setChatInput('');
+    setChatLoading(true);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: newMsgs })
+      });
+      const data = await res.json();
+      const botText = data?.text || 'Disculpá, no pude procesar tu consulta. Probá de nuevo.';
+      setChatMessages([...newMsgs, { role: 'bot', text: botText }]);
+    } catch (e) {
+      setChatMessages([...newMsgs, { role: 'bot', text: 'Hubo un error de conexión. Probá de nuevo en un momento.' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const getNivelCliente = (cantidad: number) => {
     if (cantidad >= 5) return { texto: 'VIP ⭐', color: 'text-yellow-400' };
     if (cantidad >= 3) return { texto: 'Frecuente', color: 'text-blue-400' };
@@ -1155,6 +1185,50 @@ export default function Home() {
             <p>Sin compromisos · Cancelá cuando quieras · 5 días gratis</p>
           </div>
         </div>
+
+        {/* ── Chatbot flotante ── */}
+        {chatOpen && (
+          <div className="fixed bottom-24 right-6 w-[320px] max-h-[440px] bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
+            <div className="bg-green-500 px-4 py-3 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-green-800 flex items-center justify-center text-base">🤖</div>
+              <div>
+                <p className="text-sm font-bold text-black">MegaTallerPro</p>
+                <p className="text-[11px] text-black/70">Asistente virtual · En línea</p>
+              </div>
+              <button onClick={() => setChatOpen(false)} className="ml-auto text-black/70 hover:text-black text-lg leading-none">×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3.5 flex flex-col gap-2.5">
+              {chatMessages.map((m, i) => (
+                <div key={i} className={`max-w-[85%] px-3 py-2 rounded-xl text-[13px] leading-relaxed ${
+                  m.role === 'user'
+                    ? 'bg-green-500 text-black font-medium self-end rounded-br-sm'
+                    : 'bg-zinc-800 text-zinc-100 self-start rounded-bl-sm'
+                }`}>
+                  {m.text}
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="bg-zinc-800 self-start rounded-xl rounded-bl-sm px-3 py-2.5 flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-pulse"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-pulse" style={{animationDelay:'0.2s'}}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-pulse" style={{animationDelay:'0.4s'}}></span>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 p-2.5 border-t border-zinc-800">
+              <input type="text" value={chatInput} placeholder="Escribí tu pregunta..."
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') sendChatMessage(); }}
+                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-full px-3.5 py-2 text-[13px] text-white outline-none focus:border-green-500" />
+              <button onClick={sendChatMessage} disabled={chatLoading}
+                className="bg-green-500 hover:bg-green-400 disabled:opacity-50 rounded-full w-9 h-9 flex items-center justify-center text-base text-black flex-shrink-0">➤</button>
+            </div>
+          </div>
+        )}
+        <button onClick={() => setChatOpen(!chatOpen)}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-green-500 hover:bg-green-400 shadow-lg shadow-green-500/30 flex items-center justify-center text-2xl z-50 transition-transform hover:scale-105">
+          {chatOpen ? '×' : '💬'}
+        </button>
       </div>
     );
   }
