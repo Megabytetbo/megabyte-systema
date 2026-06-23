@@ -114,16 +114,17 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Verificar sesión única cada 30 segundos ───────────────────────────────
+  // ── Verificar sesión activa cada 30 segundos ──────────────────────────────
   useEffect(() => {
     if (!user || !sessionToken) return;
     if (localStorage.getItem('megabyte_is_admin') === 'true') return;
     const verificarSesion = async () => {
       if (localStorage.getItem('megabyte_is_admin') === 'true') return;
       const { data } = await supabase.from('sesiones_activas')
-        .select('session_token').eq('user_id', user.id).single();
-      if (data && data.session_token !== sessionToken) {
-        alert('Tu sesión fue iniciada en otro dispositivo. Serás desconectado.');
+        .select('session_token').eq('user_id', user.id);
+      const tokens = (data || []).map((s: any) => s.session_token);
+      if (tokens.length > 0 && !tokens.includes(sessionToken)) {
+        alert('Tu sesión fue cerrada porque se alcanzó el límite de dispositivos conectados.');
         await supabase.auth.signOut();
         localStorage.removeItem('megabyte_recordar');
         localStorage.removeItem('megabyte_session_token');
@@ -252,10 +253,42 @@ export default function Home() {
         localStorage.removeItem('megabyte_email');
         localStorage.removeItem('megabyte_password');
       }
+
+      // Verificar plan del usuario para definir el límite de sesiones simultáneas
+      const { data: configData } = await supabase.from('configuracion')
+        .select('is_admin').eq('user_id', data.user.id).single();
+      const esAdmin = configData?.is_admin === true;
+
+      let limiteSesiones = 1;
+      if (!esAdmin) {
+        const { data: subData } = await supabase.from('suscripciones')
+          .select('plan').eq('email', data.user.email).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        limiteSesiones = subData?.plan === 'pro' ? 3 : 1;
+      } else {
+        limiteSesiones = 999;
+      }
+
       const token = crypto.randomUUID();
-      await supabase.from('sesiones_activas').upsert({
+
+      // Traer sesiones activas actuales del usuario, ordenadas por más reciente
+      const { data: sesionesExistentes } = await supabase.from('sesiones_activas')
+        .select('id, session_token, updated_at')
+        .eq('user_id', data.user.id)
+        .order('updated_at', { ascending: false });
+
+      const sesiones = sesionesExistentes || [];
+      // Si ya alcanzó el límite, eliminar las más antiguas para dejar lugar a la nueva
+      if (sesiones.length >= limiteSesiones) {
+        const aEliminar = sesiones.slice(limiteSesiones - 1);
+        for (const s of aEliminar) {
+          await supabase.from('sesiones_activas').delete().eq('id', s.id);
+        }
+      }
+
+      await supabase.from('sesiones_activas').insert({
         user_id: data.user.id, session_token: token, updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      });
+
       localStorage.setItem('megabyte_session_token', token);
       setSessionToken(token);
       setUser(data.user);
@@ -263,8 +296,9 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
-    if (user) {
-      await supabase.from('sesiones_activas').delete().eq('user_id', user.id);
+    if (user && sessionToken) {
+      await supabase.from('sesiones_activas').delete()
+        .eq('user_id', user.id).eq('session_token', sessionToken);
     }
     await supabase.auth.signOut();
     localStorage.removeItem('megabyte_recordar');
@@ -1489,6 +1523,134 @@ export default function Home() {
                 <canvas id="chartEquipos"></canvas>
               </div>
             </div>
+
+            {/* ── Finanzas Pro ── */}
+            {(() => {
+              const esPro = suscripcionActual?.plan === 'pro' || config.is_admin;
+              if (!esPro) return (
+                <div className={`${t.card} border border-dashed rounded-2xl p-6 mt-4 text-center`}>
+                  <p className="text-2xl mb-2">⭐</p>
+                  <p className={`font-semibold ${t.text} mb-1`}>Análisis avanzado disponible en Plan Pro</p>
+                  <p className={`text-sm ${t.subtext} mb-4`}>Comparativa vs mes anterior, proyección de ingresos, ranking de clientes y exportación PDF.</p>
+                  <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
+                    target="_blank" className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                    Actualizar a Pro — $22/mes
+                  </a>
+                </div>
+              );
+
+              // Cálculos Pro
+              const hoy = new Date();
+              const mesActual = hoy.getMonth();
+              const anioActual = hoy.getFullYear();
+              const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+              const anioAnterior = mesActual === 0 ? anioActual - 1 : anioActual;
+
+              const parseFecha = (f: string) => {
+                if (!f) return null;
+                const parts = f.split('/');
+                if (parts.length === 3) return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                return new Date(f);
+              };
+
+              const repsMesActual = repairs.filter((r: any) => {
+                const d = parseFecha(r.fecha); if (!d) return false;
+                return d.getMonth() === mesActual && d.getFullYear() === anioActual;
+              });
+              const repsMesAnterior = repairs.filter((r: any) => {
+                const d = parseFecha(r.fecha); if (!d) return false;
+                return d.getMonth() === mesAnterior && d.getFullYear() === anioAnterior;
+              });
+
+              const ingresoActual = repsMesActual.reduce((a: number, r: any) => a + Number(r.costo||0), 0);
+              const ingresoAnterior = repsMesAnterior.reduce((a: number, r: any) => a + Number(r.costo||0), 0);
+              const varIngreso = ingresoAnterior > 0 ? Math.round(((ingresoActual - ingresoAnterior) / ingresoAnterior) * 100) : 0;
+              const varOrdenes = repsMesActual.length - repsMesAnterior.length;
+              const ticketActual = repsMesActual.length > 0 ? Math.round(ingresoActual / repsMesActual.length) : 0;
+              const ticketAnterior = repsMesAnterior.length > 0 ? Math.round(ingresoAnterior / repsMesAnterior.length) : 0;
+              const varTicket = ticketAnterior > 0 ? Math.round(((ticketActual - ticketAnterior) / ticketAnterior) * 100) : 0;
+
+              // Ranking clientes
+              const clienteRanking: any = {};
+              repairs.forEach((r: any) => {
+                if (!r.cliente) return;
+                clienteRanking[r.cliente] = (clienteRanking[r.cliente] || 0) + Number(r.costo||0);
+              });
+              const topClientes = Object.entries(clienteRanking)
+                .sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+
+              const mesesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+              return (
+                <div className="mt-4 flex flex-col gap-4">
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Análisis Pro — comparativa vs mes anterior</p>
+                      <span className="text-xs bg-green-500/15 text-green-400 px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: 'Ingresos', value: `$${ingresoActual.toLocaleString('es-UY')}`, var: varIngreso, unit: '%' },
+                        { label: 'Órdenes completadas', value: repsMesActual.length, var: varOrdenes, unit: '' },
+                        { label: 'Ticket promedio', value: `$${ticketActual.toLocaleString('es-UY')}`, var: varTicket, unit: '%' },
+                      ].map(stat => (
+                        <div key={stat.label} className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-50'} rounded-xl p-4`}>
+                          <p className={`text-xs ${t.subtext} mb-2`}>{stat.label}</p>
+                          <p className={`text-xl font-semibold ${t.text}`}>{stat.value}</p>
+                          <p className={`text-xs mt-1 flex items-center gap-1 ${stat.var >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {stat.var >= 0 ? '↑' : '↓'} {Math.abs(stat.var)}{stat.unit} vs mes anterior
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Ranking de clientes</p>
+                      {topClientes.length === 0 ? (
+                        <p className={`text-sm ${t.subtext}`}>Sin datos suficientes</p>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {topClientes.map(([nombre, total]: any, i) => (
+                            <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text}`}>{i+1}. {nombre}</span>
+                              <span className={`text-sm font-semibold ${t.text}`}>${Number(total).toLocaleString('es-UY')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`${t.card} border rounded-2xl p-5 flex flex-col justify-between`}>
+                      <div>
+                        <p className={`text-xs ${t.subtext} font-medium mb-2 uppercase tracking-wider`}>Proyección próximo mes</p>
+                        <p className={`text-3xl font-semibold ${t.text} mb-1`}>
+                          ${ingresoActual > 0 ? Math.round(ingresoActual * 1.05).toLocaleString('es-UY') : '—'}
+                        </p>
+                        <p className={`text-xs ${t.subtext}`}>Estimación basada en tendencia actual (+5%)</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const rows = repairs.map((r: any) => `${r.orden||''}	${r.cliente||''}	${r.equipo||''}	${r.estado||''}	${r.costo||0}	${r.entrega||0}	${r.fecha||''}`).join('
+');
+                          const content = `Orden	Cliente	Equipo	Estado	Costo	Cobrado	Fecha
+${rows}`;
+                          const blob = new Blob([content], { type: 'text/tab-separated-values' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url; a.download = 'reporte-finanzas-megatallerpro.tsv'; a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="mt-4 w-full border rounded-xl py-2.5 text-sm font-medium hover:opacity-80 transition-opacity flex items-center justify-center gap-2"
+                        style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
+                        📥 Exportar datos (TSV/Excel)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
           </div>
         )}
