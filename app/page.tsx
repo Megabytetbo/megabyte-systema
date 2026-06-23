@@ -2149,12 +2149,19 @@ export default function Home() {
             if (!ticketVenta) return;
             const w = window.open('', '_blank', 'width=400,height=600');
             if (!w) return;
+            const nombreLocal = config.nombre_negocio || 'MegaTallerPro';
+            const encabezado = config.logo_url
+              ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>`
+              : `<h2>${nombreLocal}</h2>`;
+            const direccion = config.direccion ? `<p style="font-size:11px;color:#666">${config.direccion}</p>` : '';
+            const telefono = config.telefono ? `<p style="font-size:11px;color:#666">Tel: ${config.telefono}</p>` : '';
             const lineas = ticketVenta.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
             w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
               <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
               h2,p{text-align:center;margin:4px 0}.linea{border-top:1px dashed #000;margin:8px 0}
               .total{font-size:15px;font-weight:bold}</style></head><body>
-              <h2>MegaTallerPro</h2><p>Ticket de venta ${ticketVenta.numero}</p>
+              ${encabezado}${direccion}${telefono}
+              <p>Ticket de venta ${ticketVenta.numero}</p>
               <p style="font-size:11px;color:#666">${ticketVenta.fecha}</p>
               <div class="linea"></div>${lineas}<div class="linea"></div>
               <p class="total">TOTAL: $${ticketVenta.total.toLocaleString('es-UY')}</p>
@@ -2299,7 +2306,13 @@ export default function Home() {
                     <div className={`${t.card} border rounded-2xl p-5`}>
                       <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ticket — {ticketVenta.numero}</p>
                       <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-50'} rounded-xl p-4 font-mono text-xs`}>
-                        <p className={`text-center font-bold ${t.text} mb-1`}>MegaTallerPro</p>
+                        {config.logo_url ? (
+                          <img src={config.logo_url} alt="logo" className="mx-auto mb-2" style={{maxWidth:'120px', maxHeight:'48px', objectFit:'contain'}} />
+                        ) : (
+                          <p className={`text-center font-bold ${t.text} mb-1`}>{config.nombre_negocio || 'MegaTallerPro'}</p>
+                        )}
+                        {config.direccion && <p className={`text-center ${t.subtext} mb-1`}>{config.direccion}</p>}
+                        {config.telefono && <p className={`text-center ${t.subtext} mb-1`}>Tel: {config.telefono}</p>}
                         <p className={`text-center ${t.subtext} mb-2`}>Ticket de venta {ticketVenta.numero}</p>
                         <p className={`${t.subtext} mb-2`}>{ticketVenta.fecha}</p>
                         <div className={`border-t border-dashed mb-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
