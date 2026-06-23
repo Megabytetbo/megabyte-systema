@@ -2153,8 +2153,8 @@ export default function Home() {
             const encabezado = config.logo_url
               ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>`
               : `<h2>${nombreLocal}</h2>`;
-            const direccion = config.direccion ? `<p style="font-size:11px;color:#666">${config.direccion}</p>` : '';
-            const telefono = config.telefono ? `<p style="font-size:11px;color:#666">Tel: ${config.telefono}</p>` : '';
+            const direccion = config.direccion ? `<p style="font-size:11px;color:#000">${config.direccion}</p>` : '';
+            const telefono = config.telefono ? `<p style="font-size:11px;color:#000">Tel: ${config.telefono}</p>` : '';
             const lineas = ticketVenta.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
             w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
               <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
@@ -2162,7 +2162,7 @@ export default function Home() {
               .total{font-size:15px;font-weight:bold}</style></head><body>
               ${encabezado}${direccion}${telefono}
               <p>Ticket de venta ${ticketVenta.numero}</p>
-              <p style="font-size:11px;color:#666">${ticketVenta.fecha}</p>
+              <p style="font-size:11px;color:#000">${ticketVenta.fecha}</p>
               <div class="linea"></div>${lineas}<div class="linea"></div>
               <p class="total">TOTAL: $${ticketVenta.total.toLocaleString('es-UY')}</p>
               <p>Pago: ${ticketVenta.formaPago}</p>
