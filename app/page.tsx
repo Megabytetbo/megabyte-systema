@@ -1632,10 +1632,10 @@ export default function Home() {
                       </div>
                       <button
                         onClick={() => {
-                          const rows = repairs.map((r: any) => `${r.orden||''}	${r.cliente||''}	${r.equipo||''}	${r.estado||''}	${r.costo||0}	${r.entrega||0}	${r.fecha||''}`).join('
-');
-                          const content = `Orden	Cliente	Equipo	Estado	Costo	Cobrado	Fecha
-${rows}`;
+                          const sep = '\t';
+                          const nl = '\n';
+                          const rows = repairs.map((r: any) => [r.orden||'', r.cliente||'', r.equipo||'', r.estado||'', r.costo||0, r.entrega||0, r.fecha||''].join(sep)).join(nl);
+                          const content = ['Orden','Cliente','Equipo','Estado','Costo','Cobrado','Fecha'].join(sep) + nl + rows;
                           const blob = new Blob([content], { type: 'text/tab-separated-values' });
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
