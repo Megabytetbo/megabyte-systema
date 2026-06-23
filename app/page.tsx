@@ -1581,6 +1581,30 @@ export default function Home() {
 
               const mesesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
+              // Tasa de reparación
+              const repsEntregadas = repairs.filter((r: any) => r.estado === 'Entregado');
+              const repsReparadas = repsEntregadas.filter((r: any) => r.se_reparo !== false).length;
+              const repsNoReparadas = repsEntregadas.length - repsReparadas;
+              const tasaReparacion = repsEntregadas.length > 0 ? Math.round((repsReparadas / repsEntregadas.length) * 100) : 0;
+
+              // Saldo pendiente por cliente
+              const saldoMap: any = {};
+              repairs.forEach((r: any) => {
+                if (Number(r.saldo || 0) > 0 && r.cliente) {
+                  saldoMap[r.cliente] = (saldoMap[r.cliente] || 0) + Number(r.saldo);
+                }
+              });
+              const topSaldos = Object.entries(saldoMap).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+              const totalSaldoPendiente = Object.values(saldoMap).reduce((a: any, b: any) => a + b, 0);
+
+              // Ingresos por tipo de equipo
+              const equipoIngresosMap: any = {};
+              repairs.forEach((r: any) => {
+                const tipo = (r.equipo || 'Otro').split(' - ')[0];
+                equipoIngresosMap[tipo] = (equipoIngresosMap[tipo] || 0) + Number(r.costo || 0);
+              });
+              const equipoIngresosList = Object.entries(equipoIngresosMap).sort((a: any, b: any) => (b[1] as number) - (a[1] as number)).slice(0, 5);
+
               return (
                 <div className="mt-4 flex flex-col gap-4">
                   <div className={`${t.card} border rounded-2xl p-5`}>
@@ -1588,18 +1612,23 @@ export default function Home() {
                       <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Análisis Pro — comparativa vs mes anterior</p>
                       <span className="text-xs bg-green-500/15 text-green-400 px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       {[
-                        { label: 'Ingresos', value: `$${ingresoActual.toLocaleString('es-UY')}`, var: varIngreso, unit: '%' },
-                        { label: 'Órdenes completadas', value: repsMesActual.length, var: varOrdenes, unit: '' },
-                        { label: 'Ticket promedio', value: `$${ticketActual.toLocaleString('es-UY')}`, var: varTicket, unit: '%' },
+                        { label: 'Ingresos', value: `$${ingresoActual.toLocaleString('es-UY')}`, var: varIngreso, unit: '%', showVar: true },
+                        { label: 'Órdenes completadas', value: repsMesActual.length, var: varOrdenes, unit: '', showVar: true },
+                        { label: 'Ticket promedio', value: `$${ticketActual.toLocaleString('es-UY')}`, var: varTicket, unit: '%', showVar: true },
+                        { label: 'Tasa de reparación', value: `${tasaReparacion}%`, sub: `${repsReparadas} reparados / ${repsNoReparadas} no reparados`, showVar: false },
                       ].map(stat => (
                         <div key={stat.label} className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-50'} rounded-xl p-4`}>
                           <p className={`text-xs ${t.subtext} mb-2`}>{stat.label}</p>
                           <p className={`text-xl font-semibold ${t.text}`}>{stat.value}</p>
-                          <p className={`text-xs mt-1 flex items-center gap-1 ${stat.var >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {stat.var >= 0 ? '↑' : '↓'} {Math.abs(stat.var)}{stat.unit} vs mes anterior
-                          </p>
+                          {stat.showVar ? (
+                            <p className={`text-xs mt-1 ${stat.var >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {stat.var >= 0 ? '↑' : '↓'} {Math.abs(stat.var)}{stat.unit} vs mes anterior
+                            </p>
+                          ) : (
+                            <p className={`text-xs mt-1 ${t.subtext}`}>{stat.sub}</p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1611,7 +1640,7 @@ export default function Home() {
                       {topClientes.length === 0 ? (
                         <p className={`text-sm ${t.subtext}`}>Sin datos suficientes</p>
                       ) : (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col">
                           {topClientes.map(([nombre, total]: any, i) => (
                             <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
                               <span className={`text-sm ${t.text}`}>{i+1}. {nombre}</span>
@@ -1622,29 +1651,87 @@ export default function Home() {
                       )}
                     </div>
 
-                    <div className={`${t.card} border rounded-2xl p-5 flex flex-col justify-between`}>
-                      <div>
-                        <p className={`text-xs ${t.subtext} font-medium mb-2 uppercase tracking-wider`}>Proyección próximo mes</p>
-                        <p className={`text-3xl font-semibold ${t.text} mb-1`}>
-                          ${ingresoActual > 0 ? Math.round(ingresoActual * 1.05).toLocaleString('es-UY') : '—'}
-                        </p>
-                        <p className={`text-xs ${t.subtext}`}>Estimación basada en tendencia actual (+5%)</p>
-                      </div>
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Saldo pendiente por cliente</p>
+                      {topSaldos.length === 0 ? (
+                        <p className={`text-sm ${t.subtext}`}>Sin saldos pendientes</p>
+                      ) : (
+                        <div className="flex flex-col">
+                          {topSaldos.map(([nombre, saldo]: any) => (
+                            <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text}`}>{nombre}</span>
+                              <span className="text-sm font-semibold text-red-400">${Number(saldo).toLocaleString('es-UY')}</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between items-center pt-2 mt-1">
+                            <span className={`text-xs font-medium ${t.subtext}`}>Total pendiente</span>
+                            <span className="text-sm font-semibold text-red-400">${Number(totalSaldoPendiente).toLocaleString('es-UY')}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ingresos por tipo de equipo</p>
+                    <div style={{position:'relative', height:`${Math.max(equipoIngresosList.length * 40 + 20, 80)}px`}}>
+                      <canvas id="chartEquiposIngresosP"></canvas>
+                    </div>
+                    {typeof window !== 'undefined' && (() => {
+                      setTimeout(() => {
+                        const win = window as any;
+                        if (!win.Chart) return;
+                        const existing = win.Chart.getChart('chartEquiposIngresosP');
+                        if (existing) existing.destroy();
+                        const c = document.getElementById('chartEquiposIngresosP');
+                        if (!c) return;
+                        const isDark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+                        const tickColor = isDark ? '#888' : '#aaa';
+                        const colors = ['#378ADD','#534AB7','#639922','#EF9F27','#888780'];
+                        new win.Chart(c, {
+                          type: 'bar',
+                          data: {
+                            labels: equipoIngresosList.map((e: any) => e[0]),
+                            datasets: [{ data: equipoIngresosList.map((e: any) => e[1]), backgroundColor: colors.slice(0, equipoIngresosList.length), borderRadius: 4 }]
+                          },
+                          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              x: { ticks: { color: tickColor, font: { size: 11 }, callback: (v: any) => '$' + v.toLocaleString('es-UY') }, grid: { color: gridColor }, border: { display: false } },
+                              y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+                            }
+                          }
+                        });
+                      }, 200);
+                      return null;
+                    })()}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-2 uppercase tracking-wider`}>Proyección próximo mes</p>
+                      <p className={`text-3xl font-semibold ${t.text} mb-1`}>
+                        ${ingresoActual > 0 ? Math.round(ingresoActual * 1.05).toLocaleString('es-UY') : '—'}
+                      </p>
+                      <p className={`text-xs ${t.subtext}`}>Estimación basada en tendencia actual (+5%)</p>
+                    </div>
+                    <div className={`${t.card} border rounded-2xl p-5 flex items-center justify-center`}>
                       <button
                         onClick={() => {
                           const sep = '\t';
                           const nl = '\n';
                           const rows = repairs.map((r: any) => [r.orden||'', r.cliente||'', r.equipo||'', r.estado||'', r.costo||0, r.entrega||0, r.fecha||''].join(sep)).join(nl);
-                          const content = ['Orden','Cliente','Equipo','Estado','Costo','Cobrado','Fecha'].join(sep) + nl + rows;
-                          const blob = new Blob([content], { type: 'text/tab-separated-values' });
+                          const exportContent = ['Orden','Cliente','Equipo','Estado','Costo','Cobrado','Fecha'].join(sep) + nl + rows;
+                          const blob = new Blob([exportContent], { type: 'text/tab-separated-values' });
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement('a');
                           a.href = url; a.download = 'reporte-finanzas-megatallerpro.tsv'; a.click();
                           URL.revokeObjectURL(url);
                         }}
-                        className="mt-4 w-full border rounded-xl py-2.5 text-sm font-medium hover:opacity-80 transition-opacity flex items-center justify-center gap-2"
+                        className="w-full border rounded-xl py-2.5 text-sm font-medium hover:opacity-80 transition-opacity flex items-center justify-center gap-2"
                         style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
-                        📥 Exportar datos (TSV/Excel)
+                        📥 Exportar datos (Excel)
                       </button>
                     </div>
                   </div>
