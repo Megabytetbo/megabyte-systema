@@ -50,6 +50,15 @@ export default function Home() {
   const [entregaForm, setEntregaForm] = useState({ costo: '', entrega: '', garantia: '', garantiaCustom: '', seReparo: true });
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [showRegistro, setShowRegistro] = useState(false);
+  // ── Punto de ventas ──────────────────────────────────────────────────────
+  const [productos, setProductos] = useState<any[]>([]);
+  const [carrito, setCarrito] = useState<any[]>([]);
+  const [busquedaPdv, setBusquedaPdv] = useState('');
+  const [showAddProducto, setShowAddProducto] = useState(false);
+  const [productoForm, setProductoForm] = useState({ nombre: '', precio: '', stock: '', codigo_barras: '' });
+  const [formaPagoPdv, setFormaPagoPdv] = useState('Efectivo');
+  const [ticketVenta, setTicketVenta] = useState<any | null>(null);
+  const [editingProducto, setEditingProducto] = useState<any | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [showNuevaPassword, setShowNuevaPassword] = useState(false);
   const [nuevaPassword, setNuevaPassword] = useState('');
@@ -168,6 +177,11 @@ export default function Home() {
     loadRepairs();
     loadClientes();
     loadConfig();
+    const loadProductos = async () => {
+      const { data } = await supabase.from('productos').select('*').order('nombre');
+      if (data) setProductos(data);
+    };
+    loadProductos();
     // Verificar suscripcion del usuario
     const verificarAcceso = async () => {
       const { data } = await supabase.from('suscripciones')
@@ -1321,6 +1335,7 @@ export default function Home() {
     { id: 'reparaciones', label: 'Reparaciones', icon: '🔧' },
     { id: 'finanzas', label: 'Finanzas', icon: '💰' },
     { id: 'clientes', label: 'Clientes', icon: '👥' },
+    ...((config.is_admin || (typeof window !== 'undefined' && localStorage.getItem('megabyte_is_admin') === 'true') || suscripcionActual?.plan === 'pro') ? [{ id: 'ventas', label: 'Ventas', icon: '🛒' }] : []),
     { id: 'calculadora', label: 'Calculadora', icon: '🧮' },
     { id: 'configuracion', label: 'Configuración', icon: '⚙️' },
     ...(config.is_admin ? [{ id: 'admin', label: 'Admin', icon: '🛡️' }] : []),
@@ -2060,6 +2075,287 @@ export default function Home() {
             )}
           </div>
         )}
+
+        {/* ── Punto de Ventas ── */}
+        {section === 'ventas' && (() => {
+          const esPro = config.is_admin || (typeof window !== 'undefined' && localStorage.getItem('megabyte_is_admin') === 'true') || suscripcionActual?.plan === 'pro';
+
+          const productosFiltrados = productos.filter((p: any) =>
+            p.nombre.toLowerCase().includes(busquedaPdv.toLowerCase()) ||
+            (p.codigo_barras && p.codigo_barras.includes(busquedaPdv))
+          );
+
+          const agregarAlCarrito = (producto: any) => {
+            setCarrito(prev => {
+              const existente = prev.find((i: any) => i.id === producto.id);
+              if (existente) return prev.map((i: any) => i.id === producto.id ? {...i, cantidad: i.cantidad + 1} : i);
+              return [...prev, {...producto, cantidad: 1}];
+            });
+            setBusquedaPdv('');
+          };
+
+          const cambiarCantidad = (id: number, delta: number) => {
+            setCarrito(prev => prev.map((i: any) => i.id === id ? {...i, cantidad: Math.max(1, i.cantidad + delta)} : i));
+          };
+
+          const quitarDelCarrito = (id: number) => setCarrito(prev => prev.filter((i: any) => i.id !== id));
+
+          const totalCarrito = carrito.reduce((a: number, i: any) => a + (Number(i.precio) * i.cantidad), 0);
+
+          const confirmarVenta = async () => {
+            if (carrito.length === 0) return;
+            const { data: ventas } = await supabase.from('ventas').select('numero_venta').eq('user_id', user.id).order('id', { ascending: false }).limit(1).maybeSingle();
+            const nro = ventas ? parseInt((ventas.numero_venta || '0').replace(/\D/g,'')) + 1 : 1;
+            const numero = `#${String(nro).padStart(4,'0')}`;
+            const items = carrito.map((i: any) => ({ id: i.id, nombre: i.nombre, precio: Number(i.precio), cantidad: i.cantidad }));
+            await supabase.from('ventas').insert({ user_id: user.id, numero_venta: numero, total: totalCarrito, forma_pago: formaPagoPdv, items });
+            for (const item of carrito) {
+              await supabase.from('productos').update({ stock: Math.max(0, (item.stock || 0) - item.cantidad) }).eq('id', item.id);
+            }
+            const { data: prodsActualizados } = await supabase.from('productos').select('*').order('nombre');
+            if (prodsActualizados) setProductos(prodsActualizados);
+            const fecha = new Date().toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+            setTicketVenta({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha });
+            setCarrito([]);
+          };
+
+          const guardarProducto = async () => {
+            if (!productoForm.nombre || !productoForm.precio) return;
+            if (editingProducto) {
+              await supabase.from('productos').update({
+                nombre: productoForm.nombre, precio: Number(productoForm.precio),
+                stock: Number(productoForm.stock || 0), codigo_barras: productoForm.codigo_barras || null
+              }).eq('id', editingProducto.id);
+            } else {
+              await supabase.from('productos').insert({
+                user_id: user.id, nombre: productoForm.nombre, precio: Number(productoForm.precio),
+                stock: Number(productoForm.stock || 0), codigo_barras: productoForm.codigo_barras || null
+              });
+            }
+            const { data } = await supabase.from('productos').select('*').order('nombre');
+            if (data) setProductos(data);
+            setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' });
+            setShowAddProducto(false);
+            setEditingProducto(null);
+          };
+
+          const eliminarProducto = async (id: number) => {
+            if (!confirm('¿Eliminar este producto?')) return;
+            await supabase.from('productos').delete().eq('id', id);
+            setProductos(prev => prev.filter((p: any) => p.id !== id));
+          };
+
+          const imprimirTicket = () => {
+            if (!ticketVenta) return;
+            const w = window.open('', '_blank', 'width=400,height=600');
+            if (!w) return;
+            const lineas = ticketVenta.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
+            w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
+              <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
+              h2,p{text-align:center;margin:4px 0}.linea{border-top:1px dashed #000;margin:8px 0}
+              .total{font-size:15px;font-weight:bold}</style></head><body>
+              <h2>MegaTallerPro</h2><p>Ticket de venta ${ticketVenta.numero}</p>
+              <p style="font-size:11px;color:#666">${ticketVenta.fecha}</p>
+              <div class="linea"></div>${lineas}<div class="linea"></div>
+              <p class="total">TOTAL: $${ticketVenta.total.toLocaleString('es-UY')}</p>
+              <p>Pago: ${ticketVenta.formaPago}</p>
+              <div class="linea"></div><p>Gracias por su compra</p>
+              <script>window.print();window.close();</script></body></html>`);
+          };
+
+          if (!esPro) return (
+            <div>
+              <div className={`${t.card} border border-dashed rounded-2xl p-6 text-center`}>
+                <p className="text-2xl mb-2">🛒</p>
+                <p className={`font-semibold ${t.text} mb-1`}>Punto de ventas disponible en Plan Pro</p>
+                <p className={`text-sm ${t.subtext} mb-4`}>Vendé productos, manejá tu inventario y generá tickets.</p>
+                <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
+                  target="_blank" className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                  Actualizar a Pro — $22/mes
+                </a>
+              </div>
+            </div>
+          );
+
+          return (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className={`text-2xl font-bold ${t.text}`}>Punto de ventas</h1>
+                  <p className={`${t.subtext} text-sm mt-1`}>Vendé productos y generá tickets</p>
+                </div>
+                <span className="text-xs bg-green-500/15 text-green-400 px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Columna izquierda */}
+                <div className="flex flex-col gap-4">
+                  {/* Buscador */}
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Escanear / buscar producto</p>
+                    <input type="text" value={busquedaPdv} autoFocus
+                      placeholder="Escanear código de barras o buscar por nombre..."
+                      onChange={e => setBusquedaPdv(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          const match = productos.find((p: any) => p.codigo_barras === busquedaPdv || p.nombre.toLowerCase() === busquedaPdv.toLowerCase());
+                          if (match) agregarAlCarrito(match);
+                        }
+                      }}
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm focus:border-green-500`} />
+                    <p className={`text-xs ${t.subtext} mt-2`}>El lector ingresa el código automáticamente. Presioná Enter para agregar.</p>
+                    {busquedaPdv && productosFiltrados.length > 0 && (
+                      <div className={`mt-2 border ${t.divider} rounded-xl overflow-hidden`}>
+                        {productosFiltrados.slice(0, 5).map((p: any) => (
+                          <button key={p.id} onClick={() => agregarAlCarrito(p)}
+                            className={`w-full text-left px-4 py-2.5 text-sm ${t.text} hover:bg-green-500/10 flex justify-between items-center border-b last:border-0`} style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <span>{p.nombre}</span>
+                            <span className="font-medium">${Number(p.precio).toLocaleString('es-UY')}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Inventario */}
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Inventario ({productos.length})</p>
+                      <button onClick={() => { setShowAddProducto(true); setEditingProducto(null); setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' }); }}
+                        className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition-colors">+ Agregar</button>
+                    </div>
+                    {productos.length === 0 ? (
+                      <p className={`text-sm ${t.subtext}`}>Sin productos. Agregá el primero.</p>
+                    ) : (
+                      <div className="flex flex-col">
+                        {productos.map((p: any) => (
+                          <div key={p.id} className="flex items-center justify-between py-2.5 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div className="flex-1 min-w-0 mr-3">
+                              <p className={`text-sm font-medium ${t.text} truncate`}>{p.nombre}</p>
+                              <p className={`text-xs ${t.subtext}`}>{p.codigo_barras || 'Sin código'}</p>
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              <div className="text-right">
+                                <p className={`text-sm font-semibold ${t.text}`}>${Number(p.precio).toLocaleString('es-UY')}</p>
+                                <p className={`text-xs ${p.stock <= 2 ? 'text-yellow-400' : 'text-green-400'}`}>Stock: {p.stock}</p>
+                              </div>
+                              <button onClick={() => agregarAlCarrito(p)} className="text-xs bg-green-500/15 text-green-400 px-2 py-1 rounded-lg hover:bg-green-500/25">+</button>
+                              <button onClick={() => { setEditingProducto(p); setProductoForm({ nombre: p.nombre, precio: String(p.precio), stock: String(p.stock), codigo_barras: p.codigo_barras || '' }); setShowAddProducto(true); }}
+                                className={`text-xs ${t.muted} hover:opacity-70`}>✏️</button>
+                              <button onClick={() => eliminarProducto(p.id)} className="text-xs text-red-400 hover:opacity-70">🗑️</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Columna derecha */}
+                <div className="flex flex-col gap-4">
+                  {/* Carrito */}
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Carrito de venta</p>
+                    {carrito.length === 0 ? (
+                      <p className={`text-sm ${t.subtext}`}>Escaneá o seleccioná productos para agregar al carrito.</p>
+                    ) : (
+                      <>
+                        <div className="flex flex-col">
+                          {carrito.map((item: any) => (
+                            <div key={item.id} className="flex items-center gap-2 py-2.5 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text} flex-1 truncate`}>{item.nombre}</span>
+                              <button onClick={() => cambiarCantidad(item.id, -1)} className={`w-7 h-7 rounded-lg ${t.badge} border text-sm flex items-center justify-center`} style={{borderColor:'var(--color-border-tertiary)'}}>−</button>
+                              <span className={`text-sm font-medium ${t.text} w-5 text-center`}>{item.cantidad}</span>
+                              <button onClick={() => cambiarCantidad(item.id, 1)} className={`w-7 h-7 rounded-lg ${t.badge} border text-sm flex items-center justify-center`} style={{borderColor:'var(--color-border-tertiary)'}}>+</button>
+                              <span className={`text-sm font-semibold ${t.text} w-20 text-right`}>${(Number(item.precio) * item.cantidad).toLocaleString('es-UY')}</span>
+                              <button onClick={() => quitarDelCarrito(item.id)} className="text-red-400 text-sm">✕</button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center mt-3 pt-3 border-t" style={{borderColor:'var(--color-border-tertiary)'}}>
+                          <span className={`text-sm ${t.subtext}`}>Total</span>
+                          <span className={`text-2xl font-semibold ${t.text}`}>${totalCarrito.toLocaleString('es-UY')}</span>
+                        </div>
+                        <div className="mt-3">
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Forma de pago</label>
+                          <select value={formaPagoPdv} onChange={e => setFormaPagoPdv(e.target.value)}
+                            className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm mb-3`}>
+                            <option>Efectivo</option>
+                            <option>Tarjeta</option>
+                            <option>Transferencia</option>
+                          </select>
+                        </div>
+                        <button onClick={confirmarVenta}
+                          className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                          🧾 Confirmar venta y generar ticket
+                        </button>
+                        <button onClick={() => setCarrito([])} className={`w-full mt-2 text-xs ${t.subtext} hover:opacity-70`}>Vaciar carrito</button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Ticket */}
+                  {ticketVenta && (
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ticket — {ticketVenta.numero}</p>
+                      <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-50'} rounded-xl p-4 font-mono text-xs`}>
+                        <p className={`text-center font-bold ${t.text} mb-1`}>MegaTallerPro</p>
+                        <p className={`text-center ${t.subtext} mb-2`}>Ticket de venta {ticketVenta.numero}</p>
+                        <p className={`${t.subtext} mb-2`}>{ticketVenta.fecha}</p>
+                        <div className={`border-t border-dashed mb-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                        {ticketVenta.items.map((item: any, i: number) => (
+                          <p key={i} className={`${t.text} mb-1`}>{item.nombre} x{item.cantidad} ... ${(item.precio * item.cantidad).toLocaleString('es-UY')}</p>
+                        ))}
+                        <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                        <p className={`font-bold ${t.text}`}>TOTAL: ${ticketVenta.total.toLocaleString('es-UY')}</p>
+                        <p className={`${t.subtext}`}>Pago: {ticketVenta.formaPago}</p>
+                        <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                        <p className={`text-center ${t.subtext}`}>Gracias por su compra</p>
+                      </div>
+                      <button onClick={imprimirTicket}
+                        className={`mt-3 w-full border rounded-xl py-2.5 text-sm font-medium hover:opacity-80 transition-opacity flex items-center justify-center gap-2`}
+                        style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
+                        🖨️ Imprimir ticket
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal agregar/editar producto */}
+              {showAddProducto && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                  <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className={`font-semibold ${t.text}`}>{editingProducto ? 'Editar producto' : 'Agregar producto'}</h2>
+                      <button onClick={() => { setShowAddProducto(false); setEditingProducto(null); }} className={`${t.muted} text-xl`}>×</button>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      {[
+                        { label: 'Nombre', key: 'nombre', placeholder: 'Ej: Funda iPhone 15' },
+                        { label: 'Precio ($)', key: 'precio', placeholder: '0' },
+                        { label: 'Stock', key: 'stock', placeholder: '0' },
+                        { label: 'Código de barras (opcional)', key: 'codigo_barras', placeholder: 'Escanear o dejar vacío' },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{f.label}</label>
+                          <input type={f.key === 'precio' || f.key === 'stock' ? 'number' : 'text'}
+                            value={(productoForm as any)[f.key]} placeholder={f.placeholder}
+                            onChange={e => setProductoForm({...productoForm, [f.key]: e.target.value})}
+                            className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={guardarProducto}
+                      className="mt-4 w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm">
+                      {editingProducto ? 'Guardar cambios' : 'Agregar producto'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── Calculadora ── */}
         {section === 'calculadora' && (() => {
