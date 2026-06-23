@@ -2147,27 +2147,72 @@ export default function Home() {
 
           const imprimirTicket = () => {
             if (!ticketVenta) return;
-            const w = window.open('', '_blank', 'width=400,height=600');
-            if (!w) return;
-            const nombreLocal = config.nombre_negocio || 'MegaTallerPro';
-            const encabezado = config.logo_url
-              ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>`
-              : `<h2>${nombreLocal}</h2>`;
-            const direccion = config.direccion ? `<p style="font-size:11px;color:#666">${config.direccion}</p>` : '';
-            const telefono = config.telefono ? `<p style="font-size:11px;color:#666">Tel: ${config.telefono}</p>` : '';
-            const lineas = ticketVenta.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
-            w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
-              <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
-              h2,p{text-align:center;margin:4px 0}.linea{border-top:1px dashed #000;margin:8px 0}
-              .total{font-size:15px;font-weight:bold}</style></head><body>
-              ${encabezado}${direccion}${telefono}
-              <p>Ticket de venta ${ticketVenta.numero}</p>
-              <p style="font-size:11px;color:#666">${ticketVenta.fecha}</p>
-              <div class="linea"></div>${lineas}<div class="linea"></div>
-              <p class="total">TOTAL: $${ticketVenta.total.toLocaleString('es-UY')}</p>
-              <p>Pago: ${ticketVenta.formaPago}</p>
-              <div class="linea"></div><p>Gracias por su compra</p>
-              <script>window.print();window.close();</script></body></html>`);
+            const nombreLocal = config.nombre_negocio || 'MegaByte';
+            const lineas = ticketVenta.items.map((i: any) =>
+              `<div class="fila"><span>${i.nombre} x${i.cantidad}</span><span>$ ${(i.precio * i.cantidad).toLocaleString('es-UY')}</span></div>`
+            ).join('');
+            const html = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="UTF-8"/>
+                <title>Venta ${ticketVenta.numero}</title>
+                <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 12px;
+                    width: 72mm;
+                    padding: 3mm 4mm;
+                    color: #000;
+                    position: relative;
+                  }
+                  .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
+                  .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
+                  .linea { border-top: 1.5px solid #000; margin: 5px 0; }
+                  .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+                  .label { font-weight: bold; }
+                  .bloque { margin-bottom: 3px; }
+                  .total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 900; margin-top: 4px; }
+                  .footer { text-align: center; font-size: 11px; margin-top: 6px; font-weight: bold; }
+                  @media print {
+                    body { width: 72mm; }
+                    @page { margin: 0; size: 80mm auto; }
+                  }
+                </style>
+              </head>
+              <body>
+                ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombreLocal}</div>`}
+                ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
+                ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
+                <div class="linea"></div>
+
+                <div class="bloque">
+                  <div class="fila"><span class="label">Ticket:</span><span>${ticketVenta.numero}</span></div>
+                  <div class="fila"><span class="label">Fecha:</span><span>${ticketVenta.fecha}</span></div>
+                </div>
+                <div class="linea"></div>
+
+                <div class="bloque">${lineas}</div>
+                <div class="linea"></div>
+
+                <div class="total"><span>TOTAL</span><span>$ ${ticketVenta.total.toLocaleString('es-UY')}</span></div>
+                <div class="fila" style="margin-top:4px"><span class="label">Pago:</span><span>${ticketVenta.formaPago}</span></div>
+                <div class="linea"></div>
+
+                <div class="footer">Gracias por su compra</div>
+
+                <script>
+                  window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() { window.close(); };
+                  };
+                </script>
+              </body>
+              </html>
+            `;
+            const ventana = window.open('', '_blank', 'width=400,height=600');
+            if (ventana) { ventana.document.write(html); ventana.document.close(); }
           };
 
           if (!esPro) return (
