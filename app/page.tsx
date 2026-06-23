@@ -1526,7 +1526,7 @@ export default function Home() {
 
             {/* ── Finanzas Pro ── */}
             {(() => {
-              const esPro = suscripcionActual?.plan === 'pro' || config.is_admin;
+              const esPro = config.is_admin || suscripcionActual?.plan === 'pro' || localStorage.getItem('megabyte_is_admin') === 'true';
               if (!esPro) return (
                 <div className={`${t.card} border border-dashed rounded-2xl p-6 mt-4 text-center`}>
                   <p className="text-2xl mb-2">⭐</p>
