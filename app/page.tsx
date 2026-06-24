@@ -58,6 +58,8 @@ export default function Home() {
   const [productoForm, setProductoForm] = useState({ nombre: '', precio: '', stock: '', codigo_barras: '' });
   const [formaPagoPdv, setFormaPagoPdv] = useState('Efectivo');
   const [ticketVenta, setTicketVenta] = useState<any | null>(null);
+  const [ventasList, setVentasList] = useState<any[]>([]);
+  const [subVenta, setSubVenta] = useState<'vender' | 'finanzas'>('vender');
   const [editingProducto, setEditingProducto] = useState<any | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [showNuevaPassword, setShowNuevaPassword] = useState(false);
@@ -182,6 +184,11 @@ export default function Home() {
       if (data) setProductos(data);
     };
     loadProductos();
+    const loadVentas = async () => {
+      const { data } = await supabase.from('ventas').select('*').order('fecha', { ascending: false });
+      if (data) setVentasList(data);
+    };
+    loadVentas();
     // Verificar suscripcion del usuario
     const verificarAcceso = async () => {
       const { data } = await supabase.from('suscripciones')
@@ -2109,6 +2116,8 @@ export default function Home() {
             const numero = `#${String(nro).padStart(4,'0')}`;
             const items = carrito.map((i: any) => ({ id: i.id, nombre: i.nombre, precio: Number(i.precio), cantidad: i.cantidad }));
             await supabase.from('ventas').insert({ user_id: user.id, numero_venta: numero, total: totalCarrito, forma_pago: formaPagoPdv, items });
+            const { data: ventasActualizadas } = await supabase.from('ventas').select('*').order('fecha', { ascending: false });
+            if (ventasActualizadas) setVentasList(ventasActualizadas);
             for (const item of carrito) {
               await supabase.from('productos').update({ stock: Math.max(0, (item.stock || 0) - item.cantidad) }).eq('id', item.id);
             }
@@ -2184,6 +2193,43 @@ export default function Home() {
             </div>
           );
 
+          // ── Métricas de finanzas de ventas ──
+          const hoyStr = new Date().toDateString();
+          const mesActualV = new Date().getMonth();
+          const anioActualV = new Date().getFullYear();
+          const ventasHoy = ventasList.filter((v: any) => new Date(v.fecha).toDateString() === hoyStr);
+          const ventasMes = ventasList.filter((v: any) => {
+            const d = new Date(v.fecha);
+            return d.getMonth() === mesActualV && d.getFullYear() === anioActualV;
+          });
+          const totalHoy = ventasHoy.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const totalMes = ventasMes.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const totalGeneral = ventasList.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const ticketPromVenta = ventasList.length > 0 ? Math.round(totalGeneral / ventasList.length) : 0;
+          const valorInventario = productos.reduce((a: number, p: any) => a + (Number(p.precio || 0) * Number(p.stock || 0)), 0);
+
+          // Productos más vendidos
+          const vendidosMap: any = {};
+          ventasList.forEach((v: any) => {
+            (v.items || []).forEach((it: any) => {
+              if (!vendidosMap[it.nombre]) vendidosMap[it.nombre] = { cantidad: 0, total: 0 };
+              vendidosMap[it.nombre].cantidad += it.cantidad;
+              vendidosMap[it.nombre].total += it.precio * it.cantidad;
+            });
+          });
+          const topVendidos = Object.entries(vendidosMap).sort((a: any, b: any) => b[1].cantidad - a[1].cantidad).slice(0, 5);
+
+          // Ventas por día (últimos 7 días)
+          const ventasPorDia: { dia: string, total: number }[] = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const diaStr = d.toDateString();
+            const total = ventasList.filter((v: any) => new Date(v.fecha).toDateString() === diaStr).reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+            ventasPorDia.push({ dia: d.toLocaleDateString('es-UY', { weekday: 'short', day: 'numeric' }), total });
+          }
+          const maxDia = Math.max(...ventasPorDia.map(d => d.total), 1);
+
           return (
             <div>
               <div className="flex items-center justify-between mb-6">
@@ -2194,6 +2240,89 @@ export default function Home() {
                 <span className="text-xs bg-green-500/15 text-green-400 px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
               </div>
 
+              {/* Tabs */}
+              <div className="flex gap-2 mb-6">
+                <button onClick={() => setSubVenta('vender')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'vender' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  🛒 Vender
+                </button>
+                <button onClick={() => setSubVenta('finanzas')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'finanzas' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  💰 Finanzas
+                </button>
+              </div>
+
+              {subVenta === 'finanzas' ? (
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Vendido hoy', value: `$${totalHoy.toLocaleString('es-UY')}`, color: 'text-green-400' },
+                      { label: 'Vendido este mes', value: `$${totalMes.toLocaleString('es-UY')}`, color: 'text-blue-400' },
+                      { label: 'Total general', value: `$${totalGeneral.toLocaleString('es-UY')}`, color: 'text-purple-400' },
+                      { label: 'Cantidad de ventas', value: ventasList.length, color: 'text-green-400' },
+                      { label: 'Ticket promedio', value: `$${ticketPromVenta.toLocaleString('es-UY')}`, color: 'text-yellow-400' },
+                      { label: 'Valor del inventario', value: `$${valorInventario.toLocaleString('es-UY')}`, color: 'text-blue-400' },
+                    ].map(stat => (
+                      <div key={stat.label} className={`${t.card} border rounded-2xl p-4`}>
+                        <p className={`text-xs ${t.subtext} font-medium mb-2 uppercase tracking-wider`}>{stat.label}</p>
+                        <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Productos más vendidos</p>
+                      {topVendidos.length === 0 ? (
+                        <p className={`text-sm ${t.subtext}`}>Sin ventas registradas</p>
+                      ) : (
+                        <div className="flex flex-col">
+                          {topVendidos.map(([nombre, datos]: any, i) => (
+                            <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text}`}>{i+1}. {nombre}</span>
+                              <span className={`text-sm ${t.subtext}`}>{datos.cantidad} u. · <span className="font-semibold">${datos.total.toLocaleString('es-UY')}</span></span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Ventas últimos 7 días</p>
+                      <div className="flex items-end justify-between gap-2" style={{height:'140px'}}>
+                        {ventasPorDia.map((d, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                            <div className="w-full bg-green-500 rounded-t" style={{height: `${(d.total / maxDia) * 100}%`, minHeight: d.total > 0 ? '4px' : '0'}}></div>
+                            <span className={`text-[10px] ${t.subtext} mt-1 text-center`}>{d.dia}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Últimas ventas</p>
+                    {ventasList.length === 0 ? (
+                      <p className={`text-sm ${t.subtext}`}>Sin ventas registradas</p>
+                    ) : (
+                      <div className="flex flex-col">
+                        {ventasList.slice(0, 10).map((v: any) => (
+                          <div key={v.id} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div>
+                              <span className={`text-sm ${t.text}`}>{v.numero_venta}</span>
+                              <span className={`text-xs ${t.subtext} ml-2`}>{new Date(v.fecha).toLocaleDateString('es-UY', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-sm font-semibold ${t.text}`}>${Number(v.total).toLocaleString('es-UY')}</span>
+                              <span className={`text-xs ${t.subtext} ml-2`}>{v.forma_pago}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Columna izquierda */}
                 <div className="flex flex-col gap-4">
@@ -2334,6 +2463,7 @@ export default function Home() {
                   )}
                 </div>
               </div>
+              )}
 
               {/* Modal agregar/editar producto */}
               {showAddProducto && (
