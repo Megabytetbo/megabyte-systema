@@ -11,6 +11,7 @@ export default function Home() {
   const [openMenu, setOpenMenu] = useState<number | null>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [showModal, setShowModal] = useState(false);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loginForm, setLoginForm] = useState(() => {
     if (typeof window === 'undefined') return { email: '', password: '', recordar: false };
@@ -768,6 +769,8 @@ export default function Home() {
   // ── CRUD ──────────────────────────────────────────────────────────────────
   const addRepair = async () => {
     if (!form.cliente) { alert('Falta cliente'); return; }
+    if (guardandoOrden) return;
+    setGuardandoOrden(true);
     const costo = Number(form.costo || 0);
     const entrega = Number(form.entrega || 0);
     const saldo = costo - entrega;
@@ -804,7 +807,7 @@ export default function Home() {
         }),
       };
       const { data, error } = await supabase.from('repairs').insert([nuevoRepair]).select();
-      if (error) { console.error(error); alert(error.message); return; }
+      if (error) { console.error(error); alert(error.message); setGuardandoOrden(false); return; }
       if (data) setRepairs([data[0], ...repairs]);
 
       // Guardar/actualizar cliente en tabla persistente
@@ -826,6 +829,7 @@ export default function Home() {
     setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
     setEditingRepair(null);
     setShowModal(false);
+    setGuardandoOrden(false);
   };
 
   const deleteRepair = async (id: number) => {
@@ -3076,9 +3080,9 @@ export default function Home() {
                     </div>
 
                     <div className="flex gap-3 mt-6">
-                      <button onClick={addRepair}
-                        className="flex-1 bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm">
-                        {editingRepair ? 'Guardar cambios' : 'Crear orden'}
+                      <button onClick={addRepair} disabled={guardandoOrden}
+                        className="flex-1 bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-bold py-3 rounded-xl transition-colors text-sm">
+                        {guardandoOrden ? 'Guardando...' : (editingRepair ? 'Guardar cambios' : 'Crear orden')}
                       </button>
                       <button onClick={() => setShowModal(false)}
                         className={`px-6 ${t.badge} hover:bg-zinc-700 ${t.text} font-bold py-3 rounded-xl transition-colors text-sm`}>
