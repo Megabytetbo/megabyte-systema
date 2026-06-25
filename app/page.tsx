@@ -1395,11 +1395,12 @@ export default function Home() {
       )}
 
       {/* Sidebar desktop */}
-      <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-5 px-3 shrink-0 fixed h-full z-40`}>
-        <div className="flex items-center justify-center px-2 mb-6 pb-5 border-b border-zinc-800">
-          <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="w-44 h-auto object-contain" />
+      <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-4 px-3 shrink-0 fixed h-full z-40 overflow-y-auto`}
+        style={{paddingTop: diasTrialRestantes !== null && diasTrialRestantes >= 0 ? '40px' : undefined}}>
+        <div className="flex items-center justify-center px-2 mb-4 pb-4 border-b border-zinc-800 shrink-0">
+          <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="w-36 h-auto object-contain" />
         </div>
-        <nav className="flex flex-col gap-0.5 flex-1">
+        <nav className="flex flex-col gap-0.5 flex-1 min-h-0">
           {navItems.map((item) => (
             <button key={item.id} onClick={() => setSection(item.id)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
@@ -1410,8 +1411,8 @@ export default function Home() {
             </button>
           ))}
         </nav>
-        <div className={`border-t ${t.divider} pt-4 mt-4`}>
-          <div className="px-3 py-2 mb-1">
+        <div className={`border-t ${t.divider} pt-3 mt-3 shrink-0`}>
+          <div className="px-3 py-1.5 mb-1">
             <p className={`text-xs ${t.subtext} mb-0.5`}>Conectado como</p>
             <p className={`text-xs font-medium truncate ${t.muted}`}>{user.email}</p>
           </div>
