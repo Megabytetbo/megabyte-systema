@@ -55,6 +55,7 @@ export default function Home() {
   const [productos, setProductos] = useState<any[]>([]);
   const [carrito, setCarrito] = useState<any[]>([]);
   const [busquedaPdv, setBusquedaPdv] = useState('');
+  const [busquedaInventario, setBusquedaInventario] = useState('');
   const [showAddProducto, setShowAddProducto] = useState(false);
   const [productoForm, setProductoForm] = useState({ nombre: '', precio: '', stock: '', codigo_barras: '' });
   const [formaPagoPdv, setFormaPagoPdv] = useState('Efectivo');
@@ -2359,16 +2360,25 @@ export default function Home() {
 
                   {/* Inventario */}
                   <div className={`${t.card} border rounded-2xl p-5`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Inventario ({productos.length})</p>
-                      <button onClick={() => { setShowAddProducto(true); setEditingProducto(null); setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' }); }}
-                        className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition-colors">+ Agregar</button>
+                    <div className="flex items-center justify-between mb-3 gap-2">
+                      <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider whitespace-nowrap`}>Inventario ({productos.length})</p>
+                      <div className="flex items-center gap-2 flex-1 justify-end">
+                        <input type="text" value={busquedaInventario}
+                          placeholder="Buscar..."
+                          onChange={e => setBusquedaInventario(e.target.value)}
+                          className={`border ${t.input} px-3 py-1.5 rounded-lg outline-none text-xs w-full max-w-[160px] focus:border-green-500`} />
+                        <button onClick={() => { setShowAddProducto(true); setEditingProducto(null); setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' }); }}
+                          className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition-colors whitespace-nowrap">+ Agregar</button>
+                      </div>
                     </div>
                     {productos.length === 0 ? (
                       <p className={`text-sm ${t.subtext}`}>Sin productos. Agregá el primero.</p>
                     ) : (
                       <div className="flex flex-col">
-                        {productos.map((p: any) => (
+                        {productos.filter((p: any) =>
+                          p.nombre.toLowerCase().includes(busquedaInventario.toLowerCase()) ||
+                          (p.codigo_barras && p.codigo_barras.includes(busquedaInventario))
+                        ).map((p: any) => (
                           <div key={p.id} className="flex items-center justify-between py-2.5 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
                             <div className="flex-1 min-w-0 mr-3">
                               <p className={`text-sm font-medium ${t.text} truncate`}>{p.nombre}</p>
