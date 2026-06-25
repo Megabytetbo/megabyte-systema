@@ -1169,6 +1169,28 @@ export default function Home() {
             ))}
           </div>
 
+          {/* Novedades Pro */}
+          <div className="bg-gradient-to-br from-green-500/10 to-zinc-900 border border-green-500/30 rounded-2xl p-6 mb-12">
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <span className="text-xs bg-green-500 text-black font-bold px-2.5 py-1 rounded-full">NUEVO</span>
+              <h2 className="text-xl font-bold text-white">Potenciá tu taller con el Plan Pro</h2>
+            </div>
+            <p className="text-sm text-zinc-400 text-center mb-6 max-w-lg mx-auto">Herramientas profesionales para que vendas más y tengas el control total de tu negocio.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[
+                ['🛒', 'Punto de venta', 'Vendé productos con lector de código de barras y generá tickets al instante.'],
+                ['📊', 'Finanzas avanzadas', 'Comparativas mensuales, proyecciones, ranking de clientes y saldos pendientes.'],
+                ['💻', 'Multi-dispositivo', 'Usá tu cuenta en hasta 3 dispositivos a la vez, ideal para varios puestos.'],
+              ].map(([icon, title, desc]) => (
+                <div key={title} className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
+                  <div className="text-2xl mb-2">{icon}</div>
+                  <p className="text-sm font-semibold text-white mb-1">{title}</p>
+                  <p className="text-xs text-zinc-500">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Planes */}
           <h2 className="text-xl font-bold text-white text-center mb-6">Elegí tu plan</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
@@ -1196,7 +1218,7 @@ export default function Home() {
               <p className="text-3xl font-bold text-white mb-1">$22 <span className="text-base font-normal text-zinc-400">/ mes</span></p>
               <p className="text-sm text-zinc-500 mb-4">Hasta 3 talleres</p>
               <div className="flex flex-col gap-2 mb-6">
-                {['Todo lo del plan Basic', 'Hasta 3 talleres', 'Soporte prioritario'].map(f => (
+                {['Todo lo del plan Basic', 'Punto de venta con escáner', 'Finanzas avanzadas', 'Hasta 3 dispositivos', 'Soporte prioritario'].map(f => (
                   <div key={f} className="flex items-center gap-2 text-sm text-zinc-300">
                     <span className="text-green-400">✓</span> {f}
                   </div>
