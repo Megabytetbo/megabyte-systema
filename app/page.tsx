@@ -635,12 +635,14 @@ export default function Home() {
 
   // ── TICKET INTERNO 80x45mm ────────────────────────────────────────────────
   const generateTicketInterno = (repair: any) => {
+    const codigoNum = (repair.orden || '').replace(/\D/g, '') || '0';
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8"/>
         <title>Interno ${repair.orden}</title>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -655,6 +657,8 @@ export default function Home() {
           .fila { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
           .label { font-weight: bold; }
           .falla-label { font-weight: bold; font-size: 11px; margin-bottom: 2px; }
+          .orden-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
+          .orden-num { font-size: 26px; font-weight: 900; letter-spacing: 2px; }
           @media print {
             body { width: 72mm; }
             @page { margin: 0; size: 80mm auto; }
@@ -663,7 +667,10 @@ export default function Home() {
       </head>
       <body>
         <div class="linea"></div>
-        <div class="orden">${repair.orden}</div>
+        <div class="orden-row">
+          <span class="orden-num">${repair.orden}</span>
+          <svg id="barcode"></svg>
+        </div>
         <div class="linea"></div>
         <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
         <div class="fila"><span class="label">Tel:</span><span>${repair.telefono || '-'}</span></div>
@@ -673,14 +680,22 @@ export default function Home() {
         <div class="linea"></div>
         <script>
           window.onload = function() {
-            window.print();
-            window.onafterprint = function() { window.close(); };
+            try {
+              JsBarcode("#barcode", "${codigoNum}", {
+                format: "CODE128", width: 1, height: 28,
+                displayValue: true, fontSize: 9, margin: 0
+              });
+            } catch (e) {}
+            setTimeout(function() {
+              window.print();
+              window.onafterprint = function() { window.close(); };
+            }, 300);
           };
         </script>
       </body>
       </html>
     `;
-    const ventana = window.open('', '_blank', 'width=380,height=300');
+    const ventana = window.open('', '_blank', 'width=380,height=400');
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
   };
 
