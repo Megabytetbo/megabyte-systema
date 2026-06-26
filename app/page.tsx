@@ -2942,11 +2942,22 @@ export default function Home() {
                   </thead>
                   <tbody>
                     {repairs
-                      .filter((repair: any) =>
-                        repair.cliente.toLowerCase().includes(search.toLowerCase()) ||
-                        repair.equipo.toLowerCase().includes(search.toLowerCase()) ||
-                        String(repair.orden).replace('#', '').includes(search)
-                      )
+                      .filter((repair: any) => {
+                        const q = search.trim().toLowerCase();
+                        if (!q) return true;
+                        const ordenDigitos = String(repair.orden).replace(/\D/g, '');
+                        const queryDigitos = q.replace(/\D/g, '');
+                        const matchOrden = queryDigitos !== '' && (
+                          ordenDigitos === queryDigitos ||
+                          ordenDigitos === String(parseInt(queryDigitos, 10)) ||
+                          ordenDigitos.includes(queryDigitos)
+                        );
+                        return (
+                          repair.cliente.toLowerCase().includes(q) ||
+                          repair.equipo.toLowerCase().includes(q) ||
+                          matchOrden
+                        );
+                      })
                       .map((repair: any, index: number) => (
                         <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
                           <td className={`px-3 py-2.5 text-xs font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
