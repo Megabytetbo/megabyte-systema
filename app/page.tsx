@@ -61,7 +61,8 @@ export default function Home() {
   const [formaPagoPdv, setFormaPagoPdv] = useState('Efectivo');
   const [ticketVenta, setTicketVenta] = useState<any | null>(null);
   const [ventasList, setVentasList] = useState<any[]>([]);
-  const [subVenta, setSubVenta] = useState<'vender' | 'finanzas'>('vender');
+  const [subVenta, setSubVenta] = useState<'vender' | 'finanzas' | 'historial'>('vender');
+  const [busquedaHistorial, setBusquedaHistorial] = useState('');
   const [editingProducto, setEditingProducto] = useState<any | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [showNuevaPassword, setShowNuevaPassword] = useState(false);
@@ -2197,8 +2198,7 @@ export default function Home() {
             setProductos(prev => prev.filter((p: any) => p.id !== id));
           };
 
-          const imprimirTicket = () => {
-            if (!ticketVenta) return;
+          const imprimirTicketData = (datos: { numero: string, fecha: string, items: any[], total: number, formaPago: string }) => {
             const w = window.open('', '_blank', 'width=400,height=600');
             if (!w) return;
             const nombreLocal = config.nombre_negocio || 'MegaTallerPro';
@@ -2207,19 +2207,34 @@ export default function Home() {
               : `<h2>${nombreLocal}</h2>`;
             const direccion = config.direccion ? `<p style="font-size:11px;color:#000">${config.direccion}</p>` : '';
             const telefono = config.telefono ? `<p style="font-size:11px;color:#000">Tel: ${config.telefono}</p>` : '';
-            const lineas = ticketVenta.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
+            const lineas = datos.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
             w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
               <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
               h2,p{text-align:center;margin:4px 0}.linea{border-top:1px dashed #000;margin:8px 0}
               .total{font-size:15px;font-weight:bold}</style></head><body>
               ${encabezado}${direccion}${telefono}
-              <p>Ticket de venta ${ticketVenta.numero}</p>
-              <p style="font-size:11px;color:#000">${ticketVenta.fecha}</p>
+              <p>Ticket de venta ${datos.numero}</p>
+              <p style="font-size:11px;color:#000">${datos.fecha}</p>
               <div class="linea"></div>${lineas}<div class="linea"></div>
-              <p class="total">TOTAL: $${ticketVenta.total.toLocaleString('es-UY')}</p>
-              <p>Pago: ${ticketVenta.formaPago}</p>
+              <p class="total">TOTAL: $${datos.total.toLocaleString('es-UY')}</p>
+              <p>Pago: ${datos.formaPago}</p>
               <div class="linea"></div><p>Gracias por su compra</p>
               <script>window.print();window.close();</script></body></html>`);
+          };
+
+          const imprimirTicket = () => {
+            if (!ticketVenta) return;
+            imprimirTicketData(ticketVenta);
+          };
+
+          const reimprimirVenta = (v: any) => {
+            imprimirTicketData({
+              numero: v.numero_venta,
+              fecha: new Date(v.fecha).toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }),
+              items: v.items || [],
+              total: Number(v.total || 0),
+              formaPago: v.forma_pago || 'Efectivo'
+            });
           };
 
           if (!esPro) return (
@@ -2293,9 +2308,63 @@ export default function Home() {
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'finanzas' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
                   💰 Finanzas
                 </button>
+                <button onClick={() => setSubVenta('historial')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'historial' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  🧾 Historial
+                </button>
               </div>
 
-              {subVenta === 'finanzas' ? (
+              {subVenta === 'historial' ? (
+                <div className={`${t.card} border rounded-2xl p-5`}>
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Historial de ventas ({ventasList.length})</p>
+                    <input type="text" value={busquedaHistorial}
+                      placeholder="Buscar por N° ticket, fecha o pago..."
+                      onChange={e => setBusquedaHistorial(e.target.value)}
+                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-green-500`} />
+                  </div>
+                  {(() => {
+                    const q = busquedaHistorial.trim().toLowerCase();
+                    const filtradas = ventasList.filter((v: any) => {
+                      if (!q) return true;
+                      const fechaStr = new Date(v.fecha).toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }).toLowerCase();
+                      return (v.numero_venta || '').toLowerCase().includes(q) ||
+                             fechaStr.includes(q) ||
+                             (v.forma_pago || '').toLowerCase().includes(q) ||
+                             (v.items || []).some((it: any) => (it.nombre || '').toLowerCase().includes(q));
+                    });
+                    if (filtradas.length === 0) return <p className={`text-sm ${t.subtext}`}>No se encontraron ventas.</p>;
+                    return (
+                      <div className="flex flex-col">
+                        {filtradas.map((v: any) => (
+                          <div key={v.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-semibold ${t.text}`}>{v.numero_venta}</span>
+                                <span className={`text-xs ${t.subtext}`}>{new Date(v.fecha).toLocaleDateString('es-UY', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                              </div>
+                              <p className={`text-xs ${t.subtext} truncate mt-0.5`}>
+                                {(v.items || []).map((it: any) => `${it.nombre} x${it.cantidad}`).join(', ')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                              <div className="text-right">
+                                <p className={`text-sm font-semibold ${t.text}`}>${Number(v.total).toLocaleString('es-UY')}</p>
+                                <p className={`text-xs ${t.subtext}`}>{v.forma_pago}</p>
+                              </div>
+                              <button onClick={() => reimprimirVenta(v)}
+                                className={`text-xs border rounded-lg px-2.5 py-1.5 hover:opacity-70`}
+                                style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
+                                🖨️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : subVenta === 'finanzas' ? (
                 <div className="flex flex-col gap-4">
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
