@@ -60,8 +60,14 @@ export default function Home() {
   const [productoForm, setProductoForm] = useState({ nombre: '', precio: '', stock: '', codigo_barras: '' });
   const [formaPagoPdv, setFormaPagoPdv] = useState('Efectivo');
   const [ticketVenta, setTicketVenta] = useState<any | null>(null);
+  const [tieneGarantiaVenta, setTieneGarantiaVenta] = useState(false);
+  const [mesesGarantiaVenta, setMesesGarantiaVenta] = useState('3');
+  const [clienteGarantiaVenta, setClienteGarantiaVenta] = useState('');
+  const [telefonoGarantiaVenta, setTelefonoGarantiaVenta] = useState('');
+  const [garantiasVentasList, setGarantiasVentasList] = useState<any[]>([]);
+  const [busquedaGarantiasVentas, setBusquedaGarantiasVentas] = useState('');
   const [ventasList, setVentasList] = useState<any[]>([]);
-  const [subVenta, setSubVenta] = useState<'vender' | 'finanzas' | 'historial'>('vender');
+  const [subVenta, setSubVenta] = useState<'vender' | 'finanzas' | 'historial' | 'garantias'>('vender');
   const [busquedaHistorial, setBusquedaHistorial] = useState('');
   const [editingProducto, setEditingProducto] = useState<any | null>(null);
   const [showLanding, setShowLanding] = useState(true);
@@ -192,6 +198,11 @@ export default function Home() {
       if (data) setVentasList(data);
     };
     loadVentas();
+    const loadGarantiasVentas = async () => {
+      const { data } = await supabase.from('garantias_ventas').select('*').order('fecha_venta', { ascending: false });
+      if (data) setGarantiasVentasList(data);
+    };
+    loadGarantiasVentas();
     // Verificar suscripcion del usuario
     const verificarAcceso = async () => {
       const { data } = await supabase.from('suscripciones')
@@ -2155,6 +2166,7 @@ export default function Home() {
 
           const confirmarVenta = async () => {
             if (carrito.length === 0) return;
+            if (tieneGarantiaVenta && !clienteGarantiaVenta.trim()) { alert('Falta el nombre del cliente para la garantía'); return; }
             const { data: ventas } = await supabase.from('ventas').select('numero_venta').eq('user_id', user.id).order('id', { ascending: false }).limit(1).maybeSingle();
             const nro = ventas ? parseInt((ventas.numero_venta || '0').replace(/\D/g,'')) + 1 : 1;
             const numero = `#${String(nro).padStart(4,'0')}`;
@@ -2168,8 +2180,29 @@ export default function Home() {
             const { data: prodsActualizados } = await supabase.from('productos').select('*').order('nombre');
             if (prodsActualizados) setProductos(prodsActualizados);
             const fecha = new Date().toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-            setTicketVenta({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha });
+
+            let garantiaInfo: { meses: number, cliente: string, telefono: string, vencimiento: string } | null = null;
+            if (tieneGarantiaVenta) {
+              const meses = parseInt(mesesGarantiaVenta, 10) || 3;
+              const fechaVenc = new Date();
+              fechaVenc.setMonth(fechaVenc.getMonth() + meses);
+              const productosNombres = items.map((i: any) => i.nombre).join(', ');
+              await supabase.from('garantias_ventas').insert({
+                user_id: user.id, numero_venta: numero, cliente: clienteGarantiaVenta.trim(),
+                telefono: telefonoGarantiaVenta.trim() || null, productos: productosNombres,
+                meses, fecha_vencimiento: fechaVenc.toISOString()
+              });
+              const { data: garantiasActualizadas } = await supabase.from('garantias_ventas').select('*').order('fecha_venta', { ascending: false });
+              if (garantiasActualizadas) setGarantiasVentasList(garantiasActualizadas);
+              garantiaInfo = { meses, cliente: clienteGarantiaVenta.trim(), telefono: telefonoGarantiaVenta.trim(), vencimiento: fechaVenc.toLocaleDateString('es-UY') };
+            }
+
+            setTicketVenta({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha, garantia: garantiaInfo });
             setCarrito([]);
+            setTieneGarantiaVenta(false);
+            setMesesGarantiaVenta('3');
+            setClienteGarantiaVenta('');
+            setTelefonoGarantiaVenta('');
           };
 
           const guardarProducto = async () => {
@@ -2198,7 +2231,7 @@ export default function Home() {
             setProductos(prev => prev.filter((p: any) => p.id !== id));
           };
 
-          const imprimirTicketData = (datos: { numero: string, fecha: string, items: any[], total: number, formaPago: string }) => {
+          const imprimirTicketData = (datos: { numero: string, fecha: string, items: any[], total: number, formaPago: string, garantia?: { meses: number, cliente: string, telefono: string, vencimiento: string } | null }) => {
             const w = window.open('', '_blank', 'width=400,height=600');
             if (!w) return;
             const nombreLocal = config.nombre_negocio || 'MegaTallerPro';
@@ -2208,6 +2241,13 @@ export default function Home() {
             const direccion = config.direccion ? `<p style="font-size:11px;color:#000">${config.direccion}</p>` : '';
             const telefono = config.telefono ? `<p style="font-size:11px;color:#000">Tel: ${config.telefono}</p>` : '';
             const lineas = datos.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
+            const garantiaHtml = datos.garantia ? `
+              <div class="linea"></div>
+              <p style="font-weight:bold">GARANTÍA: ${datos.garantia.meses} meses</p>
+              <p style="font-size:11px;color:#000">Cliente: ${datos.garantia.cliente}</p>
+              ${datos.garantia.telefono ? `<p style="font-size:11px;color:#000">Tel: ${datos.garantia.telefono}</p>` : ''}
+              <p style="font-size:11px;color:#000">Válida hasta: ${datos.garantia.vencimiento}</p>
+            ` : '';
             w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
               <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
               h2,p{text-align:center;margin:4px 0}.linea{border-top:1px dashed #000;margin:8px 0}
@@ -2218,6 +2258,7 @@ export default function Home() {
               <div class="linea"></div>${lineas}<div class="linea"></div>
               <p class="total">TOTAL: $${datos.total.toLocaleString('es-UY')}</p>
               <p>Pago: ${datos.formaPago}</p>
+              ${garantiaHtml}
               <div class="linea"></div><p>Gracias por su compra</p>
               <script>window.print();window.close();</script></body></html>`);
           };
@@ -2312,9 +2353,54 @@ export default function Home() {
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'historial' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
                   🧾 Historial
                 </button>
+                <button onClick={() => setSubVenta('garantias')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'garantias' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  🛡️ Garantías
+                </button>
               </div>
 
-              {subVenta === 'historial' ? (
+              {subVenta === 'garantias' ? (
+                <div className={`${t.card} border rounded-2xl p-5`}>
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Garantías de ventas ({garantiasVentasList.length})</p>
+                    <input type="text" value={busquedaGarantiasVentas}
+                      placeholder="Buscar por cliente, producto o ticket..."
+                      onChange={e => setBusquedaGarantiasVentas(e.target.value)}
+                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-green-500`} />
+                  </div>
+                  {(() => {
+                    const q = busquedaGarantiasVentas.trim().toLowerCase();
+                    const ahora = new Date();
+                    const filtradas = garantiasVentasList.filter((g: any) => {
+                      if (!q) return true;
+                      return (g.cliente || '').toLowerCase().includes(q) ||
+                             (g.productos || '').toLowerCase().includes(q) ||
+                             (g.numero_venta || '').toLowerCase().includes(q);
+                    });
+                    if (filtradas.length === 0) return <p className={`text-sm ${t.subtext}`}>Sin garantías registradas.</p>;
+                    return (
+                      <div className="flex flex-col">
+                        {filtradas.map((g: any) => {
+                          const vencimiento = new Date(g.fecha_vencimiento);
+                          const vigente = vencimiento >= ahora;
+                          return (
+                            <div key={g.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium ${t.text}`}>{g.cliente}</p>
+                                <p className={`text-xs ${t.subtext} truncate mt-0.5`}>{g.productos} · Ticket {g.numero_venta}</p>
+                                {g.telefono && <p className={`text-xs ${t.subtext}`}>{g.telefono}</p>}
+                              </div>
+                              <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${vigente ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                                {vigente ? 'Vigente hasta' : 'Vencida'} {vencimiento.toLocaleDateString('es-UY')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : subVenta === 'historial' ? (
                 <div className={`${t.card} border rounded-2xl p-5`}>
                   <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
                     <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Historial de ventas ({ventasList.length})</p>
@@ -2542,6 +2628,39 @@ export default function Home() {
                             <option>Transferencia</option>
                           </select>
                         </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-sm ${t.text}`}>¿Tiene garantía?</span>
+                          <button type="button" onClick={() => setTieneGarantiaVenta(!tieneGarantiaVenta)}
+                            className={`w-10 h-6 rounded-full relative transition-colors ${tieneGarantiaVenta ? 'bg-green-500' : `${t.badge}`}`}>
+                            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${tieneGarantiaVenta ? 'left-[18px]' : 'left-0.5'}`}></span>
+                          </button>
+                        </div>
+                        {tieneGarantiaVenta && (
+                          <div className="flex flex-col gap-2 mb-3">
+                            <div>
+                              <label className={`text-xs ${t.subtext} mb-1 block`}>Meses de garantía</label>
+                              <select value={mesesGarantiaVenta} onChange={e => setMesesGarantiaVenta(e.target.value)}
+                                className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                                <option value="1">1 mes</option>
+                                <option value="3">3 meses</option>
+                                <option value="6">6 meses</option>
+                                <option value="12">12 meses</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className={`text-xs ${t.subtext} mb-1 block`}>Nombre del cliente</label>
+                              <input type="text" value={clienteGarantiaVenta} placeholder="Nombre completo"
+                                onChange={e => setClienteGarantiaVenta(e.target.value)}
+                                className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                            </div>
+                            <div>
+                              <label className={`text-xs ${t.subtext} mb-1 block`}>Teléfono (opcional)</label>
+                              <input type="text" value={telefonoGarantiaVenta} placeholder="Teléfono"
+                                onChange={e => setTelefonoGarantiaVenta(e.target.value)}
+                                className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                            </div>
+                          </div>
+                        )}
                         <button onClick={confirmarVenta}
                           className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl text-sm transition-colors">
                           🧾 Confirmar venta y generar ticket
@@ -2572,6 +2691,14 @@ export default function Home() {
                         <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
                         <p className={`font-bold ${t.text}`}>TOTAL: ${ticketVenta.total.toLocaleString('es-UY')}</p>
                         <p className={`${t.subtext}`}>Pago: {ticketVenta.formaPago}</p>
+                        {ticketVenta.garantia && (
+                          <>
+                            <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                            <p className={`font-bold ${t.text}`}>GARANTÍA: {ticketVenta.garantia.meses} meses</p>
+                            <p className={`${t.subtext}`}>Cliente: {ticketVenta.garantia.cliente}</p>
+                            <p className={`${t.subtext}`}>Válida hasta: {ticketVenta.garantia.vencimiento}</p>
+                          </>
+                        )}
                         <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
                         <p className={`text-center ${t.subtext}`}>Gracias por su compra</p>
                       </div>
