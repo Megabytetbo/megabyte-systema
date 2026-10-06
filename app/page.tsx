@@ -64,6 +64,7 @@ export default function Home() {
   const [mesesGarantiaVenta, setMesesGarantiaVenta] = useState('3');
   const [clienteGarantiaVenta, setClienteGarantiaVenta] = useState('');
   const [telefonoGarantiaVenta, setTelefonoGarantiaVenta] = useState('');
+  const [montoRecibidoPdv, setMontoRecibidoPdv] = useState('');
   const [garantiasVentasList, setGarantiasVentasList] = useState<any[]>([]);
   const [busquedaGarantiasVentas, setBusquedaGarantiasVentas] = useState('');
   const [ventasList, setVentasList] = useState<any[]>([]);
@@ -2203,6 +2204,7 @@ export default function Home() {
             setMesesGarantiaVenta('3');
             setClienteGarantiaVenta('');
             setTelefonoGarantiaVenta('');
+            setMontoRecibidoPdv('');
           };
 
           const guardarProducto = async () => {
@@ -2621,13 +2623,32 @@ export default function Home() {
                         </div>
                         <div className="mt-3">
                           <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Forma de pago</label>
-                          <select value={formaPagoPdv} onChange={e => setFormaPagoPdv(e.target.value)}
+                          <select value={formaPagoPdv} onChange={e => { setFormaPagoPdv(e.target.value); if (e.target.value !== 'Efectivo') setMontoRecibidoPdv(''); }}
                             className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm mb-3`}>
                             <option>Efectivo</option>
                             <option>Tarjeta</option>
                             <option>Transferencia</option>
                           </select>
                         </div>
+                        {formaPagoPdv === 'Efectivo' && (
+                          <div className="mb-3">
+                            <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Monto recibido</label>
+                            <input type="number" value={montoRecibidoPdv} placeholder="0"
+                              onChange={e => setMontoRecibidoPdv(e.target.value)}
+                              className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                            {montoRecibidoPdv !== '' && (
+                              Number(montoRecibidoPdv) >= totalCarrito ? (
+                                <p className="text-sm font-semibold text-green-400 mt-2">
+                                  Cambio a devolver: ${(Number(montoRecibidoPdv) - totalCarrito).toLocaleString('es-UY')}
+                                </p>
+                              ) : (
+                                <p className="text-sm font-semibold text-red-400 mt-2">
+                                  Falta: ${(totalCarrito - Number(montoRecibidoPdv)).toLocaleString('es-UY')}
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-2">
                           <span className={`text-sm ${t.text}`}>¿Tiene garantía?</span>
                           <button type="button" onClick={() => setTieneGarantiaVenta(!tieneGarantiaVenta)}
