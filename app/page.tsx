@@ -997,6 +997,63 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [section, repairs]);
 
+  // ── Gráfica de ventas por mes (Finanzas de Ventas) ──────────────────────────
+  useEffect(() => {
+    if (section !== 'ventas' || subVenta !== 'finanzas') return;
+    const loadChartVentas = () => {
+      if (typeof window === 'undefined') return;
+      const win = window as any;
+      const renderChartVentas = () => {
+        const Chart = win.Chart;
+        if (!Chart) return;
+        const existing = Chart.getChart('chartVentasMeses');
+        if (existing) existing.destroy();
+        const c = document.getElementById('chartVentasMeses');
+        if (!c) return;
+        const isDark = document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        const tickColor = isDark ? '#888' : '#aaa';
+
+        const mesesLabelsV = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const totalesPorMes: { [key: string]: number } = {};
+        ventasList.forEach((v: any) => {
+          const d = new Date(v.fecha);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          totalesPorMes[key] = (totalesPorMes[key] || 0) + Number(v.total || 0);
+        });
+        const clavesOrdenadas = Object.keys(totalesPorMes).sort();
+        const labelsFinal = clavesOrdenadas.map(k => {
+          const [anio, mes] = k.split('-').map(Number);
+          return `${mesesLabelsV[mes]} ${String(anio).slice(2)}`;
+        });
+        const datosFinal = clavesOrdenadas.map(k => totalesPorMes[k]);
+
+        new Chart(c, {
+          type: 'bar',
+          data: {
+            labels: labelsFinal,
+            datasets: [{ label: 'Vendido', data: datosFinal, backgroundColor: '#22c55e', borderRadius: 4 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false } },
+                      y: { ticks: { color: tickColor, font: { size: 11 }, callback: (v: any) => '$' + v }, grid: { color: gridColor }, border: { display: false } } } }
+        });
+      };
+
+      if (win.Chart) {
+        setTimeout(renderChartVentas, 50);
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+        script.onload = () => setTimeout(renderChartVentas, 50);
+        document.head.appendChild(script);
+      }
+    };
+    const timer = setTimeout(loadChartVentas, 100);
+    return () => clearTimeout(timer);
+  }, [section, subVenta, ventasList]);
+
   // ── Estadísticas ──────────────────────────────────────────────────────────
   const totalCobrado = repairs.reduce((acc, r) => acc + Number(r.entrega || 0), 0);
   const totalPendiente = repairs.reduce((acc, r) => acc + Number(r.saldo || 0), 0);
@@ -2468,6 +2525,13 @@ export default function Home() {
                         <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
                       </div>
                     ))}
+                  </div>
+
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ventas por mes</p>
+                    <div style={{position:'relative', height:'200px'}}>
+                      <canvas id="chartVentasMeses"></canvas>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
