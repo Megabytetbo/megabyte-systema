@@ -447,7 +447,7 @@ export default function Home() {
       <table><thead><tr><th>Orden</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th>Estado</th><th>Costo</th></tr></thead>
       <tbody>${filas}</tbody></table>
       <div class="res"><strong>Total:</strong> ${repairs.length} reparaciones &nbsp;|&nbsp; <strong>Cobrado:</strong> $ ${totalCobrado}</div>
-      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}</script>
+      <script>window.addEventListener("afterprint",function(){setTimeout(function(){window.close();},150);},{once:true});window.onload=function(){window.focus();window.print();};</script>
       </body></html>`;
     const v = window.open('', '_blank', 'width=900,height=700');
     if (v) { v.document.write(html); v.document.close(); }
@@ -478,7 +478,7 @@ export default function Home() {
       <table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Reparaciones</th><th>Total</th></tr></thead>
       <tbody>${filas}</tbody></table>
       <div class="res"><strong>Total clientes:</strong> ${clientes.length}</div>
-      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}</script>
+      <script>window.addEventListener("afterprint",function(){setTimeout(function(){window.close();},150);},{once:true});window.onload=function(){window.focus();window.print();};</script>
       </body></html>`;
     const v = window.open('', '_blank', 'width=900,height=700');
     if (v) { v.document.write(html); v.document.close(); }
@@ -635,8 +635,11 @@ export default function Home() {
 
         <script>
           window.onload = function() {
+            window.addEventListener('afterprint', function() {
+              setTimeout(function() { window.close(); }, 150);
+            }, { once: true });
+            window.focus();
             window.print();
-            window.onafterprint = function() { window.close(); };
           };
         </script>
       </body>
@@ -700,8 +703,11 @@ export default function Home() {
               });
             } catch (e) {}
             setTimeout(function() {
+              window.addEventListener('afterprint', function() {
+                setTimeout(function() { window.close(); }, 150);
+              }, { once: true });
+              window.focus();
               window.print();
-              window.onafterprint = function() { window.close(); };
             }, 300);
           };
         </script>
@@ -784,8 +790,11 @@ export default function Home() {
 
         <script>
           window.onload = function() {
+            window.addEventListener('afterprint', function() {
+              setTimeout(function() { window.close(); }, 150);
+            }, { once: true });
+            window.focus();
             window.print();
-            window.onafterprint = function() { window.close(); };
           };
         </script>
       </body>
@@ -2319,7 +2328,12 @@ export default function Home() {
               <p>Pago: ${datos.formaPago}</p>
               ${garantiaHtml}
               <div class="linea"></div><p>Gracias por su compra</p>
-              <script>window.print();window.close();</script></body></html>`);
+              <script>
+                window.addEventListener('afterprint', function() {
+                  setTimeout(function() { window.close(); }, 150);
+                }, { once: true });
+                window.onload = function() { window.focus(); window.print(); };
+              </script></body></html>`);
           };
 
           const imprimirTicket = () => {
