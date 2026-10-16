@@ -537,14 +537,14 @@ export default function Home() {
 
   // Clases dinámicas según tema
   const t = darkMode ? {
-    bg: 'bg-zinc-950', sidebar: 'bg-zinc-900 border-zinc-800', card: 'bg-zinc-900 border-zinc-800',
-    input: 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-600 focus:border-green-500',
+    bg: 'bg-[#090d11]', sidebar: 'bg-[#0c1218] border-[#202b34]', card: 'bg-[#141b22] border-[#26333d]',
+    input: 'bg-[#111a22] border-[#2a3944] text-white placeholder-zinc-500 focus:border-emerald-500',
     text: 'text-white', subtext: 'text-zinc-500', muted: 'text-zinc-400',
     row: 'border-zinc-800 hover:bg-zinc-800/40', navHover: 'hover:text-white hover:bg-zinc-800',
-    navActive: 'bg-green-500/10 text-green-400', divider: 'border-zinc-800',
-    modal: 'bg-zinc-900 border-zinc-800', menuBg: 'bg-zinc-800 border-zinc-700',
+    navActive: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30', divider: 'border-[#26333d]',
+    modal: 'bg-[#141b22] border-[#26333d]', menuBg: 'bg-[#18212a] border-[#2a3944]',
     menuItem: 'hover:bg-zinc-700', badge: 'bg-zinc-800', select: 'bg-zinc-800 border-zinc-700 text-white',
-    tableHead: 'text-zinc-500',
+    tableHead: 'text-slate-400',
   } : {
     bg: 'bg-slate-100', sidebar: 'bg-white border-slate-200', card: 'bg-white border-slate-200',
     input: 'bg-slate-50 border-slate-200 text-gray-900 placeholder-slate-400 focus:border-green-500',
@@ -1481,12 +1481,36 @@ export default function Home() {
 
   // ── Main app ──────────────────────────────────────────────────────────────
   return (
-    <div className={`min-h-screen ${t.bg} ${t.text} flex`}>
+    <div className={`min-h-screen ${t.bg} ${t.text} flex ${darkMode ? "mega-premium-dark" : ""}`}>
       {diasTrialRestantes !== null && diasTrialRestantes >= 0 && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black text-center text-xs font-bold py-1.5">
           ⏳ Período de prueba — {diasTrialRestantes} día{diasTrialRestantes !== 1 ? 's' : ''} restante{diasTrialRestantes !== 1 ? 's' : ''}
         </div>
       )}
+
+      {darkMode && <style>{`
+        .mega-premium-dark { background: #090d11; color: #e8eef3; }
+        .mega-premium-dark aside { background: linear-gradient(180deg,#0d171c 0%,#0a1015 100%); border-color:#22313a; box-shadow: 8px 0 32px rgba(0,0,0,.16); }
+        .mega-premium-dark aside nav button { transition: background .18s ease, color .18s ease, transform .18s ease; }
+        .mega-premium-dark aside nav button:hover { background: rgba(0,212,122,.09); transform:translateX(2px); }
+        .mega-premium-dark main { background: radial-gradient(ellipse at 75% 0%,rgba(0,164,103,.055),transparent 46%),#090d11; }
+        .mega-premium-dark main > div > div[class*="grid"] > div[class*="rounded-2xl"],
+        .mega-premium-dark main div[class*="bg-zinc-900"][class*="rounded-2xl"] { box-shadow:0 10px 32px rgba(0,0,0,.16); }
+        .mega-premium-dark main h1 { letter-spacing:-.035em; }
+        .mega-premium-dark main h2 { letter-spacing:-.02em; }
+        .mega-premium-dark main input:not([type="checkbox"]):not([type="radio"]),
+        .mega-premium-dark main select,
+        .mega-premium-dark main textarea { border-radius:11px; transition:border-color .18s ease,box-shadow .18s ease; }
+        .mega-premium-dark main input:focus,
+        .mega-premium-dark main select:focus,
+        .mega-premium-dark main textarea:focus { outline-color:#00d47a; box-shadow:0 0 0 3px rgba(0,212,122,.09); }
+        .mega-premium-dark main button { transition:filter .18s ease,box-shadow .18s ease,transform .18s ease; }
+        .mega-premium-dark main button:hover:not(:disabled) { filter:brightness(1.1); }
+        .mega-premium-dark main table { border-collapse:separate; border-spacing:0; }
+        .mega-premium-dark main tbody tr { transition:background .18s ease; }
+        .mega-premium-dark main tbody tr:hover { background:rgba(0,212,122,.045); }
+        .mega-premium-dark main th { letter-spacing:.035em; }
+      `}</style>}
 
       {/* Sidebar desktop */}
       <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-4 px-3 shrink-0 fixed h-full z-40 overflow-y-auto`}
