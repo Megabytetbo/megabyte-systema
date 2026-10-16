@@ -635,8 +635,11 @@ export default function Home() {
 
         <script>
           window.onload = function() {
+            window.addEventListener('afterprint', function() {
+              setTimeout(function() { window.close(); }, 150);
+            }, { once: true });
+            window.focus();
             window.print();
-            window.onafterprint = function() { window.close(); };
           };
         </script>
       </body>
@@ -700,8 +703,11 @@ export default function Home() {
               });
             } catch (e) {}
             setTimeout(function() {
+              window.addEventListener('afterprint', function() {
+                setTimeout(function() { window.close(); }, 150);
+              }, { once: true });
+              window.focus();
               window.print();
-              window.onafterprint = function() { window.close(); };
             }, 300);
           };
         </script>
@@ -784,8 +790,11 @@ export default function Home() {
 
         <script>
           window.onload = function() {
+            window.addEventListener('afterprint', function() {
+              setTimeout(function() { window.close(); }, 150);
+            }, { once: true });
+            window.focus();
             window.print();
-            window.onafterprint = function() { window.close(); };
           };
         </script>
       </body>
