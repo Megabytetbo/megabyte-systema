@@ -20,7 +20,7 @@ export default function Home() {
     const password = recordar ? (localStorage.getItem('megabyte_password') || '') : '';
     return { email, password, recordar };
   });
-  const [section, setSection] = useState('reparaciones');
+  const [section, setSection] = useState('dashboard');
   const [editingRepair, setEditingRepair] = useState<any | null>(null);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -1457,6 +1457,32 @@ export default function Home() {
     );
   }
 
+  // ── Datos de presentación del dashboard (sin escrituras a Supabase) ──
+  const hoyDashboard = new Date();
+  const mesDashboard = hoyDashboard.getMonth();
+  const anioDashboard = hoyDashboard.getFullYear();
+  const ventasMesDashboard = ventasList.filter((v: any) => {
+    const d = new Date(v.fecha);
+    return !isNaN(d.getTime()) && d.getMonth() === mesDashboard && d.getFullYear() === anioDashboard;
+  });
+  const totalVentasMesDashboard = ventasMesDashboard.reduce((n: number, v: any) => n + Number(v.total || 0), 0);
+  const ventasPorDiaDashboard = Array.from({ length: new Date(anioDashboard, mesDashboard + 1, 0).getDate() }, (_, i) => {
+    return ventasMesDashboard.filter((v: any) => new Date(v.fecha).getDate() === i + 1)
+      .reduce((n: number, v: any) => n + Number(v.total || 0), 0);
+  });
+  const maxVentaDiaDashboard = Math.max(1, ...ventasPorDiaDashboard);
+  const graficoVentasDashboard = ventasPorDiaDashboard.map((n: number, i: number) =>
+    `${(i / Math.max(1, ventasPorDiaDashboard.length - 1)) * 600},${135 - (n / maxVentaDiaDashboard) * 115}`
+  ).join(' ');
+  const stockTotalDashboard = productos.reduce((n: number, p: any) => n + Number(p.stock || 0), 0);
+  const reparacionesRecientesDashboard = repairs.slice(0, 5);
+  const ventasRecientesDashboard = ventasList.slice(0, 5);
+  const dineroUY = (n: number) => '$ ' + Number(n || 0).toLocaleString('es-UY', { maximumFractionDigits: 0 });
+  const fechaDashboard = hoyDashboard.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const estadoSuscripcionDashboard = suscripcionActual?.estado === 'activo' ? 'Plan activo' :
+    suscripcionActual?.estado === 'trial' ? 'Período de prueba' :
+    suscripcionActual?.estado === 'inactivo' ? 'Plan inactivo' : 'Sin información de plan';
+
   // ── Nav items ─────────────────────────────────────────────────────────────
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -1510,6 +1536,20 @@ export default function Home() {
         .mega-premium-dark main tbody tr { transition:background .18s ease; }
         .mega-premium-dark main tbody tr:hover { background:rgba(0,212,122,.045); }
         .mega-premium-dark main th { letter-spacing:.035em; }
+        .mega-premium-dark .mega-surface { background:linear-gradient(145deg,#101b20,#0a1116); border:1px solid #1b2e35; border-radius:17px; box-shadow:0 14px 32px rgba(0,0,0,.16); }
+        .mega-premium-dark .mega-stat { position:relative; overflow:hidden; min-height:132px; transition:transform .18s ease,border-color .18s ease; }
+        .mega-premium-dark .mega-stat:hover { transform:translateY(-2px); border-color:#18794e; }
+        .mega-premium-dark .mega-stat:after { content:''; position:absolute; width:120px;height:120px;right:-45px;bottom:-72px;border-radius:50%;background:var(--stat-glow,rgba(0,220,130,.12));filter:blur(28px);pointer-events:none; }
+        .mega-premium-dark .mega-dash-table { width:100%;border-collapse:collapse; }
+        .mega-premium-dark .mega-dash-table th { text-align:left; font-size:11px; font-weight:500; color:#8b9ba9; padding:12px 14px;background:#152128; white-space:nowrap; }
+        .mega-premium-dark .mega-dash-table td { font-size:12px; padding:12px 14px;border-bottom:1px solid #1c2b33;white-space:nowrap; }
+        .mega-premium-dark .mega-dash-table tr:last-child td { border-bottom:0; }
+        .mega-premium-dark .mega-nav-title { color:#698397; font-size:10px; font-weight:700;letter-spacing:.12em;padding:17px 12px 7px; }
+        .mega-premium-dark .mega-topbar { background:rgba(8,16,21,.94);border-bottom:1px solid #203039; }
+        .mega-premium-dark .mega-gradient-btn { background:linear-gradient(115deg,#00c77c,#00e59a);color:#04261a; }
+        .mega-premium-dark .mega-dash-tag { font-size:10px;padding:5px 9px;border-radius:9px;display:inline-block;font-weight:600; }
+        .mega-premium-dark .mega-dashboard-scroll { scrollbar-width:thin;scrollbar-color:#234039 transparent; }
+
       `}</style>}
 
       {/* Sidebar desktop */}
@@ -1519,15 +1559,27 @@ export default function Home() {
           <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="w-36 h-auto object-contain" />
         </div>
         <nav className="flex flex-col gap-0.5 flex-1 min-h-0">
-          {navItems.map((item) => (
-            <button key={item.id} onClick={() => setSection(item.id)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
-                section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
-              }`}>
-              <span className="text-base">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
+          {[
+            { title: '', ids: ['dashboard'] },
+            { title: 'REPARACIONES', ids: ['reparaciones', 'clientes', 'finanzas'] },
+            { title: 'PUNTO DE VENTAS', ids: ['ventas'] },
+            { title: 'HERRAMIENTAS', ids: ['calculadora'] },
+            { title: 'CONFIGURACIÓN', ids: ['configuracion', 'admin'] },
+          ].map(group => {
+            const items = navItems.filter(item => group.ids.includes(item.id));
+            if (!items.length) return null;
+            return <React.Fragment key={group.title || 'inicio'}>
+              {group.title && <div className="mega-nav-title">{group.title}</div>}
+              {items.map(item => (
+                <button key={item.id} onClick={() => setSection(item.id)}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all text-left ${
+                    section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
+                  }`}>
+                  <span className="text-lg w-6 text-center">{item.icon}</span>{item.id === 'dashboard' ? 'Inicio' : item.label}
+                </button>
+              ))}
+            </React.Fragment>;
+          })}
         </nav>
         <div className={`border-t ${t.divider} pt-3 mt-3 shrink-0`}>
           <div className="px-3 py-1.5 mb-1">
@@ -1588,44 +1640,78 @@ export default function Home() {
       {/* Main content */}
       <main className="flex-1 overflow-auto p-4 md:p-8 md:ml-60 mt-14 md:mt-0">
 
-        {/* ── Dashboard ── */}
+        {/* Barra superior premium: navegación y búsqueda, sin alterar búsquedas existentes */}
+        <div className={`mega-topbar -mx-4 md:-mx-8 -mt-4 md:-mt-8 mb-7 px-4 md:px-8 py-3 flex items-center gap-4 ${darkMode ? '' : 'bg-white border-b border-slate-200'}`}>
+          <div className="hidden lg:flex items-center gap-2 flex-1 max-w-xl rounded-xl border border-[#273842] bg-[#111b23] px-3 py-2.5">
+            <span className="text-slate-400">⌕</span>
+            <input aria-label="Buscar reparaciones" value={search} onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') setSection('reparaciones'); }}
+              placeholder="Buscar clientes, equipos o reparaciones..." className="bg-transparent border-0 outline-none text-sm text-slate-100 placeholder-slate-500 w-full" />
+            <button onClick={() => setSection('reparaciones')} className="text-xs text-slate-400 hover:text-emerald-400 whitespace-nowrap">Buscar ↗</button>
+          </div>
+          <div className="flex-1 lg:hidden text-sm font-semibold text-emerald-400">MegaTallerPro</div>
+          <button onClick={toggleTheme} title="Cambiar tema" className="rounded-xl border border-[#26343c] px-3 py-2 text-lg">{darkMode ? '☼' : '☾'}</button>
+          <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-[#273842]">
+            <span className="w-9 h-9 rounded-full bg-emerald-700/80 flex items-center justify-center text-white text-xs font-bold">{(config.nombre_negocio || 'MB').slice(0,2).toUpperCase()}</span>
+            <div className="min-w-0"><div className="text-xs font-semibold truncate max-w-32">{config.nombre_negocio || 'MegaByte'}</div><div className="text-[10px] text-slate-500 truncate max-w-32">{user.email}</div></div>
+          </div>
+        </div>
+
+        {/* ── Dashboard premium: métricas reales y navegación existente ── */}
         {section === 'dashboard' && (
-          <div>
-            <div className="mb-8">
-              <h1 className={`text-2xl font-bold ${t.text}`}>Dashboard</h1>
-              <p className={`${t.subtext} text-sm mt-1`}>Resumen general del taller</p>
+          <div className="mega-dashboard-scroll space-y-5 pb-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-1">
+              <div><h1 className="text-2xl md:text-3xl font-bold tracking-tight">¡Hola, {config.nombre_negocio || 'MegaByte'}! 👋</h1>
+                <p className={`${t.subtext} text-sm mt-1`}>Aquí tenés un resumen de tu taller</p></div>
+              <div className={`${t.card} border rounded-2xl px-4 py-3 flex items-center gap-3 text-sm`}><span className="text-xl">▣</span><div><p className="text-xs text-slate-400 capitalize">{fechaDashboard}</p><p className="font-semibold">{hoyDashboard.toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})}</p></div></div>
             </div>
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
               {[
-                { label: 'Total reparaciones', value: repairs.length, color: 'text-green-400', accent: 'bg-green-500/10' },
-                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', accent: 'bg-yellow-500/10' },
-                { label: 'En reparación', value: repairs.filter(r => r.estado === 'En reparación').length, color: 'text-blue-400', accent: 'bg-blue-500/10' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', accent: 'bg-green-500/10' },
-              ].map((stat) => (
-                <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
-                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
-                  <p className={`text-3xl font-semibold ${stat.color}`}>{stat.value}</p>
-                </div>
-              ))}
+                { label:'En reparación', value:repairs.filter((r:any)=>r.estado==='En reparación').length, icon:'🔧', color:'#00d68b', bg:'rgba(0,214,139,.14)', to:'reparaciones' },
+                { label:'Listos para entregar', value:repairs.filter((r:any)=>r.estado==='Reparado').length, icon:'☑', color:'#3b93ff', bg:'rgba(59,147,255,.14)', to:'reparaciones' },
+                { label:'Unidades en stock', value:stockTotalDashboard, icon:'📦', color:'#e7bd37', bg:'rgba(231,189,55,.13)', to:'ventas' },
+                { label:'Ventas este mes', value:ventasMesDashboard.length, icon:'🛒', color:'#bc75f5', bg:'rgba(188,117,245,.13)', to:'ventas' },
+              ].map(stat=><button key={stat.label} onClick={()=>{ if (navItems.some(item => item.id === stat.to)) setSection(stat.to); }}
+                className={`mega-surface mega-stat p-4 text-left ${!darkMode ? t.card : ''}`} style={{borderColor:darkMode ? stat.color+'50' : undefined, ['--stat-glow' as any]:stat.bg}}>
+                <div className="flex items-start gap-3"><span className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0" style={{background:stat.bg,color:stat.color}}>{stat.icon}</span>
+                  <div className="min-w-0"><p className="text-3xl font-bold leading-none mt-1">{stat.value}</p><p className="text-xs mt-2 text-slate-300">{stat.label}</p></div><span className="ml-auto text-slate-500">›</span></div>
+              </button>)}
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              {[
-                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
-                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400' },
-                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
-                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', small: true },
-                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
-              ].map((stat) => (
-                <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
-                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
-                  <p className={`font-semibold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="mega-surface overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-4"><h2 className="font-semibold text-sm">🔧 &nbsp; Reparaciones recientes</h2><button onClick={()=>setSection('reparaciones')} className="text-xs text-emerald-400 border border-emerald-500/50 rounded-lg px-3 py-1.5">Ver todas →</button></div>
+                <div className="overflow-x-auto"><table className="mega-dash-table"><thead><tr><th>Orden</th><th>Cliente</th><th>Equipo</th><th>Estado</th></tr></thead><tbody>
+                  {reparacionesRecientesDashboard.map((r:any)=><tr key={r.id}><td className="font-semibold">{r.orden || '#' + r.id}</td><td>{r.cliente || '—'}</td><td className="max-w-40 truncate">{r.equipo || '—'}</td><td><span className={`mega-dash-tag ${estadoColor[r.estado] || 'bg-zinc-700/50 text-zinc-300'}`}>{r.estado || '—'}</span></td></tr>)}
+                  {!reparacionesRecientesDashboard.length && <tr><td colSpan={4} className="text-center text-slate-500">Todavía no hay reparaciones</td></tr>}
+                </tbody></table></div>
+              </div>
+              <div className="mega-surface overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-4"><h2 className="font-semibold text-sm">🛒 &nbsp; Ventas recientes</h2><button onClick={()=>{if (navItems.some(item => item.id === 'ventas')) {setSection('ventas');setSubVenta('historial');}}} className="text-xs text-emerald-400 border border-emerald-500/50 rounded-lg px-3 py-1.5">Ver todas →</button></div>
+                <div className="overflow-x-auto"><table className="mega-dash-table"><thead><tr><th>Venta</th><th>Fecha</th><th>Total</th><th>Pago</th></tr></thead><tbody>
+                  {ventasRecientesDashboard.map((v:any,i:number)=><tr key={v.id || i}><td className="font-semibold">{v.numero_venta || '#' + v.id}</td><td>{v.fecha ? new Date(v.fecha).toLocaleDateString('es-UY') : '—'}</td><td className="font-semibold">{dineroUY(Number(v.total||0))}</td><td><span className="mega-dash-tag bg-emerald-500/15 text-emerald-300">{v.forma_pago || v.metodo_pago || '—'}</span></td></tr>)}
+                  {!ventasRecientesDashboard.length && <tr><td colSpan={4} className="text-center text-slate-500">Todavía no hay ventas</td></tr>}
+                </tbody></table></div>
+              </div>
             </div>
-
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="mega-surface p-4 lg:col-span-4"><div className="flex justify-between items-center mb-4"><h2 className="text-sm font-semibold">▥ &nbsp; Equipos más reparados</h2><span className="text-xs text-slate-500">Histórico</span></div>
+                <div className="space-y-4">{equiposData.map(([nombre,cantidad]:any,i:number)=><div key={nombre} className="flex gap-3 items-center text-xs"><span className="text-slate-400 w-4">{i+1}</span><span className="truncate w-28" title={nombre}>{nombre}</span><div className="h-2 bg-slate-800 rounded-full flex-1 overflow-hidden"><div className="h-full bg-emerald-400 rounded-full" style={{width:`${Number(cantidad)/Math.max(1,Number(equiposData[0]?.[1]||1))*100}%`}} /></div><span className="font-semibold w-5 text-right">{cantidad}</span></div>)}
+                  {!equiposData.length && <p className="text-sm text-slate-500">Sin reparaciones registradas</p>}</div>
+              </div>
+              <div className="mega-surface p-4 lg:col-span-5"><div className="flex justify-between items-center mb-3"><h2 className="text-sm font-semibold">＄ &nbsp; Ventas del mes</h2><span className="text-xs text-slate-500">{hoyDashboard.toLocaleDateString('es-UY',{month:'long',year:'numeric'})}</span></div>
+                <div className="text-2xl font-bold text-emerald-400 mb-1">{dineroUY(totalVentasMesDashboard)}</div><p className="text-xs text-slate-500 mb-3">Total vendido este mes</p>
+                <div className="h-40 w-full relative"><svg viewBox="0 0 600 150" preserveAspectRatio="none" className="w-full h-full" role="img" aria-label="Gráfico de ventas diarias del mes">
+                  {[30,70,110].map(y=><line key={y} x1="0" x2="600" y1={y} y2={y} stroke="#26343d" strokeWidth="1" />)}
+                  <polygon points={`0,150 ${graficoVentasDashboard} 600,150`} fill="rgba(0,211,130,.12)" />
+                  <polyline points={graficoVentasDashboard} fill="none" stroke="#00db8b" strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+                </svg></div><p className="text-xs text-slate-500 mt-1">Días del mes · valores reales de ventas</p>
+              </div>
+              <div className="mega-surface p-4 lg:col-span-3"><h2 className="text-sm font-semibold mb-4">♛ &nbsp; Estado de suscripción</h2>
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 mb-4"><p className="font-semibold text-emerald-400">{estadoSuscripcionDashboard}</p><p className="text-xs text-slate-400 mt-1">{suscripcionActual?.plan ? 'Plan '+String(suscripcionActual.plan).toUpperCase() : 'Consultá tu plan actual'}</p></div>
+                <div className="space-y-3 text-xs"><div className="flex justify-between gap-2"><span className="text-slate-400">Vencimiento</span><span>{suscripcionActual?.fecha_vencimiento || '—'}</span></div><div className="flex justify-between gap-2"><span className="text-slate-400">Reparaciones</span><span>{repairs.length}</span></div><div className="flex justify-between gap-2"><span className="text-slate-400">Productos</span><span>{productos.length}</span></div></div>
+                <button onClick={()=>setSection('configuracion')} className="mega-gradient-btn rounded-xl py-2.5 w-full font-semibold text-xs mt-5">Configuración →</button>
+              </div>
+            </div>
           </div>
         )}
 
