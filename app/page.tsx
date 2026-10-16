@@ -2234,6 +2234,7 @@ export default function Home() {
           const confirmarVenta = async () => {
             if (carrito.length === 0) return;
             if (tieneGarantiaVenta && !clienteGarantiaVenta.trim()) { alert('Falta el nombre del cliente para la garantía'); return; }
+            const ventanaTicket = window.open('', '_blank', 'width=400,height=600');
             const { data: ventas } = await supabase.from('ventas').select('numero_venta').eq('user_id', user.id).order('id', { ascending: false }).limit(1).maybeSingle();
             const nro = ventas ? parseInt((ventas.numero_venta || '0').replace(/\D/g,'')) + 1 : 1;
             const numero = `#${String(nro).padStart(4,'0')}`;
@@ -2265,6 +2266,7 @@ export default function Home() {
             }
 
             setTicketVenta({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha, garantia: garantiaInfo });
+            imprimirTicketData({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha, garantia: garantiaInfo }, ventanaTicket);
             setCarrito([]);
             setTieneGarantiaVenta(false);
             setMesesGarantiaVenta('3');
@@ -2299,8 +2301,8 @@ export default function Home() {
             setProductos(prev => prev.filter((p: any) => p.id !== id));
           };
 
-          const imprimirTicketData = (datos: { numero: string, fecha: string, items: any[], total: number, formaPago: string, garantia?: { meses: number, cliente: string, telefono: string, vencimiento: string } | null }) => {
-            const w = window.open('', '_blank', 'width=400,height=600');
+          const imprimirTicketData = (datos: { numero: string, fecha: string, items: any[], total: number, formaPago: string, garantia?: { meses: number, cliente: string, telefono: string, vencimiento: string } | null }, ventanaExistente?: Window | null) => {
+            const w = ventanaExistente || window.open('', '_blank', 'width=400,height=600');
             if (!w) return;
             const nombreLocal = config.nombre_negocio || 'MegaTallerPro';
             const encabezado = config.logo_url
