@@ -593,8 +593,8 @@ export default function Home() {
           .linea-suave { border-top: 1px dashed #000; margin: 4px 0; }
           .seguimiento { display:flex; align-items:center; justify-content:flex-start; gap:7px; margin:4px 0; page-break-inside:avoid; }
           .seguimiento-texto { max-width:37mm; font-size:11px; font-weight:bold; line-height:1.2; }
-          #qr-seguimiento { width:22mm; height:22mm; flex-shrink:0; }
-          #qr-seguimiento img, #qr-seguimiento canvas { width:22mm !important; height:22mm !important; display:block; }
+          #qr-seguimiento { width:15mm; height:15mm; flex-shrink:0; }
+          #qr-seguimiento img, #qr-seguimiento canvas { width:15mm !important; height:15mm !important; display:block; }
           .legal { font-size: 10px; text-align: left; margin-top: 4px; line-height: 1.4; }
           .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
           @media print {
@@ -616,7 +616,6 @@ export default function Home() {
         <div class="bloque">
           <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
           <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
-          <div class="fila"><span class="label">Teléfono:</span><span>${repair.telefono || '-'}</span></div>
         </div>
         <div class="linea"></div>
 
@@ -648,7 +647,7 @@ export default function Home() {
 
         <div class="seguimiento" id="bloque-seguimiento">
           <div id="qr-seguimiento"></div>
-          <div class="seguimiento-texto">ESCANEÁ ESTE QR PARA VER EL ESTADO DE TU REPARACIÓN<br/><span style="font-weight:normal">Podés consultar el estado de tu equipo cuando quieras.</span></div>
+          <div class="seguimiento-texto">ESCANEÁ ESTE QR PARA VER EL ESTADO DE TU REPARACIÓN</div>
         </div>
         <div class="footer">Gracias por confiar en ${nombre}</div>
         <div class="footer">Conserve este comprobante</div>
