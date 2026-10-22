@@ -567,7 +567,7 @@ export default function Home() {
       <head>
         <meta charset="UTF-8"/>
         <title>Ticket ${repair.orden}</title>
-        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -583,16 +583,18 @@ export default function Home() {
           .fila { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
           .label { font-weight: bold; }
            .bloque { margin-bottom: 2px; }
-          .cabecera-orden { text-align:center; margin: 3px 0 4px; }
-          .tipo-ticket { font-size: 11px; font-weight: bold; letter-spacing: .5px; }
+          .cabecera-orden { display:flex; justify-content:space-between; align-items:end; margin: 3px 0 4px; gap:4px; }
+          .tipo-ticket { font-size: 11px; font-weight: bold; letter-spacing: .2px; }
+          .fecha-orden { font-size:10px; text-align:right; white-space:nowrap; padding-bottom:2px; }
           .numero-orden { font-size: 20px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; }
           .seccion { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
           .fila span:last-child { text-align: right; overflow-wrap: anywhere; max-width: 67%; }
           .fila-destacada { border-top: 1px dotted #000; padding-top: 3px; margin-top: 2px; }
           .linea-suave { border-top: 1px dashed #000; margin: 4px 0; }
-          .seguimiento { display:flex; align-items:center; justify-content:center; gap:7px; margin:3px 0; }
+          .seguimiento { display:flex; align-items:center; justify-content:flex-start; gap:7px; margin:4px 0; page-break-inside:avoid; }
           .seguimiento-texto { max-width:37mm; font-size:11px; font-weight:bold; line-height:1.2; }
           #qr-seguimiento { width:22mm; height:22mm; flex-shrink:0; }
+          #qr-seguimiento img, #qr-seguimiento canvas { width:22mm !important; height:22mm !important; display:block; }
           .legal { font-size: 10px; text-align: left; margin-top: 4px; line-height: 1.4; }
           .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
           @media print {
@@ -605,10 +607,10 @@ export default function Home() {
         ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
         ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
         ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
-        <div class="linea"></div>
+        <div class="linea-suave"></div>
         <div class="cabecera-orden">
-          <div class="tipo-ticket">ORDEN DE REPARACIÓN</div>
-          <div class="numero-orden">${repair.orden}</div>
+          <div><div class="tipo-ticket">ORDEN DE REPARACIÓN</div><div class="numero-orden">${repair.orden}</div></div>
+          <div class="fecha-orden">Fecha: ${repair.fecha || '-'}</div>
         </div>
         <div class="linea-suave"></div>
         <div class="bloque">
@@ -640,13 +642,13 @@ export default function Home() {
 
         <div class="bloque">
           <div class="fila"><span class="label">Estado:</span><span>${repair.estado}</span></div>
-          <div class="fila"><span class="label">Fecha:</span><span>${repair.fecha}</span></div>
+          
         </div>
         <div class="linea"></div>
 
         <div class="seguimiento" id="bloque-seguimiento">
-          <canvas id="qr-seguimiento" width="180" height="180"></canvas>
-          <div class="seguimiento-texto">CONSULTÁ TU REPARACIÓN<br/><span style="font-weight:normal">Escaneá este QR para ver el estado de tu equipo.</span></div>
+          <div id="qr-seguimiento"></div>
+          <div class="seguimiento-texto">ESCANEÁ ESTE QR PARA VER EL ESTADO DE TU REPARACIÓN<br/><span style="font-weight:normal">Podés consultar el estado de tu equipo cuando quieras.</span></div>
         </div>
         <div class="footer">Gracias por confiar en ${nombre}</div>
         <div class="footer">Conserve este comprobante</div>
@@ -660,13 +662,13 @@ export default function Home() {
             }, { once: true });
             try {
               if (!window.QRCode) throw new Error('No se cargó el generador QR');
-              await window.QRCode.toCanvas(document.getElementById('qr-seguimiento'), ${JSON.stringify(seguimientoUrl)}, {
-                width: 180, margin: 1, errorCorrectionLevel: 'M',
-                color: { dark: '#000000', light: '#ffffff' }
+              new window.QRCode(document.getElementById('qr-seguimiento'), {
+                text: ${JSON.stringify(seguimientoUrl)}, width: 180, height: 180,
+                colorDark: '#000000', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.M
               });
             } catch (error) {
               console.error('Error generando QR:', error);
-              document.getElementById('bloque-seguimiento').style.display = 'none';
+              document.getElementById('bloque-seguimiento').innerHTML = '<div style="font-size:10px">No se pudo generar el QR. Reintentá la impresión.</div>'; 
             }
             // Esperar a que el logo y el QR estén listos antes de imprimir.
             await Promise.all(Array.from(document.images).map(function(img) {
