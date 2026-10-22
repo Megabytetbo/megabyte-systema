@@ -559,12 +559,15 @@ export default function Home() {
   // ── TICKET HTML para impresora térmica 80mm ──────────────────────────────
   const generatePDF = (repair: any) => {
     const nombre = config.nombre_negocio || 'MegaByte';
+    // Ruta reservada para la futura página pública de seguimiento.
+    const seguimientoUrl = `${window.location.origin}/seguimiento/${encodeURIComponent(String(repair.orden || '').replace(/^#/, ''))}`;
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8"/>
         <title>Ticket ${repair.orden}</title>
+        <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -576,10 +579,20 @@ export default function Home() {
           }
           .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
           .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
-          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
-          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+          .linea { border-top: 1.5px solid #000; margin: 4px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
           .label { font-weight: bold; }
-          .bloque { margin-bottom: 3px; }
+           .bloque { margin-bottom: 2px; }
+          .cabecera-orden { text-align:center; margin: 3px 0 4px; }
+          .tipo-ticket { font-size: 11px; font-weight: bold; letter-spacing: .5px; }
+          .numero-orden { font-size: 20px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; }
+          .seccion { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
+          .fila span:last-child { text-align: right; overflow-wrap: anywhere; max-width: 67%; }
+          .fila-destacada { border-top: 1px dotted #000; padding-top: 3px; margin-top: 2px; }
+          .linea-suave { border-top: 1px dashed #000; margin: 4px 0; }
+          .seguimiento { display:flex; align-items:center; justify-content:center; gap:7px; margin:3px 0; }
+          .seguimiento-texto { max-width:37mm; font-size:11px; font-weight:bold; line-height:1.2; }
+          #qr-seguimiento { width:22mm; height:22mm; flex-shrink:0; }
           .legal { font-size: 10px; text-align: left; margin-top: 4px; line-height: 1.4; }
           .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
           @media print {
@@ -593,9 +606,12 @@ export default function Home() {
         ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
         ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
         <div class="linea"></div>
-
+        <div class="cabecera-orden">
+          <div class="tipo-ticket">ORDEN DE REPARACIÓN</div>
+          <div class="numero-orden">${repair.orden}</div>
+        </div>
+        <div class="linea-suave"></div>
         <div class="bloque">
-          <div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div>
           <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
           <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
           <div class="fila"><span class="label">Teléfono:</span><span>${repair.telefono || '-'}</span></div>
@@ -603,14 +619,14 @@ export default function Home() {
         <div class="linea"></div>
 
         <div class="bloque">
-          <div class="label">Falla:</div>
+          <div class="seccion">Falla reportada</div>
           <div style="margin-top:2px">${repair.falla}</div>
         </div>
 
         ${repair.trabajo ? `
         <div class="linea"></div>
         <div class="bloque">
-          <div class="label">Trabajo realizado:</div>
+          <div class="seccion">Trabajo realizado</div>
           <div style="margin-top:2px">${repair.trabajo}</div>
         </div>` : ''}
 
@@ -618,7 +634,7 @@ export default function Home() {
         <div class="bloque">
           <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
           <div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div>
-          <div class="fila label"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
+          <div class="fila label fila-destacada"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
         </div>
         <div class="linea"></div>
 
@@ -628,16 +644,36 @@ export default function Home() {
         </div>
         <div class="linea"></div>
 
+        <div class="seguimiento" id="bloque-seguimiento">
+          <canvas id="qr-seguimiento" width="180" height="180"></canvas>
+          <div class="seguimiento-texto">CONSULTÁ TU REPARACIÓN<br/><span style="font-weight:normal">Escaneá este QR para ver el estado de tu equipo.</span></div>
+        </div>
         <div class="footer">Gracias por confiar en ${nombre}</div>
         <div class="footer">Conserve este comprobante</div>
         <div class="linea"></div>
         <div class="legal">Pasados los 90 dias la empresa no se responsabiliza por los equipos y se tomaran como abandono, pudiendo disponer de los mismos como forma de pago por el servicio brindado.</div>
 
         <script>
-          window.onload = function() {
+          window.onload = async function() {
             window.addEventListener('afterprint', function() {
               setTimeout(function() { window.close(); }, 150);
             }, { once: true });
+            try {
+              if (!window.QRCode) throw new Error('No se cargó el generador QR');
+              await window.QRCode.toCanvas(document.getElementById('qr-seguimiento'), ${JSON.stringify(seguimientoUrl)}, {
+                width: 180, margin: 1, errorCorrectionLevel: 'M',
+                color: { dark: '#000000', light: '#ffffff' }
+              });
+            } catch (error) {
+              console.error('Error generando QR:', error);
+              document.getElementById('bloque-seguimiento').style.display = 'none';
+            }
+            // Esperar a que el logo y el QR estén listos antes de imprimir.
+            await Promise.all(Array.from(document.images).map(function(img) {
+              return img.complete ? Promise.resolve() : new Promise(function(resolve) {
+                img.onload = resolve; img.onerror = resolve;
+              });
+            }));
             window.focus();
             window.print();
           };
