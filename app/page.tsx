@@ -31,7 +31,7 @@ export default function Home() {
   const [form, setForm] = useState({
     cliente: '', tipo: '', modelo: '', falla: '',
     telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '',
-    garantia: '', garantiaCustom: '',
+    garantia: '', garantiaCustom: '', comentario_publico: '',
   });
   const [config, setConfig] = useState<any>({
     nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
@@ -849,12 +849,13 @@ export default function Home() {
         cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
         falla: form.falla, telefono: form.telefono,
         contrasena: form.contrasena, trabajo: form.trabajo,
-        costo, entrega, saldo,
+        costo, entrega, saldo, comentario_publico: form.comentario_publico.trim(),
       }).eq('id', editingRepair.id);
 
+      if (error) { alert('No se pudieron guardar los cambios: ' + error.message); setGuardandoOrden(false); return; }
       if (!error) {
         setRepairs(repairs.map((r) => r.id === editingRepair.id
-          ? { ...r, cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`, falla: form.falla, telefono: form.telefono, contrasena: form.contrasena, trabajo: form.trabajo, costo, entrega, saldo }
+          ? { ...r, cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`, falla: form.falla, telefono: form.telefono, contrasena: form.contrasena, trabajo: form.trabajo, costo, entrega, saldo, comentario_publico: form.comentario_publico.trim() }
           : r));
       }
     } else {
@@ -867,7 +868,7 @@ export default function Home() {
         cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
         falla: form.falla, telefono: form.telefono,
         contrasena: form.contrasena, trabajo: form.trabajo,
-        costo, entrega, saldo, estado: 'Pendiente',
+        costo, entrega, saldo, estado: 'Pendiente', comentario_publico: form.comentario_publico.trim(),
         user_id: user.id,
         garantia: form.garantia === 'otro' ? form.garantiaCustom : form.garantia,
         fecha: new Date().toLocaleString('es-UY', {
@@ -895,7 +896,7 @@ export default function Home() {
       }
     }
 
-    setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
+    setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '', comentario_publico: '' });
     setEditingRepair(null);
     setShowModal(false);
     setGuardandoOrden(false);
@@ -913,7 +914,7 @@ export default function Home() {
       cliente: repair.cliente || '', tipo: partes[0] || '', modelo: partes[1] || '',
       falla: repair.falla || '', telefono: repair.telefono || '',
       contrasena: repair.contrasena || '', trabajo: repair.trabajo || '',
-      garantia: repair.garantia || '', garantiaCustom: '',
+      garantia: repair.garantia || '', garantiaCustom: '', comentario_publico: repair.comentario_publico || '',
       costo: String(repair.costo || ''), entrega: String(repair.entrega || ''), saldo: String(repair.saldo || ''),
     });
     setEditingRepair(repair);
@@ -2015,7 +2016,7 @@ export default function Home() {
                           </button>
                           <button onClick={() => {
                             setEditingRepair(null);
-                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
+                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '', comentario_publico: '' });
                             setSection('reparaciones');
                             setShowModal(true);
                           }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-xs font-bold transition-colors whitespace-nowrap">
@@ -3245,7 +3246,7 @@ export default function Home() {
               </div>
               <button onClick={() => {
                 setEditingRepair(null);
-                setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
+                setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '', comentario_publico: '' });
                 setShowModal(true);
               }} className="bg-[#00c347] hover:bg-[#00d957] text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
                 + Nueva Orden
@@ -3465,6 +3466,14 @@ export default function Home() {
                       <textarea placeholder="Descripción detallada del trabajo..." value={form.trabajo}
                         onChange={(e) => setForm({ ...form, trabajo: e.target.value })}
                         className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[100px] resize-none`} />
+                    </div>
+
+                    <div className="mt-4">
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Comentario para el cliente (seguimiento QR)</label>
+                      <textarea placeholder="Ej: Estamos esperando el repuesto para continuar con la reparación..." value={form.comentario_publico}
+                        onChange={(e) => setForm({ ...form, comentario_publico: e.target.value })}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[90px] resize-y`} />
+                      <p className={`mt-1 text-xs ${t.subtext}`}>Visible para el cliente al consultar su QR. No se imprime en los tickets.</p>
                     </div>
 
                     <div className="flex gap-3 mt-6">
