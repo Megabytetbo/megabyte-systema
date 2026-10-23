@@ -62,7 +62,7 @@ export default async function SeguimientoPage({ params }: Props) {
           <div className="mb-2 text-[10px] font-semibold tracking-[.08em] text-[#99a7b6]">SEGUIMIENTO DE REPARACIÓN</div>
           <div className="flex items-center justify-between gap-2 rounded-[8px] border border-[#293946] bg-[#17232d] px-3 py-3">
             <h1 className="min-w-0 text-[21px] font-extrabold tracking-[-.035em]">Orden {r.orden}</h1>
-            <span className="max-w-[135px] shrink-0 rounded-[3px] bg-[#00c347] px-2 py-[6px] text-center text-[11px] font-bold leading-tight text-[#001d0a]">{estado}</span>
+            <span className="max-w-[135px] shrink-0 rounded-[3px] bg-[#00c347] px-2 py-[6px] text-center text-[11px] font-bold leading-tight text-[#001d0a]">{estado === 'Reparado' ? 'Listo para retirar' : estado === 'Pendiente' ? 'Equipo recibido' : estado}</span>
           </div>
           <div className="mt-4 flex gap-3">
             <div className="flex w-[83px] shrink-0 items-center justify-center rounded-[7px] border border-[#2a3b49] bg-[#0a121b]"><MobileIcon /></div>
@@ -71,7 +71,6 @@ export default async function SeguimientoPage({ params }: Props) {
               <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-[6px] text-[12px] leading-snug">
                 <span className="text-[#a7b5c6]">Falla:</span><span className="break-words">{r.falla || 'Sin especificar'}</span>
                 <span className="text-[#a7b5c6]">Fecha de ingreso:</span><span>{fecha}</span>
-                <span className="text-[#a7b5c6]">Accesorios:</span><span>No registrados</span>
               </div>
             </div>
           </div>

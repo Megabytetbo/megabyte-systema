@@ -994,7 +994,9 @@ export default function Home() {
 
         const estadosList = [
           { label: 'Pendiente', count: repairs.filter((r: any) => r.estado === 'Pendiente').length, color: '#EF9F27' },
-          { label: 'En reparación', count: repairs.filter((r: any) => r.estado === 'En reparación').length, color: '#378ADD' },
+          { label: 'En diagnóstico', count: repairs.filter((r: any) => r.estado === 'En diagnóstico').length, color: '#D69E31' },
+          { label: 'En diagnóstico', count: repairs.filter(r => r.estado === 'En diagnóstico').length, color: '#D69E31' },
+    { label: 'En reparación', count: repairs.filter((r: any) => r.estado === 'En reparación').length, color: '#378ADD' },
           { label: 'Reparado', count: repairs.filter((r: any) => r.estado === 'Reparado').length, color: '#639922' },
           { label: 'Entregado', count: repairs.filter((r: any) => r.estado === 'Entregado').length, color: '#888780' },
         ].filter(e => e.count > 0);
@@ -1152,17 +1154,20 @@ export default function Home() {
 
   const estadoColor: any = {
     'Pendiente': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+    'En diagnóstico': 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
     'En reparación': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
     'Reparado': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
     'Entregado': 'bg-[#00c347]/20 text-[#00d957] border border-[#00c347]/30',
   };
 
   const estadoSelectColor: any = darkMode ? {
+    'En diagnóstico': 'bg-amber-500/20 text-amber-400',
     'Pendiente': 'bg-yellow-500/20 text-yellow-400',
     'En reparación': 'bg-blue-500/20 text-blue-400',
     'Reparado': 'bg-purple-500/20 text-purple-400',
     'Entregado': 'bg-[#00c347]/20 text-[#00d957]',
   } : {
+    'En diagnóstico': 'bg-amber-100 text-amber-800',
     'Pendiente': 'bg-amber-100 text-amber-800',
     'En reparación': 'bg-blue-100 text-blue-800',
     'Reparado': 'bg-purple-100 text-purple-800',
@@ -3331,6 +3336,7 @@ export default function Home() {
                               }}
                               className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer min-w-[110px] ${estadoSelectColor[repair.estado] || (darkMode ? 'bg-[#253641] text-white' : 'bg-slate-100 text-slate-700')}`}>
                               <option>Pendiente</option>
+                              <option>En diagnóstico</option>
                               <option>En reparación</option>
                               <option>Reparado</option>
                               <option value="Entregado">Entregado {repair.se_reparo === false ? '❌' : '✅'}</option>
