@@ -537,20 +537,20 @@ export default function Home() {
 
   // Clases dinámicas según tema
   const t = darkMode ? {
-    bg: 'bg-zinc-950', sidebar: 'bg-zinc-900 border-zinc-800', card: 'bg-zinc-900 border-zinc-800',
-    input: 'bg-zinc-800 border-zinc-700 text-white placeholder-zinc-600 focus:border-green-500',
-    text: 'text-white', subtext: 'text-zinc-500', muted: 'text-zinc-400',
-    row: 'border-zinc-800 hover:bg-zinc-800/40', navHover: 'hover:text-white hover:bg-zinc-800',
-    navActive: 'bg-green-500/10 text-green-400', divider: 'border-zinc-800',
-    modal: 'bg-zinc-900 border-zinc-800', menuBg: 'bg-zinc-800 border-zinc-700',
-    menuItem: 'hover:bg-zinc-700', badge: 'bg-zinc-800', select: 'bg-zinc-800 border-zinc-700 text-white',
-    tableHead: 'text-zinc-500',
+    bg: 'bg-[#090c0a]', sidebar: 'bg-[#141a16] border-[#202a23]', card: 'bg-[#141a16] border-[#202a23]',
+    input: 'bg-[#202a23] border-[#344137] text-white placeholder-[#526054] focus:border-[#39d36b]',
+    text: 'text-white', subtext: 'text-[#8a998c]', muted: 'text-[#aab8ac]',
+    row: 'border-[#202a23] hover:bg-[#202a23]/40', navHover: 'hover:text-white hover:bg-[#202a23]',
+    navActive: 'bg-[#39d36b]/10 text-[#58e982]', divider: 'border-[#202a23]',
+    modal: 'bg-[#141a16] border-[#202a23]', menuBg: 'bg-[#202a23] border-[#344137]',
+    menuItem: 'hover:bg-[#344137]', badge: 'bg-[#202a23]', select: 'bg-[#202a23] border-[#344137] text-white',
+    tableHead: 'text-[#8a998c]',
   } : {
     bg: 'bg-slate-100', sidebar: 'bg-white border-slate-200', card: 'bg-white border-slate-200',
-    input: 'bg-slate-50 border-slate-200 text-gray-900 placeholder-slate-400 focus:border-green-500',
+    input: 'bg-slate-50 border-slate-200 text-gray-900 placeholder-slate-400 focus:border-[#39d36b]',
     text: 'text-gray-900', subtext: 'text-slate-400', muted: 'text-slate-500',
     row: 'border-slate-100 hover:bg-slate-50', navHover: 'hover:text-gray-900 hover:bg-slate-100',
-    navActive: 'bg-green-500/10 text-green-600', divider: 'border-slate-200',
+    navActive: 'bg-[#39d36b]/10 text-[#24b956]', divider: 'border-slate-200',
     modal: 'bg-white border-slate-200', menuBg: 'bg-white border-slate-200',
     menuItem: 'hover:bg-slate-100', badge: 'bg-slate-100', select: 'bg-slate-50 border-slate-200 text-gray-900',
     tableHead: 'text-slate-400',
@@ -1147,26 +1147,26 @@ export default function Home() {
   const getNivelCliente = (cantidad: number) => {
     if (cantidad >= 5) return { texto: 'VIP ⭐', color: 'text-yellow-400' };
     if (cantidad >= 3) return { texto: 'Frecuente', color: 'text-blue-400' };
-    return { texto: 'Normal', color: 'text-zinc-400' };
+    return { texto: 'Normal', color: 'text-[#aab8ac]' };
   };
 
   const estadoColor: any = {
     'Pendiente': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
     'En reparación': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
     'Reparado': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
-    'Entregado': 'bg-green-500/20 text-green-400 border border-green-500/30',
+    'Entregado': 'bg-[#39d36b]/20 text-[#58e982] border border-[#39d36b]/30',
   };
 
   const estadoSelectColor: any = darkMode ? {
     'Pendiente': 'bg-yellow-500/20 text-yellow-400',
     'En reparación': 'bg-blue-500/20 text-blue-400',
     'Reparado': 'bg-purple-500/20 text-purple-400',
-    'Entregado': 'bg-green-500/20 text-green-400',
+    'Entregado': 'bg-[#39d36b]/20 text-[#58e982]',
   } : {
     'Pendiente': 'bg-amber-100 text-amber-800',
     'En reparación': 'bg-blue-100 text-blue-800',
     'Reparado': 'bg-purple-100 text-purple-800',
-    'Entregado': 'bg-green-100 text-green-800',
+    'Entregado': 'bg-[#d8f9e1] text-[#136c34]',
   };
 
   // ── Login screen ──────────────────────────────────────────────────────────
@@ -1182,30 +1182,30 @@ export default function Home() {
 
     if (inactivo || (esTrial && vencido) || (suscripcionActual.estado === 'activo' && vencido)) {
       return (
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[#090c0a] flex items-center justify-center p-6">
           <div className="w-full max-w-sm text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/20 mb-6">
               <span className="text-3xl">🔒</span>
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Acceso bloqueado</h1>
-            <p className="text-zinc-400 text-sm mb-2">
+            <p className="text-[#aab8ac] text-sm mb-2">
               {inactivo ? 'Tu cuenta está inactiva.' : 'Tu período de prueba ha vencido.'}
             </p>
-            <p className="text-zinc-500 text-xs mb-6">Elegí un plan para continuar usando MegaTallerPro.</p>
+            <p className="text-[#8a998c] text-xs mb-6">Elegí un plan para continuar usando MegaTallerPro.</p>
             <div className="flex flex-col gap-3 mb-4">
               <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/b2721abc-1fff-4b32-a8a4-aecf84944aa7"
                 target="_blank"
-                className="w-full border border-zinc-700 hover:border-green-500 text-white font-bold py-3 rounded-xl transition-colors text-sm text-center">
+                className="w-full border border-[#344137] hover:border-[#39d36b] text-white font-bold py-3 rounded-xl transition-colors text-sm text-center">
                 Plan Basic — $15/mes
               </a>
               <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
                 target="_blank"
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm text-center">
+                className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-3 rounded-xl transition-colors text-sm text-center">
                 Plan Pro — $22/mes ⭐
               </a>
             </div>
             <button onClick={handleLogout}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-xl transition-colors text-xs">
+              className="w-full bg-[#202a23] hover:bg-[#344137] text-white py-2.5 rounded-xl transition-colors text-xs">
               Cerrar sesión
             </button>
           </div>
@@ -1216,29 +1216,29 @@ export default function Home() {
 
   if (showNuevaPassword) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#090c0a] flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
               <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-20 w-auto object-contain" />
             </div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
+          <div className="bg-[#141a16] border border-[#202a23] rounded-2xl p-8 flex flex-col gap-4">
             <h2 className="text-white font-bold text-lg">Nueva contraseña</h2>
             <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Nueva contraseña</label>
+              <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Nueva contraseña</label>
               <input type="password" placeholder="Mínimo 6 caracteres" value={nuevaPassword}
                 onChange={e => setNuevaPassword(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
             </div>
             <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Confirmar contraseña</label>
+              <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Confirmar contraseña</label>
               <input type="password" placeholder="Repetí la contraseña" value={nuevaPasswordConfirm}
                 onChange={e => setNuevaPasswordConfirm(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
             </div>
             <button onClick={handleNuevaPassword}
-              className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+              className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
               Guardar contraseña
             </button>
           </div>
@@ -1249,19 +1249,19 @@ export default function Home() {
 
   if (!user && showLanding) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white overflow-y-auto">
+      <div className="min-h-screen bg-[#090c0a] text-white overflow-y-auto">
         {/* Header */}
-        <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+        <div className="border-b border-[#202a23] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-16 w-auto object-contain" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
-              className="text-zinc-400 hover:text-white text-sm px-4 py-2 transition-colors">
+              className="text-[#aab8ac] hover:text-white text-sm px-4 py-2 transition-colors">
               Iniciar sesión
             </button>
             <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
-              className="bg-green-500 hover:bg-green-400 text-black text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+              className="bg-[#39d36b] hover:bg-[#58e982] text-black text-sm font-bold px-4 py-2 rounded-xl transition-colors">
               Registrarse
             </button>
           </div>
@@ -1273,14 +1273,14 @@ export default function Home() {
             <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-44 w-auto object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-4 leading-tight">El sistema de gestión<br/>para talleres técnicos</h1>
-          <p className="text-zinc-400 text-lg mb-8 max-w-md mx-auto">Simple, rápido y desde cualquier dispositivo. Controlá tus reparaciones, clientes y finanzas en un solo lugar.</p>
+          <p className="text-[#aab8ac] text-lg mb-8 max-w-md mx-auto">Simple, rápido y desde cualquier dispositivo. Controlá tus reparaciones, clientes y finanzas en un solo lugar.</p>
           <div className="flex gap-3 justify-center flex-wrap">
             <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
-              className="bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm">
+              className="bg-[#39d36b] hover:bg-[#58e982] text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm">
               Probá gratis 5 días
             </button>
             <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
-              className="border border-zinc-700 hover:border-zinc-500 text-zinc-300 px-6 py-3 rounded-xl transition-colors text-sm">
+              className="border border-[#344137] hover:border-[#8a998c] text-[#d4dfd6] px-6 py-3 rounded-xl transition-colors text-sm">
               Iniciar sesión
             </button>
           </div>
@@ -1297,31 +1297,31 @@ export default function Home() {
               ['💰', 'Finanzas', 'Control de ingresos y saldos'],
               ['📱', 'Mobile', 'Funciona en cualquier dispositivo'],
             ].map(([icon, title, desc]) => (
-              <div key={title} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+              <div key={title} className="bg-[#141a16] border border-[#202a23] rounded-xl p-4 text-center">
                 <div className="text-2xl mb-2">{icon}</div>
                 <p className="text-sm font-medium text-white mb-1">{title}</p>
-                <p className="text-xs text-zinc-500">{desc}</p>
+                <p className="text-xs text-[#8a998c]">{desc}</p>
               </div>
             ))}
           </div>
 
           {/* Novedades Pro */}
-          <div className="bg-gradient-to-br from-green-500/10 to-zinc-900 border border-green-500/30 rounded-2xl p-6 mb-12">
+          <div className="bg-gradient-to-br from-[#39d36b]/10 to-[#141a16] border border-[#39d36b]/30 rounded-2xl p-6 mb-12">
             <div className="flex items-center gap-2 justify-center mb-1">
-              <span className="text-xs bg-green-500 text-black font-bold px-2.5 py-1 rounded-full">NUEVO</span>
+              <span className="text-xs bg-[#39d36b] text-black font-bold px-2.5 py-1 rounded-full">NUEVO</span>
               <h2 className="text-xl font-bold text-white">Potenciá tu taller con el Plan Pro</h2>
             </div>
-            <p className="text-sm text-zinc-400 text-center mb-6 max-w-lg mx-auto">Herramientas profesionales para que vendas más y tengas el control total de tu negocio.</p>
+            <p className="text-sm text-[#aab8ac] text-center mb-6 max-w-lg mx-auto">Herramientas profesionales para que vendas más y tengas el control total de tu negocio.</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {[
                 ['🛒', 'Punto de venta', 'Vendé productos con lector de código de barras y generá tickets al instante.'],
                 ['📊', 'Finanzas avanzadas', 'Comparativas mensuales, proyecciones, ranking de clientes y saldos pendientes.'],
                 ['💻', 'Multi-dispositivo', 'Usá tu cuenta en hasta 3 dispositivos a la vez, ideal para varios puestos.'],
               ].map(([icon, title, desc]) => (
-                <div key={title} className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
+                <div key={title} className="bg-[#141a16]/60 border border-[#202a23] rounded-xl p-4">
                   <div className="text-2xl mb-2">{icon}</div>
                   <p className="text-sm font-semibold text-white mb-1">{title}</p>
-                  <p className="text-xs text-zinc-500">{desc}</p>
+                  <p className="text-xs text-[#8a998c]">{desc}</p>
                 </div>
               ))}
             </div>
@@ -1330,46 +1330,46 @@ export default function Home() {
           {/* Planes */}
           <h2 className="text-xl font-bold text-white text-center mb-6">Elegí tu plan</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-2">Basic</p>
-              <p className="text-3xl font-bold text-white mb-1">$15 <span className="text-base font-normal text-zinc-400">/ mes</span></p>
-              <p className="text-sm text-zinc-500 mb-4">1 taller</p>
+            <div className="bg-[#141a16] border border-[#202a23] rounded-2xl p-6">
+              <p className="text-xs text-[#8a998c] uppercase tracking-wider font-medium mb-2">Basic</p>
+              <p className="text-3xl font-bold text-white mb-1">$15 <span className="text-base font-normal text-[#aab8ac]">/ mes</span></p>
+              <p className="text-sm text-[#8a998c] mb-4">1 taller</p>
               <div className="flex flex-col gap-2 mb-6">
                 {['Reparaciones ilimitadas', 'Clientes y tickets', 'WhatsApp automático', 'Finanzas'].map(f => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-zinc-300">
-                    <span className="text-green-400">✓</span> {f}
+                  <div key={f} className="flex items-center gap-2 text-sm text-[#d4dfd6]">
+                    <span className="text-[#58e982]">✓</span> {f}
                   </div>
                 ))}
               </div>
               <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/b2721abc-1fff-4b32-a8a4-aecf84944aa7"
                 target="_blank"
-                className="w-full border border-zinc-700 hover:border-green-500 text-white py-2.5 rounded-xl text-sm transition-colors text-center block">
+                className="w-full border border-[#344137] hover:border-[#39d36b] text-white py-2.5 rounded-xl text-sm transition-colors text-center block">
                 Suscribirse — $15/mes
               </a>
             </div>
 
-            <div className="bg-zinc-900 border-2 border-green-500 rounded-2xl p-6 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-black text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Más popular</div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-2">Pro</p>
-              <p className="text-3xl font-bold text-white mb-1">$22 <span className="text-base font-normal text-zinc-400">/ mes</span></p>
-              <p className="text-sm text-zinc-500 mb-4">Hasta 3 talleres</p>
+            <div className="bg-[#141a16] border-2 border-[#39d36b] rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#39d36b] text-black text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Más popular</div>
+              <p className="text-xs text-[#8a998c] uppercase tracking-wider font-medium mb-2">Pro</p>
+              <p className="text-3xl font-bold text-white mb-1">$22 <span className="text-base font-normal text-[#aab8ac]">/ mes</span></p>
+              <p className="text-sm text-[#8a998c] mb-4">Hasta 3 talleres</p>
               <div className="flex flex-col gap-2 mb-6">
                 {['Todo lo del plan Basic', 'Punto de venta con escáner', 'Finanzas avanzadas', 'Hasta 3 dispositivos', 'Soporte prioritario'].map(f => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-zinc-300">
-                    <span className="text-green-400">✓</span> {f}
+                  <div key={f} className="flex items-center gap-2 text-sm text-[#d4dfd6]">
+                    <span className="text-[#58e982]">✓</span> {f}
                   </div>
                 ))}
               </div>
               <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
                 target="_blank"
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm transition-colors text-center block">
+                className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-2.5 rounded-xl text-sm transition-colors text-center block">
                 Suscribirse — $22/mes
               </a>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="text-center text-sm text-zinc-500">
+          <div className="text-center text-sm text-[#8a998c]">
             <p>Sin compromisos · Cancelá cuando quieras · 5 días gratis</p>
           </div>
         </div>
@@ -1380,83 +1380,83 @@ export default function Home() {
   if (!user) {
     return (
       <>
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#090c0a] flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
             <div className="flex justify-center mb-6">
               <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-24 w-auto object-contain" />
             </div>
-            <p className="text-zinc-500 text-sm mt-1">Sistema de gestión técnica</p>
+            <p className="text-[#8a998c] text-sm mt-1">Sistema de gestión técnica</p>
           </div>
 
           {!showRegistro ? (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
+            <div className="bg-[#141a16] border border-[#202a23] rounded-2xl p-8 flex flex-col gap-4">
               <div>
-                <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
+                <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Correo electrónico</label>
                 <input type="email" placeholder="ejemplo@correo.com" value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 font-medium mb-1 block">Contraseña</label>
+                <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Contraseña</label>
                 <input type="password" placeholder="••••••••" value={loginForm.password}
                   onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
               </div>
-              <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-[#aab8ac] cursor-pointer">
                 <input type="checkbox" checked={loginForm.recordar}
                   onChange={(e) => setLoginForm({ ...loginForm, recordar: e.target.checked })}
                   className="accent-green-500 w-4 h-4" />
                 Mantener sesión iniciada
               </label>
               <button onClick={handleLogin}
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+                className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
                 Ingresar
               </button>
               <button onClick={() => { setShowRecuperar(true); setRecuperarEnviado(false); setRecuperarEmail(''); }}
-                className="w-full text-zinc-500 hover:text-zinc-300 text-xs text-center transition-colors">
+                className="w-full text-[#8a998c] hover:text-[#d4dfd6] text-xs text-center transition-colors">
                 ¿Olvidaste tu contraseña?
               </button>
               <button onClick={() => setShowRegistro(true)}
-                className="w-full text-zinc-400 hover:text-white text-sm text-center transition-colors mt-1">
-                ¿No tenés cuenta? <span className="text-green-400 font-medium">Probá 5 días gratis</span>
+                className="w-full text-[#aab8ac] hover:text-white text-sm text-center transition-colors mt-1">
+                ¿No tenés cuenta? <span className="text-[#58e982] font-medium">Probá 5 días gratis</span>
               </button>
             </div>
           ) : (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
+            <div className="bg-[#141a16] border border-[#202a23] rounded-2xl p-8 flex flex-col gap-4">
               <h2 className="text-white font-bold text-lg">Crear cuenta — 5 días gratis</h2>
               <div>
-                <label className="text-xs text-zinc-400 font-medium mb-1 block">Nombre del taller</label>
+                <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Nombre del taller</label>
                 <input type="text" placeholder="Ej: TechRepair Montevideo" value={registroForm.nombre}
                   onChange={(e) => setRegistroForm({ ...registroForm, nombre: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 font-medium mb-1 block">Correo electrónico</label>
+                <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Correo electrónico</label>
                 <input type="email" placeholder="correo@ejemplo.com" value={registroForm.email}
                   onChange={(e) => setRegistroForm({ ...registroForm, email: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 font-medium mb-1 block">Contraseña</label>
+                <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Contraseña</label>
                 <input type="password" placeholder="Mínimo 6 caracteres" value={registroForm.password}
                   onChange={(e) => setRegistroForm({ ...registroForm, password: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
               </div>
               <div>
-                <label className="text-xs text-zinc-400 font-medium mb-1 block">Confirmar contraseña</label>
+                <label className="text-xs text-[#aab8ac] font-medium mb-1 block">Confirmar contraseña</label>
                 <input type="password" placeholder="Repetí la contraseña" value={registroForm.confirmar}
                   onChange={(e) => setRegistroForm({ ...registroForm, confirmar: e.target.value })}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm" />
               </div>
               <button onClick={handleRegistro} disabled={registrando}
-                className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+                className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
                 {registrando ? 'Creando cuenta...' : 'Crear cuenta gratis'}
               </button>
               <button onClick={() => setShowRegistro(false)}
-                className="w-full text-zinc-400 hover:text-white text-sm text-center transition-colors">
+                className="w-full text-[#aab8ac] hover:text-white text-sm text-center transition-colors">
                 ← Volver al inicio de sesión
               </button>
             </div>
@@ -1466,19 +1466,19 @@ export default function Home() {
 
       {showRecuperar && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 w-full max-w-sm">
+          <div className="bg-[#141a16] border border-[#202a23] rounded-2xl p-8 w-full max-w-sm">
             {!recuperarEnviado ? (
               <>
                 <h2 className="text-white font-bold text-lg mb-2">Recuperar contraseña</h2>
-                <p className="text-zinc-400 text-sm mb-4">Ingresá tu email y te enviaremos un link para restablecerla.</p>
+                <p className="text-[#aab8ac] text-sm mb-4">Ingresá tu email y te enviaremos un link para restablecerla.</p>
                 <input type="email" placeholder="correo@ejemplo.com" value={recuperarEmail}
                   onChange={e => setRecuperarEmail(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm mb-4" />
+                  className="w-full bg-[#202a23] border border-[#344137] text-white placeholder-[#8a998c] p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm mb-4" />
                 <div className="flex gap-2">
                   <button onClick={() => setShowRecuperar(false)}
-                    className="flex-1 border border-zinc-700 text-zinc-400 py-2.5 rounded-xl text-sm">Cancelar</button>
+                    className="flex-1 border border-[#344137] text-[#aab8ac] py-2.5 rounded-xl text-sm">Cancelar</button>
                   <button onClick={handleRecuperar}
-                    className="flex-1 bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm">Enviar</button>
+                    className="flex-1 bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-2.5 rounded-xl text-sm">Enviar</button>
                 </div>
               </>
             ) : (
@@ -1486,10 +1486,10 @@ export default function Home() {
                 <div className="text-center mb-4">
                   <div className="text-4xl mb-3">📧</div>
                   <h2 className="text-white font-bold text-lg mb-2">Email enviado</h2>
-                  <p className="text-zinc-400 text-sm">Revisá tu bandeja de entrada y seguí el link para restablecer tu contraseña.</p>
+                  <p className="text-[#aab8ac] text-sm">Revisá tu bandeja de entrada y seguí el link para restablecer tu contraseña.</p>
                 </div>
                 <button onClick={() => setShowRecuperar(false)}
-                  className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm">Entendido</button>
+                  className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-2.5 rounded-xl text-sm">Entendido</button>
               </>
             )}
           </div>
@@ -1533,7 +1533,7 @@ export default function Home() {
       {/* Sidebar desktop */}
       <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-4 px-3 shrink-0 fixed h-full z-40 overflow-y-auto`}
         style={{paddingTop: diasTrialRestantes !== null && diasTrialRestantes >= 0 ? '40px' : undefined}}>
-        <div className="flex items-center justify-center px-2 mb-4 pb-4 border-b border-zinc-800 shrink-0">
+        <div className="flex items-center justify-center px-2 mb-4 pb-4 border-b border-[#202a23] shrink-0">
           <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="w-36 h-auto object-contain" />
         </div>
         <nav className="flex flex-col gap-0.5 flex-1 min-h-0">
@@ -1616,10 +1616,10 @@ export default function Home() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
               {[
-                { label: 'Total reparaciones', value: repairs.length, color: 'text-green-400', accent: 'bg-green-500/10' },
+                { label: 'Total reparaciones', value: repairs.length, color: 'text-[#58e982]', accent: 'bg-[#39d36b]/10' },
                 { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', accent: 'bg-yellow-500/10' },
                 { label: 'En reparación', value: repairs.filter(r => r.estado === 'En reparación').length, color: 'text-blue-400', accent: 'bg-blue-500/10' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500', accent: 'bg-green-500/10' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-[#39d36b]', accent: 'bg-[#39d36b]/10' },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
                   <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
@@ -1631,10 +1631,10 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               {[
                 { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
-                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400' },
+                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-[#58e982]' },
                 { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
                 { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', small: true },
+                { label: 'Equipo más reparado', value: equipoTop, color: 'text-[#58e982]', small: true },
                 { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
@@ -1656,14 +1656,14 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {[
-                { label: 'Reparaciones totales', value: repairs.length, color: 'text-green-400' },
+                { label: 'Reparaciones totales', value: repairs.length, color: 'text-[#58e982]' },
                 { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400' },
-                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-green-500' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-[#39d36b]' },
                 { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
-                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-green-400' },
+                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-[#58e982]' },
                 { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
                 { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
-                { label: 'Equipo más reparado', value: equipoTop, color: 'text-green-400', small: true },
+                { label: 'Equipo más reparado', value: equipoTop, color: 'text-[#58e982]', small: true },
                 { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
               ].map((stat) => (
                 <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
@@ -1679,8 +1679,8 @@ export default function Home() {
               <div className={`${t.card} border rounded-2xl p-5`}>
                 <p className={`text-xs ${t.subtext} font-medium mb-1 uppercase tracking-wider`}>Ingresos por mes</p>
                 <div className="flex gap-4 mb-3">
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-400"></span>Facturado</span>
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-400"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-green-500"></span>Cobrado</span>
+                  <span className="flex items-center gap-1.5 text-xs text-[#aab8ac]"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-400"></span>Facturado</span>
+                  <span className="flex items-center gap-1.5 text-xs text-[#aab8ac]"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#39d36b]"></span>Cobrado</span>
                 </div>
                 <div style={{position:'relative', height:'180px'}}>
                   <canvas id="chartMeses"></canvas>
@@ -1691,7 +1691,7 @@ export default function Home() {
                 <p className={`text-xs ${t.subtext} font-medium mb-1 uppercase tracking-wider`}>Estado de reparaciones</p>
                 <div className="flex flex-wrap gap-3 mb-3">
                   {estadosData.map(e => (
-                    <span key={e.label} className="flex items-center gap-1.5 text-xs text-zinc-400">
+                    <span key={e.label} className="flex items-center gap-1.5 text-xs text-[#aab8ac]">
                       <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{backgroundColor: e.color}}></span>
                       {e.label} {e.count}
                     </span>
@@ -1719,7 +1719,7 @@ export default function Home() {
                   <p className={`font-semibold ${t.text} mb-1`}>Análisis avanzado disponible en Plan Pro</p>
                   <p className={`text-sm ${t.subtext} mb-4`}>Comparativa vs mes anterior, proyección de ingresos, ranking de clientes y exportación PDF.</p>
                   <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
-                    target="_blank" className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                    target="_blank" className="inline-block bg-[#39d36b] hover:bg-[#58e982] text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
                     Actualizar a Pro — $22/mes
                   </a>
                 </div>
@@ -1796,7 +1796,7 @@ export default function Home() {
                   <div className={`${t.card} border rounded-2xl p-5`}>
                     <div className="flex items-center justify-between mb-4">
                       <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Análisis Pro — comparativa vs mes anterior</p>
-                      <span className="text-xs bg-green-500/15 text-green-400 px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
+                      <span className="text-xs bg-[#39d36b]/15 text-[#58e982] px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
                     </div>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       {([
@@ -1805,11 +1805,11 @@ export default function Home() {
                         { label: 'Ticket promedio', value: `$${ticketActual.toLocaleString('es-UY')}`, varN: varTicket, unit: '%', showVar: true, sub: '' },
                         { label: 'Tasa de reparación', value: `${tasaReparacion}%`, varN: 0, unit: '', showVar: false, sub: `${repsReparadas} reparados / ${repsNoReparadas} no reparados` },
                       ] as {label:string,value:string,varN:number,unit:string,showVar:boolean,sub:string}[]).map(stat => (
-                        <div key={stat.label} className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-50'} rounded-xl p-4`}>
+                        <div key={stat.label} className={`${darkMode ? 'bg-[#202a23]' : 'bg-slate-50'} rounded-xl p-4`}>
                           <p className={`text-xs ${t.subtext} mb-2`}>{stat.label}</p>
                           <p className={`text-xl font-semibold ${t.text}`}>{stat.value}</p>
                           {stat.showVar ? (
-                            <p className={`text-xs mt-1 ${stat.varN >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            <p className={`text-xs mt-1 ${stat.varN >= 0 ? 'text-[#58e982]' : 'text-red-400'}`}>
                               {stat.varN >= 0 ? '↑' : '↓'} {Math.abs(stat.varN)}{stat.unit} vs mes anterior
                             </p>
                           ) : (
@@ -1980,19 +1980,19 @@ export default function Home() {
                     cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
                     (cliente.telefono || '').includes(searchClientes)
                   ).map((cliente: any, index: number) => (
-                    <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
-                      <td className={`px-3 py-2.5 text-xs font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
-                      <td className={`px-3 py-2.5 text-xs ${t.muted} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
-                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
-                        <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-1 rounded-lg text-xs font-bold">
+                    <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-[#202a23]" : "hover:bg-slate-50"}`}>
+                      <td className={`px-3 py-2.5 text-xs font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 text-xs ${t.muted} border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
+                        <span className="bg-[#39d36b]/20 text-[#58e982] border border-[#39d36b]/30 px-2 py-1 rounded-lg text-xs font-bold">
                           {cliente.cantidad}
                         </span>
                       </td>
-                      <td className={`px-3 py-2.5 text-xs text-blue-400 font-bold border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {cliente.total}</td>
-                      <td className={`px-3 py-2.5 font-bold text-xs ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                      <td className={`px-3 py-2.5 text-xs text-blue-400 font-bold border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 font-bold text-xs ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
                         {getNivelCliente(cliente.cantidad).texto}
                       </td>
-                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
                         <button onClick={() => {
                           const historial = repairs.filter((r: any) => r.cliente === cliente.cliente);
                           let texto = `Historial de ${cliente.cliente}\n\n`;
@@ -2000,18 +2000,18 @@ export default function Home() {
                             texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
                           });
                           alert(texto);
-                        }} className={`${t.badge} hover:bg-zinc-600 px-3 py-1.5 rounded-lg text-xs transition-colors ${t.muted}`}>
+                        }} className={`${t.badge} hover:bg-[#526054] px-3 py-1.5 rounded-lg text-xs transition-colors ${t.muted}`}>
                           Ver historial
                         </button>
                       </td>
-                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
                         <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
                           target="_blank"
-                          className="bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg text-black text-xs font-bold transition-colors">
+                          className="bg-[#39d36b] hover:bg-[#58e982] px-3 py-1.5 rounded-lg text-black text-xs font-bold transition-colors">
                           WhatsApp
                         </a>
                       </td>
-                      <td className={`px-3 py-2.5 rounded-r-xl border-r border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                      <td className={`px-3 py-2.5 rounded-r-xl border-r border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
                         <div className="flex gap-2">
                           <button onClick={() => {
                             setEditingCliente(cliente);
@@ -2062,7 +2062,7 @@ export default function Home() {
                       <button onClick={() => setEditingCliente(null)}
                         className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
                       <button onClick={guardarEdicionCliente}
-                        className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
+                        className="flex-1 bg-[#39d36b] hover:bg-[#58e982] text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
                     </div>
                   </div>
                 </div>
@@ -2080,7 +2080,7 @@ export default function Home() {
                 <p className={`${t.subtext} text-sm mt-1`}>{suscripciones.length} talleres registrados</p>
               </div>
               <button onClick={() => { cargarSuscripciones(); setShowAdminModal({ nombre_taller: '', email: '', plan: 'basic', estado: 'activo', fecha_vencimiento: '' }); }}
-                className="bg-green-500 hover:bg-green-400 text-black font-bold px-4 py-2 rounded-xl text-sm">
+                className="bg-[#39d36b] hover:bg-[#58e982] text-black font-bold px-4 py-2 rounded-xl text-sm">
                 + Nuevo taller
               </button>
             </div>
@@ -2096,7 +2096,7 @@ export default function Home() {
                 const ingresosPro = suscripciones.filter((s: any) => s.estado === 'activo' && s.plan === 'pro').length * 22;
                 const ingresosMes = ingresosBasic + ingresosPro;
                 return [
-                  { label: 'Activos', value: activos, color: 'text-green-400' },
+                  { label: 'Activos', value: activos, color: 'text-[#58e982]' },
                   { label: 'En trial', value: trials, color: 'text-amber-400' },
                   { label: 'Inactivos', value: inactivos, color: 'text-red-400' },
                   { label: 'Ingresos est. mes', value: `$ ${ingresosMes}`, color: 'text-blue-400' },
@@ -2160,7 +2160,7 @@ export default function Home() {
                       <td className={`p-4 font-medium ${t.text}`}>{sub.nombre_taller}</td>
                       <td className={`p-4 ${t.muted} text-sm`}>{sub.email}</td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.plan === 'pro' ? 'bg-blue-500/20 text-blue-400' : 'bg-zinc-500/20 text-zinc-400'}`}>
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.plan === 'pro' ? 'bg-blue-500/20 text-blue-400' : 'bg-[#8a998c]/20 text-[#aab8ac]'}`}>
                           {sub.plan?.toUpperCase()}
                         </span>
                       </td>
@@ -2168,7 +2168,7 @@ export default function Home() {
                         {sub.fecha_vencimiento ? new Date(sub.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
                       </td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.estado === 'activo' ? 'bg-green-500/20 text-green-400' : sub.estado === 'trial' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.estado === 'activo' ? 'bg-[#39d36b]/20 text-[#58e982]' : sub.estado === 'trial' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
                           {sub.estado === 'activo' ? '✅ Activo' : sub.estado === 'trial' ? '⏳ En prueba' : '⛔ Inactivo'}
                         </span>
                       </td>
@@ -2179,7 +2179,7 @@ export default function Home() {
                             ✏️ Editar
                           </button>
                           <button onClick={() => toggleEstado(sub.id, sub.estado)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-bold ${sub.estado === 'activo' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                            className={`px-3 py-1.5 rounded-lg text-sm font-bold ${sub.estado === 'activo' ? 'bg-red-500/20 text-red-400' : 'bg-[#39d36b]/20 text-[#58e982]'}`}>
                             {sub.estado === 'activo' ? 'Desactivar' : 'Activar'}
                           </button>
                         </div>
@@ -2238,7 +2238,7 @@ export default function Home() {
                       <button onClick={() => setShowAdminModal(null)}
                         className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
                       <button onClick={() => guardarSuscripcion(showAdminModal)}
-                        className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
+                        className="flex-1 bg-[#39d36b] hover:bg-[#58e982] text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
                     </div>
                   </div>
                 </div>
@@ -2397,7 +2397,7 @@ export default function Home() {
                 <p className={`font-semibold ${t.text} mb-1`}>Punto de ventas disponible en Plan Pro</p>
                 <p className={`text-sm ${t.subtext} mb-4`}>Vendé productos, manejá tu inventario y generá tickets.</p>
                 <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
-                  target="_blank" className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                  target="_blank" className="inline-block bg-[#39d36b] hover:bg-[#58e982] text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
                   Actualizar a Pro — $22/mes
                 </a>
               </div>
@@ -2448,25 +2448,25 @@ export default function Home() {
                   <h1 className={`text-2xl font-bold ${t.text}`}>Punto de ventas</h1>
                   <p className={`${t.subtext} text-sm mt-1`}>Vendé productos y generá tickets</p>
                 </div>
-                <span className="text-xs bg-green-500/15 text-green-400 px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
+                <span className="text-xs bg-[#39d36b]/15 text-[#58e982] px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
               </div>
 
               {/* Tabs */}
               <div className="flex gap-2 mb-6">
                 <button onClick={() => setSubVenta('vender')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'vender' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'vender' ? 'bg-[#39d36b] text-black' : `${t.card} border ${t.subtext}`}`}>
                   🛒 Vender
                 </button>
                 <button onClick={() => setSubVenta('finanzas')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'finanzas' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'finanzas' ? 'bg-[#39d36b] text-black' : `${t.card} border ${t.subtext}`}`}>
                   💰 Finanzas
                 </button>
                 <button onClick={() => setSubVenta('historial')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'historial' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'historial' ? 'bg-[#39d36b] text-black' : `${t.card} border ${t.subtext}`}`}>
                   🧾 Historial
                 </button>
                 <button onClick={() => setSubVenta('garantias')}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'garantias' ? 'bg-green-500 text-black' : `${t.card} border ${t.subtext}`}`}>
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'garantias' ? 'bg-[#39d36b] text-black' : `${t.card} border ${t.subtext}`}`}>
                   🛡️ Garantías
                 </button>
               </div>
@@ -2478,7 +2478,7 @@ export default function Home() {
                     <input type="text" value={busquedaGarantiasVentas}
                       placeholder="Buscar por cliente, producto o ticket..."
                       onChange={e => setBusquedaGarantiasVentas(e.target.value)}
-                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-green-500`} />
+                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-[#39d36b]`} />
                   </div>
                   {(() => {
                     const q = busquedaGarantiasVentas.trim().toLowerCase();
@@ -2502,7 +2502,7 @@ export default function Home() {
                                 <p className={`text-xs ${t.subtext} truncate mt-0.5`}>{g.productos} · Ticket {g.numero_venta}</p>
                                 {g.telefono && <p className={`text-xs ${t.subtext}`}>{g.telefono}</p>}
                               </div>
-                              <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${vigente ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+                              <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${vigente ? 'bg-[#39d36b]/15 text-[#58e982]' : 'bg-red-500/15 text-red-400'}`}>
                                 {vigente ? 'Vigente hasta' : 'Vencida'} {vencimiento.toLocaleDateString('es-UY')}
                               </span>
                             </div>
@@ -2519,7 +2519,7 @@ export default function Home() {
                     <input type="text" value={busquedaHistorial}
                       placeholder="Buscar por N° ticket, fecha o pago..."
                       onChange={e => setBusquedaHistorial(e.target.value)}
-                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-green-500`} />
+                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-[#39d36b]`} />
                   </div>
                   {(() => {
                     const q = busquedaHistorial.trim().toLowerCase();
@@ -2566,10 +2566,10 @@ export default function Home() {
                 <div className="flex flex-col gap-4">
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
-                      { label: 'Vendido hoy', value: `$${totalHoy.toLocaleString('es-UY')}`, color: 'text-green-400' },
+                      { label: 'Vendido hoy', value: `$${totalHoy.toLocaleString('es-UY')}`, color: 'text-[#58e982]' },
                       { label: 'Vendido este mes', value: `$${totalMes.toLocaleString('es-UY')}`, color: 'text-blue-400' },
                       { label: 'Total general', value: `$${totalGeneral.toLocaleString('es-UY')}`, color: 'text-purple-400' },
-                      { label: 'Cantidad de ventas', value: ventasList.length, color: 'text-green-400' },
+                      { label: 'Cantidad de ventas', value: ventasList.length, color: 'text-[#58e982]' },
                       { label: 'Ticket promedio', value: `$${ticketPromVenta.toLocaleString('es-UY')}`, color: 'text-yellow-400' },
                       { label: 'Valor del inventario', value: `$${valorInventario.toLocaleString('es-UY')}`, color: 'text-blue-400' },
                     ].map(stat => (
@@ -2609,7 +2609,7 @@ export default function Home() {
                       <div className="flex items-end justify-between gap-2" style={{height:'140px'}}>
                         {ventasPorDia.map((d, i) => (
                           <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                            <div className="w-full bg-green-500 rounded-t" style={{height: `${(d.total / maxDia) * 100}%`, minHeight: d.total > 0 ? '4px' : '0'}}></div>
+                            <div className="w-full bg-[#39d36b] rounded-t" style={{height: `${(d.total / maxDia) * 100}%`, minHeight: d.total > 0 ? '4px' : '0'}}></div>
                             <span className={`text-[10px] ${t.subtext} mt-1 text-center`}>{d.dia}</span>
                           </div>
                         ))}
@@ -2655,13 +2655,13 @@ export default function Home() {
                           if (match) agregarAlCarrito(match);
                         }
                       }}
-                      className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm focus:border-green-500`} />
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm focus:border-[#39d36b]`} />
                     <p className={`text-xs ${t.subtext} mt-2`}>El lector ingresa el código automáticamente. Presioná Enter para agregar.</p>
                     {busquedaPdv && productosFiltrados.length > 0 && (
                       <div className={`mt-2 border ${t.divider} rounded-xl overflow-hidden`}>
                         {productosFiltrados.slice(0, 5).map((p: any) => (
                           <button key={p.id} onClick={() => agregarAlCarrito(p)}
-                            className={`w-full text-left px-4 py-2.5 text-sm ${t.text} hover:bg-green-500/10 flex justify-between items-center border-b last:border-0`} style={{borderColor:'var(--color-border-tertiary)'}}>
+                            className={`w-full text-left px-4 py-2.5 text-sm ${t.text} hover:bg-[#39d36b]/10 flex justify-between items-center border-b last:border-0`} style={{borderColor:'var(--color-border-tertiary)'}}>
                             <span>{p.nombre}</span>
                             <span className="font-medium">${Number(p.precio).toLocaleString('es-UY')}</span>
                           </button>
@@ -2678,9 +2678,9 @@ export default function Home() {
                         <input type="text" value={busquedaInventario}
                           placeholder="Buscar..."
                           onChange={e => setBusquedaInventario(e.target.value)}
-                          className={`border ${t.input} px-3 py-1.5 rounded-lg outline-none text-xs w-full max-w-[160px] focus:border-green-500`} />
+                          className={`border ${t.input} px-3 py-1.5 rounded-lg outline-none text-xs w-full max-w-[160px] focus:border-[#39d36b]`} />
                         <button onClick={() => { setShowAddProducto(true); setEditingProducto(null); setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' }); }}
-                          className="text-xs bg-green-500 text-black font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition-colors whitespace-nowrap">+ Agregar</button>
+                          className="text-xs bg-[#39d36b] text-black font-bold px-3 py-1.5 rounded-lg hover:bg-[#58e982] transition-colors whitespace-nowrap">+ Agregar</button>
                       </div>
                     </div>
                     {productos.length === 0 ? (
@@ -2699,9 +2699,9 @@ export default function Home() {
                             <div className="flex items-center gap-3 flex-shrink-0">
                               <div className="text-right">
                                 <p className={`text-sm font-semibold ${t.text}`}>${Number(p.precio).toLocaleString('es-UY')}</p>
-                                <p className={`text-xs ${p.stock <= 2 ? 'text-yellow-400' : 'text-green-400'}`}>Stock: {p.stock}</p>
+                                <p className={`text-xs ${p.stock <= 2 ? 'text-yellow-400' : 'text-[#58e982]'}`}>Stock: {p.stock}</p>
                               </div>
-                              <button onClick={() => agregarAlCarrito(p)} className="text-xs bg-green-500/15 text-green-400 px-2 py-1 rounded-lg hover:bg-green-500/25">+</button>
+                              <button onClick={() => agregarAlCarrito(p)} className="text-xs bg-[#39d36b]/15 text-[#58e982] px-2 py-1 rounded-lg hover:bg-[#39d36b]/25">+</button>
                               <button onClick={() => { setEditingProducto(p); setProductoForm({ nombre: p.nombre, precio: String(p.precio), stock: String(p.stock), codigo_barras: p.codigo_barras || '' }); setShowAddProducto(true); }}
                                 className={`text-xs ${t.muted} hover:opacity-70`}>✏️</button>
                               <button onClick={() => eliminarProducto(p.id)} className="text-xs text-red-400 hover:opacity-70">🗑️</button>
@@ -2755,7 +2755,7 @@ export default function Home() {
                               className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
                             {montoRecibidoPdv !== '' && (
                               Number(montoRecibidoPdv) >= totalCarrito ? (
-                                <p className="text-sm font-semibold text-green-400 mt-2">
+                                <p className="text-sm font-semibold text-[#58e982] mt-2">
                                   Cambio a devolver: ${(Number(montoRecibidoPdv) - totalCarrito).toLocaleString('es-UY')}
                                 </p>
                               ) : (
@@ -2769,7 +2769,7 @@ export default function Home() {
                         <div className="flex items-center justify-between mb-2">
                           <span className={`text-sm ${t.text}`}>¿Tiene garantía?</span>
                           <button type="button" onClick={() => setTieneGarantiaVenta(!tieneGarantiaVenta)}
-                            className={`w-10 h-6 rounded-full relative transition-colors ${tieneGarantiaVenta ? 'bg-green-500' : `${t.badge}`}`}>
+                            className={`w-10 h-6 rounded-full relative transition-colors ${tieneGarantiaVenta ? 'bg-[#39d36b]' : `${t.badge}`}`}>
                             <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${tieneGarantiaVenta ? 'left-[18px]' : 'left-0.5'}`}></span>
                           </button>
                         </div>
@@ -2800,7 +2800,7 @@ export default function Home() {
                           </div>
                         )}
                         <button onClick={confirmarVenta}
-                          className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                          className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-3 rounded-xl text-sm transition-colors">
                           🧾 Confirmar venta y generar ticket
                         </button>
                         <button onClick={() => setCarrito([])} className={`w-full mt-2 text-xs ${t.subtext} hover:opacity-70`}>Vaciar carrito</button>
@@ -2812,7 +2812,7 @@ export default function Home() {
                   {ticketVenta && (
                     <div className={`${t.card} border rounded-2xl p-5`}>
                       <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ticket — {ticketVenta.numero}</p>
-                      <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-50'} rounded-xl p-4 font-mono text-xs`}>
+                      <div className={`${darkMode ? 'bg-[#202a23]' : 'bg-slate-50'} rounded-xl p-4 font-mono text-xs`}>
                         {config.logo_url ? (
                           <img src={config.logo_url} alt="logo" className="mx-auto mb-2" style={{maxWidth:'120px', maxHeight:'48px', objectFit:'contain'}} />
                         ) : (
@@ -2876,7 +2876,7 @@ export default function Home() {
                       ))}
                     </div>
                     <button onClick={guardarProducto}
-                      className="mt-4 w-full bg-green-500 hover:bg-green-400 text-black font-bold py-2.5 rounded-xl text-sm">
+                      className="mt-4 w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-2.5 rounded-xl text-sm">
                       {editingProducto ? 'Guardar cambios' : 'Agregar producto'}
                     </button>
                   </div>
@@ -2970,7 +2970,7 @@ export default function Home() {
               {/* Calculadora básica */}
               <div tabIndex={0} onFocus={() => setCalcFocused(true)} onBlur={() => setCalcFocused(false)} className={`${t.card} border rounded-2xl p-5 outline-none`}>
                 <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Calculadora</p>
-                <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mb-3 border-2 transition-colors ${calcFocused ? 'border-green-500' : 'border-transparent'}`}>
+                <div className={`${darkMode ? 'bg-[#202a23]' : 'bg-slate-100'} rounded-xl p-4 mb-3 border-2 transition-colors ${calcFocused ? 'border-[#39d36b]' : 'border-transparent'}`}>
                   <div className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}>{calcExpr}</div>
                   <div className={`text-3xl font-mono font-semibold ${t.text} text-right`}>
                     {calcDisplay}
@@ -2996,7 +2996,7 @@ export default function Home() {
                     { label: '+', action: 'op:+', cls: 'text-blue-400' },
                     { label: '0', action: 'num:0', cls: 'col-span-2' },
                     { label: '.', action: 'dot', cls: '' },
-                    { label: '=', action: 'equals', cls: 'bg-green-500 !text-black font-bold border-green-500' },
+                    { label: '=', action: 'equals', cls: 'bg-[#39d36b] !text-black font-bold border-[#39d36b]' },
                   ].map((btn) => (
                     <button key={btn.action}
                       data-calc={btn.action}
@@ -3027,11 +3027,11 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
+                <div className={`${darkMode ? 'bg-[#202a23]' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
                   {[
                     { label: 'Subtotal', val: fmt(presSubtotal), color: t.subtext },
                     { label: 'Con ganancia', val: fmt(presConG), color: 'text-blue-400' },
-                    { label: 'Con descuento', val: fmt(presConD), color: 'text-green-400' },
+                    { label: 'Con descuento', val: fmt(presConD), color: 'text-[#58e982]' },
                     { label: 'Saldo pendiente', val: fmt(presSaldo), color: 'text-red-400', big: true },
                   ].map(r => (
                     <div key={r.label} className="flex justify-between items-center">
@@ -3084,12 +3084,12 @@ export default function Home() {
                       className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
                   </div>
                 </div>
-                <div className={`${darkMode ? 'bg-zinc-800' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
+                <div className={`${darkMode ? 'bg-[#202a23]' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
                   {[
                     { label: 'Tasa aplicada', val: tasaIva + '%', color: t.subtext },
                     { label: 'Precio sin IVA', val: ivaBaseN ? fmt(ivaBaseN) : ivaFinalN ? fmt(ivaBaseCalc) : '—', color: 'text-blue-400', big: true },
                     { label: 'Monto de IVA', val: ivaBaseN ? fmt(ivaMonto) : ivaFinalN ? fmt(ivaMontoDesde) : '—', color: 'text-yellow-400' },
-                    { label: 'Precio con IVA', val: ivaBaseN ? fmt(ivaFinalCalc) : ivaFinalN ? fmt(ivaFinalN) : '—', color: 'text-green-400', big: true },
+                    { label: 'Precio con IVA', val: ivaBaseN ? fmt(ivaFinalCalc) : ivaFinalN ? fmt(ivaFinalN) : '—', color: 'text-[#58e982]', big: true },
                   ].map(r => (
                     <div key={r.label} className="flex justify-between items-center">
                       <span className={`text-xs ${r.color}`}>{r.label}</span>
@@ -3116,7 +3116,7 @@ export default function Home() {
               <div className={`${t.card} border rounded-2xl p-6`}>
                 <h2 className={`text-base font-semibold ${t.text} mb-1`}>Apariencia</h2>
                 <p className={`text-sm ${t.subtext} mb-5`}>Cambiá el tema visual de la aplicación</p>
-                <div className={`flex items-center justify-between p-4 rounded-xl border ${t.divider} ${darkMode ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
+                <div className={`flex items-center justify-between p-4 rounded-xl border ${t.divider} ${darkMode ? 'bg-[#202a23]/50' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
                     <div>
@@ -3126,7 +3126,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={toggleTheme}
-                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-green-500' : 'bg-gray-300'}`}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#39d36b]' : 'bg-gray-300'}`}
                   >
                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -3142,13 +3142,13 @@ export default function Home() {
                 <div className="mb-5">
                   <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO DEL NEGOCIO</label>
                   {config.logo_url && (
-                    <div className={`mb-3 p-3 ${darkMode ? 'bg-zinc-800' : 'bg-gray-100'} rounded-xl inline-block`}>
+                    <div className={`mb-3 p-3 ${darkMode ? 'bg-[#202a23]' : 'bg-gray-100'} rounded-xl inline-block`}>
                       <img src={config.logo_url} alt="Logo" className="max-h-20 max-w-full object-contain" />
                     </div>
                   )}
                   <input type="file" accept="image/*"
                     onChange={(e) => { if (e.target.files?.[0]) subirLogo(e.target.files[0]); }}
-                    className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-green-500 file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
+                    className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-[#39d36b] file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
                   <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG. Se mostrará en el ticket de impresión.</p>
                 </div>
 
@@ -3176,7 +3176,7 @@ export default function Home() {
                 {/* Mensajes automáticos */}
                 <div className={`border-t ${t.divider} pt-6`}>
                   <h3 className={`text-sm font-bold ${t.text} mb-1`}>Mensajes automáticos de WhatsApp</h3>
-                  <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{cliente}"}</code> <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{equipo}"}</code> <code className="bg-zinc-700 text-green-400 px-1 rounded">{"{saldo}"}</code></p>
+                  <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-[#344137] text-[#58e982] px-1 rounded">{"{cliente}"}</code> <code className="bg-[#344137] text-[#58e982] px-1 rounded">{"{equipo}"}</code> <code className="bg-[#344137] text-[#58e982] px-1 rounded">{"{saldo}"}</code></p>
                   <div className="space-y-4">
                     {[
                       { key: 'en_reparacion', label: 'EN REPARACIÓN', msgKey: 'msg_en_reparacion', switchKey: 'switch_en_reparacion' },
@@ -3187,12 +3187,12 @@ export default function Home() {
                         <div className="flex items-center justify-between mb-2">
                           <label className={`text-xs ${t.subtext} font-medium`}>{label}</label>
                           <div className="flex items-center gap-2">
-                            <span className={`text-xs font-medium ${config[switchKey] ? 'text-green-400' : t.subtext}`}>
+                            <span className={`text-xs font-medium ${config[switchKey] ? 'text-[#58e982]' : t.subtext}`}>
                               {config[switchKey] ? 'Activo' : 'Inactivo'}
                             </span>
                             <button
                               onClick={() => setConfig({...config, [switchKey]: !config[switchKey]})}
-                              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${config[switchKey] ? 'bg-green-500' : 'bg-zinc-600'}`}>
+                              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${config[switchKey] ? 'bg-[#39d36b]' : 'bg-[#526054]'}`}>
                               <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-200 ${config[switchKey] ? 'left-[18px]' : 'left-0.5'}`} />
                             </button>
                           </div>
@@ -3213,7 +3213,7 @@ export default function Home() {
                   <p className={`text-xs ${t.subtext} mb-4`}>Descargá un respaldo de tus datos en PDF</p>
                   <div className="flex flex-col gap-2">
                     <button onClick={exportarReparacionesPDF}
-                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-green-500 transition-colors`}>
+                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-[#39d36b] transition-colors`}>
                       <span className="text-lg">📄</span>
                       <div className="text-left">
                         <p className={`font-medium ${t.text}`}>Exportar reparaciones</p>
@@ -3221,7 +3221,7 @@ export default function Home() {
                       </div>
                     </button>
                     <button onClick={exportarClientesPDF}
-                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-green-500 transition-colors`}>
+                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-[#39d36b] transition-colors`}>
                       <span className="text-lg">👥</span>
                       <div className="text-left">
                         <p className={`font-medium ${t.text}`}>Exportar clientes</p>
@@ -3232,7 +3232,7 @@ export default function Home() {
                 </div>
 
                 <button onClick={guardarConfig} disabled={configGuardando}
-                  className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-colors text-sm">
+                  className="w-full bg-[#39d36b] hover:bg-[#58e982] text-black font-bold py-3 rounded-xl transition-colors text-sm">
                   {configGuardando ? 'Guardando...' : 'Guardar configuración'}
                 </button>
               </div>
@@ -3253,7 +3253,7 @@ export default function Home() {
                 setEditingRepair(null);
                 setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '' });
                 setShowModal(true);
-              }} className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
+              }} className="bg-[#39d36b] hover:bg-[#58e982] text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
                 + Nueva Orden
               </button>
             </div>
@@ -3293,16 +3293,16 @@ export default function Home() {
                         );
                       })
                       .map((repair: any, index: number) => (
-                        <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-zinc-800" : "hover:bg-slate-50"}`}>
-                          <td className={`px-3 py-2.5 text-xs font-bold text-green-400 whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.orden}</td>
-                          <td className={`px-3 py-2.5 text-xs font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
-                          <td className={`px-3 py-2.5 text-xs ${darkMode ? 'text-zinc-300' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.equipo}</td>
-                          <td className={`px-3 py-2.5 text-xs ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.falla}</td>
-                          <td className={`px-3 py-2.5 text-xs text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
-                          <td className={`px-3 py-2.5 text-xs text-green-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
-                          <td className={`px-3 py-2.5 text-xs text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
-                          <td className={`px-3 py-2.5 ${t.subtext} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>{repair.fecha}</td>
-                          <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                        <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-[#202a23]" : "hover:bg-slate-50"}`}>
+                          <td className={`px-3 py-2.5 text-xs font-bold text-[#58e982] whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>{repair.orden}</td>
+                          <td className={`px-3 py-2.5 text-xs font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`px-3 py-2.5 text-xs ${darkMode ? 'text-[#d4dfd6]' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>{repair.equipo}</td>
+                          <td className={`px-3 py-2.5 text-xs ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>{repair.falla}</td>
+                          <td className={`px-3 py-2.5 text-xs text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs text-[#58e982] font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
+                          <td className={`px-3 py-2.5 ${t.subtext} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>{repair.fecha}</td>
+                          <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
                             <select value={repair.estado}
                               onChange={async (e) => {
                                 const nuevoEstado = e.target.value;
@@ -3329,14 +3329,14 @@ export default function Home() {
                                   window.open(`https://wa.me/598${numero}?text=${mensaje}`, '_blank');
                                 }
                               }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer min-w-[110px] ${estadoSelectColor[repair.estado] || (darkMode ? 'bg-zinc-700 text-white' : 'bg-slate-100 text-slate-700')}`}>
+                              className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer min-w-[110px] ${estadoSelectColor[repair.estado] || (darkMode ? 'bg-[#344137] text-white' : 'bg-slate-100 text-slate-700')}`}>
                               <option>Pendiente</option>
                               <option>En reparación</option>
                               <option>Reparado</option>
                               <option value="Entregado">Entregado {repair.se_reparo === false ? '❌' : '✅'}</option>
                             </select>
                           </td>
-                          <td className={`px-3 py-2.5 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+                          <td className={`px-3 py-2.5 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-[#202a23]' : 'border-slate-200'}`}>
                             {openMenu === repair.id && (
                               <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
                             )}
@@ -3349,7 +3349,7 @@ export default function Home() {
                               const left = Math.min(rect.right - menuW, window.innerWidth - menuW - 8);
                               setMenuPos({ top, left });
                               setOpenMenu(repair.id);
-                            }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
+                            }} className={`${t.badge} hover:bg-[#526054] w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
                             {openMenu === repair.id && (
                               <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
                                 className={`${t.menuBg} border rounded-xl shadow-2xl w-48 overflow-hidden`}>
@@ -3413,7 +3413,7 @@ export default function Home() {
                       <div>
                         <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tipo de equipo</label>
                         <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                          className={`w-full border ${t.select} p-3 rounded-xl outline-none focus:border-green-500 transition-colors text-sm`}>
+                          className={`w-full border ${t.select} p-3 rounded-xl outline-none focus:border-[#39d36b] transition-colors text-sm`}>
                           <option value="">Seleccionar tipo</option>
                           <option value="Celular">Celular</option>
                           <option value="Notebook">Notebook</option>
@@ -3474,11 +3474,11 @@ export default function Home() {
 
                     <div className="flex gap-3 mt-6">
                       <button onClick={addRepair} disabled={guardandoOrden}
-                        className="flex-1 bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-bold py-3 rounded-xl transition-colors text-sm">
+                        className="flex-1 bg-[#39d36b] hover:bg-[#58e982] disabled:opacity-60 text-black font-bold py-3 rounded-xl transition-colors text-sm">
                         {guardandoOrden ? 'Guardando...' : (editingRepair ? 'Guardar cambios' : 'Crear orden')}
                       </button>
                       <button onClick={() => setShowModal(false)}
-                        className={`px-6 ${t.badge} hover:bg-zinc-700 ${t.text} font-bold py-3 rounded-xl transition-colors text-sm`}>
+                        className={`px-6 ${t.badge} hover:bg-[#344137] ${t.text} font-bold py-3 rounded-xl transition-colors text-sm`}>
                         Cancelar
                       </button>
                     </div>
@@ -3506,7 +3506,7 @@ export default function Home() {
                 <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>¿Se reparó el equipo?</label>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setEntregaForm({...entregaForm, seReparo: true})}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${entregaForm.seReparo ? 'bg-green-500/15 border-green-500 text-green-400' : `${t.badge} border ${t.divider} ${t.muted}`}`}>
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${entregaForm.seReparo ? 'bg-[#39d36b]/15 border-[#39d36b] text-[#58e982]' : `${t.badge} border ${t.divider} ${t.muted}`}`}>
                     ✅ Reparado
                   </button>
                   <button type="button" onClick={() => setEntregaForm({...entregaForm, seReparo: false})}
@@ -3556,7 +3556,7 @@ export default function Home() {
                 <button onClick={() => setModalEntrega(null)}
                   className={`flex-1 ${t.badge} border ${t.divider} py-2.5 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
                 <button onClick={confirmarEntrega}
-                  className="flex-1 bg-green-500 hover:bg-green-400 text-black py-2.5 rounded-xl text-sm font-bold">
+                  className="flex-1 bg-[#39d36b] hover:bg-[#58e982] text-black py-2.5 rounded-xl text-sm font-bold">
                   Confirmar entrega
                 </button>
               </div>
