@@ -579,15 +579,15 @@ export default function Home() {
           }
           .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
           .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
-          .linea { border-top: 1.5px solid #000; margin: 4px 0; }
-          .fila { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
+          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
           .label { font-weight: bold; }
-           .bloque { margin-bottom: 2px; }
+          .bloque { margin-bottom: 3px; }
           .cabecera-orden { display:flex; justify-content:space-between; align-items:end; margin: 3px 0 4px; gap:4px; }
           .tipo-ticket { font-size: 11px; font-weight: bold; letter-spacing: .2px; }
           .fecha-orden { font-size:10px; text-align:right; white-space:nowrap; padding-bottom:2px; }
           .numero-orden { font-size: 20px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; }
-          .seccion { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 3px; }
+          .seccion { font-size: 12px; font-weight: bold; margin-bottom: 3px; }
           .fila span:last-child { text-align: right; overflow-wrap: anywhere; max-width: 67%; }
           .fila-destacada { border-top: 1px dotted #000; padding-top: 3px; margin-top: 2px; }
           .linea-suave { border-top: 1px dashed #000; margin: 4px 0; }
@@ -620,14 +620,14 @@ export default function Home() {
         <div class="linea"></div>
 
         <div class="bloque">
-          <div class="seccion">Falla reportada</div>
+          <div class="seccion">Falla:</div>
           <div style="margin-top:2px">${repair.falla}</div>
         </div>
 
         ${repair.trabajo ? `
         <div class="linea"></div>
         <div class="bloque">
-          <div class="seccion">Trabajo realizado</div>
+          <div class="seccion">Trabajo realizado:</div>
           <div style="margin-top:2px">${repair.trabajo}</div>
         </div>` : ''}
 
