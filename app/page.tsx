@@ -2390,6 +2390,7 @@ export default function Home() {
               ${garantiaHtml}
               <div class="linea"></div><p>Gracias por su compra</p>
               <script>window.addEventListener("afterprint", function() { window.close(); }, { once: true }); window.addEventListener("load", async function() { await Promise.all(Array.from(document.images).map(function(img) { return img.complete ? Promise.resolve() : new Promise(function(resolve) { img.onload = resolve; img.onerror = resolve; }); })); window.focus(); window.print(); });</script></body></html>`);
+            w.document.close();
           };
 
           const imprimirTicket = () => {
