@@ -68,6 +68,7 @@ export default function Home() {
   const [garantiasVentasList, setGarantiasVentasList] = useState<any[]>([]);
   const [busquedaGarantiasVentas, setBusquedaGarantiasVentas] = useState('');
   const [ventasList, setVentasList] = useState<any[]>([]);
+  const [eliminandoVentaId, setEliminandoVentaId] = useState<number | null>(null);
   const [subVenta, setSubVenta] = useState<'vender' | 'finanzas' | 'historial' | 'garantias'>('vender');
   const [busquedaHistorial, setBusquedaHistorial] = useState('');
   const [editingProducto, setEditingProducto] = useState<any | null>(null);
@@ -425,6 +426,27 @@ export default function Home() {
     setRepairs(data || []);
     generateTicketEntrega({ ...modalEntrega, costo, entrega, saldo, garantia, fecha_entrega });
     setModalEntrega(null);
+  };
+
+  // Anulación transaccional: conserva la venta y devuelve el stock una sola vez.
+  const anularVenta = async (venta: any) => {
+    if (eliminandoVentaId !== null || !user || venta.anulada) return;
+    if (!window.confirm(`¿Anular la venta ${venta.numero_venta} por $ ${Number(venta.total || 0).toLocaleString('es-UY')}?\n\nLa venta seguirá visible como ANULADA y los productos volverán al stock.`)) return;
+    setEliminandoVentaId(venta.id);
+    try {
+      const { error } = await supabase.rpc('anular_venta_y_reponer_stock', { p_venta_id: venta.id });
+      if (error) throw error;
+      const { data: ventasActualizadas, error: errorVentas } = await supabase.from('ventas').select('*').order('fecha', { ascending: false });
+      const { data: productosActualizados, error: errorProductos } = await supabase.from('productos').select('*').order('nombre');
+      if (errorVentas || errorProductos) throw errorVentas || errorProductos;
+      setVentasList(ventasActualizadas || []);
+      setProductos(productosActualizados || []);
+      alert(`Venta ${venta.numero_venta} anulada. Stock reintegrado.`);
+    } catch (error: any) {
+      alert('No se pudo completar o actualizar la anulación: ' + (error?.message || String(error)));
+    } finally {
+      setEliminandoVentaId(null);
+    }
   };
 
   const exportarReparacionesPDF = () => {
@@ -1060,7 +1082,7 @@ export default function Home() {
 
         const mesesLabelsV = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         const totalesPorMes: { [key: string]: number } = {};
-        ventasList.forEach((v: any) => {
+        ventasList.filter((v: any) => !v.anulada).forEach((v: any) => {
           const d = new Date(v.fecha);
           const key = `${d.getFullYear()}-${d.getMonth()}`;
           totalesPorMes[key] = (totalesPorMes[key] || 0) + Number(v.total || 0);
@@ -2403,20 +2425,21 @@ export default function Home() {
           const hoyStr = new Date().toDateString();
           const mesActualV = new Date().getMonth();
           const anioActualV = new Date().getFullYear();
-          const ventasHoy = ventasList.filter((v: any) => new Date(v.fecha).toDateString() === hoyStr);
-          const ventasMes = ventasList.filter((v: any) => {
+          const ventasVigentes = ventasList.filter((v: any) => !v.anulada);
+          const ventasHoy = ventasVigentes.filter((v: any) => new Date(v.fecha).toDateString() === hoyStr);
+          const ventasMes = ventasVigentes.filter((v: any) => {
             const d = new Date(v.fecha);
             return d.getMonth() === mesActualV && d.getFullYear() === anioActualV;
           });
           const totalHoy = ventasHoy.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
           const totalMes = ventasMes.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
-          const totalGeneral = ventasList.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
-          const ticketPromVenta = ventasList.length > 0 ? Math.round(totalGeneral / ventasList.length) : 0;
+          const totalGeneral = ventasVigentes.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const ticketPromVenta = ventasVigentes.length > 0 ? Math.round(totalGeneral / ventasVigentes.length) : 0;
           const valorInventario = productos.reduce((a: number, p: any) => a + (Number(p.precio || 0) * Number(p.stock || 0)), 0);
 
           // Productos más vendidos
           const vendidosMap: any = {};
-          ventasList.forEach((v: any) => {
+          ventasList.filter((v: any) => !v.anulada).forEach((v: any) => {
             (v.items || []).forEach((it: any) => {
               if (!vendidosMap[it.nombre]) vendidosMap[it.nombre] = { cantidad: 0, total: 0 };
               vendidosMap[it.nombre].cantidad += it.cantidad;
@@ -2431,7 +2454,7 @@ export default function Home() {
             const d = new Date();
             d.setDate(d.getDate() - i);
             const diaStr = d.toDateString();
-            const total = ventasList.filter((v: any) => new Date(v.fecha).toDateString() === diaStr).reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+            const total = ventasVigentes.filter((v: any) => new Date(v.fecha).toDateString() === diaStr).reduce((a: number, v: any) => a + Number(v.total || 0), 0);
             ventasPorDia.push({ dia: d.toLocaleDateString('es-UY', { weekday: 'short', day: 'numeric' }), total });
           }
           const maxDia = Math.max(...ventasPorDia.map(d => d.total), 1);
@@ -2491,7 +2514,7 @@ export default function Home() {
                           const vencimiento = new Date(g.fecha_vencimiento);
                           const vigente = vencimiento >= ahora;
                           return (
-                            <div key={g.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div key={g.id} className={`flex items-center justify-between py-3 border-b last:border-0 ${v.anulada ? "opacity-65" : ""}`} style={{borderColor:'var(--color-border-tertiary)'}}>
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-medium ${t.text}`}>{g.cliente}</p>
                                 <p className={`text-xs ${t.subtext} truncate mt-0.5`}>{g.productos} · Ticket {g.numero_venta}</p>
@@ -2510,7 +2533,7 @@ export default function Home() {
               ) : subVenta === 'historial' ? (
                 <div className={`${t.card} border rounded-2xl p-5`}>
                   <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                    <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Historial de ventas ({ventasList.length})</p>
+                    <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Historial de ventas ({ventasList.length}, {ventasList.filter((v: any) => v.anulada).length} anuladas)</p>
                     <input type="text" value={busquedaHistorial}
                       placeholder="Buscar por N° ticket, fecha o pago..."
                       onChange={e => setBusquedaHistorial(e.target.value)}
@@ -2530,10 +2553,11 @@ export default function Home() {
                     return (
                       <div className="flex flex-col">
                         {filtradas.map((v: any) => (
-                          <div key={v.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                          <div key={v.id} className={`flex items-center justify-between py-3 border-b last:border-0 ${v.anulada ? "opacity-65" : ""}`} style={{borderColor:'var(--color-border-tertiary)'}}>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className={`text-sm font-semibold ${t.text}`}>{v.numero_venta}</span>
+                                {v.anulada && <span className="text-[10px] font-bold text-red-400 border border-red-500/40 rounded px-1.5 py-0.5">ANULADA</span>}
                                 <span className={`text-xs ${t.subtext}`}>{new Date(v.fecha).toLocaleDateString('es-UY', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
                               </div>
                               <p className={`text-xs ${t.subtext} truncate mt-0.5`}>
@@ -2545,8 +2569,13 @@ export default function Home() {
                                 <p className={`text-sm font-semibold ${t.text}`}>${Number(v.total).toLocaleString('es-UY')}</p>
                                 <p className={`text-xs ${t.subtext}`}>{v.forma_pago}</p>
                               </div>
-                              <button onClick={() => reimprimirVenta(v)}
-                                className={`text-xs border rounded-lg px-2.5 py-1.5 hover:opacity-70`}
+                              <button onClick={() => anularVenta(v)} disabled={eliminandoVentaId !== null || !!v.anulada}
+                                title={v.anulada ? "Venta ya anulada" : "Anular venta y devolver productos al stock"}
+                                className="text-xs border border-red-500/40 text-red-400 rounded-lg px-2.5 py-1.5 hover:bg-red-500/10 disabled:opacity-40">
+                                {eliminandoVentaId === v.id ? '...' : v.anulada ? 'Anulada' : 'Anular'}
+                              </button>
+                              <button disabled={!!v.anulada} onClick={() => reimprimirVenta(v)}
+                                className={`text-xs border rounded-lg px-2.5 py-1.5 hover:opacity-70 disabled:opacity-30`}
                                 style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
                                 🖨️
                               </button>
@@ -2564,7 +2593,7 @@ export default function Home() {
                       { label: 'Vendido hoy', value: `$${totalHoy.toLocaleString('es-UY')}`, color: 'text-[#00d957]' },
                       { label: 'Vendido este mes', value: `$${totalMes.toLocaleString('es-UY')}`, color: 'text-blue-400' },
                       { label: 'Total general', value: `$${totalGeneral.toLocaleString('es-UY')}`, color: 'text-purple-400' },
-                      { label: 'Cantidad de ventas', value: ventasList.length, color: 'text-[#00d957]' },
+                      { label: 'Cantidad de ventas', value: ventasVigentes.length, color: 'text-[#00d957]' },
                       { label: 'Ticket promedio', value: `$${ticketPromVenta.toLocaleString('es-UY')}`, color: 'text-yellow-400' },
                       { label: 'Valor del inventario', value: `$${valorInventario.toLocaleString('es-UY')}`, color: 'text-blue-400' },
                     ].map(stat => (
@@ -2614,11 +2643,11 @@ export default function Home() {
 
                   <div className={`${t.card} border rounded-2xl p-5`}>
                     <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Últimas ventas</p>
-                    {ventasList.length === 0 ? (
+                    {ventasVigentes.length === 0 ? (
                       <p className={`text-sm ${t.subtext}`}>Sin ventas registradas</p>
                     ) : (
                       <div className="flex flex-col">
-                        {ventasList.slice(0, 10).map((v: any) => (
+                        {ventasVigentes.slice(0, 10).map((v: any) => (
                           <div key={v.id} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
                             <div>
                               <span className={`text-sm ${t.text}`}>{v.numero_venta}</span>
