@@ -33,6 +33,29 @@ function MobileIcon() {
   </svg>;
 }
 
+function EquipoIcon({ equipo }: { equipo: string }) {
+  const tipo = (equipo || '').toLocaleLowerCase('es-UY');
+  if (/notebook|laptop|portátil|portatil|macbook|chromebook|netbook/.test(tipo)) return <svg viewBox="0 0 100 112" aria-hidden="true" className="w-[78px] h-[96px]">
+    <rect x="9" y="23" width="82" height="57" rx="5" fill="#1d2734" stroke="#62738a" strokeWidth="2"/><rect x="14" y="28" width="72" height="47" rx="2" fill="#172b59"/><path d="M14 65 48 28H86V75H14Z" fill="#2d5aab"/><path d="M38 75 74 28H86V75Z" fill="#8a63bf" opacity=".8"/><path d="M4 82H96L88 89H12Z" fill="#62738a"/><path d="M4 82H96L91 86H9Z" fill="#344356"/><rect x="43" y="83" width="14" height="2" rx="1" fill="#a4b2c4"/>
+  </svg>;
+  if (/tablet|ipad|tab\b/.test(tipo)) return <svg viewBox="0 0 86 112" aria-hidden="true" className="w-[72px] h-[96px]">
+    <rect x="7" y="8" width="72" height="96" rx="8" fill="#1d2734" stroke="#62738a" strokeWidth="2"/><rect x="12" y="14" width="62" height="84" rx="3" fill="#172b59"/><path d="M12 83 58 14H74V98H12Z" fill="#2d5aab"/><path d="M37 98 74 40V98Z" fill="#8a63bf" opacity=".85"/><circle cx="43" cy="101" r="1.7" fill="#6d7888"/>
+  </svg>;
+  if (/playstation|ps[345]|xbox|nintendo|switch|consola|wii/.test(tipo)) return <svg viewBox="0 0 100 112" aria-hidden="true" className="w-[78px] h-[96px]">
+    <rect x="30" y="10" width="40" height="67" rx="5" fill="#1d2734" stroke="#62738a" strokeWidth="2"/><path d="M49 13H66V74H49Z" fill="#172b59"/><path d="M51 14 66 29V74H51Z" fill="#2d5aab"/><rect x="46" y="17" width="2" height="54" rx="1" fill="#8a63bf"/><path d="M19 75C12 76 8 84 8 92c0 8 6 11 12 7l13-8h34l13 8c6 4 12 1 12-7 0-8-4-16-11-17l-18-4H37Z" fill="#344356" stroke="#62738a" strokeWidth="2"/><path d="M25 80v13M19 86h12" stroke="#b2c1d3" strokeWidth="3" strokeLinecap="round"/><circle cx="72" cy="83" r="3" fill="#8a63bf"/><circle cx="79" cy="89" r="3" fill="#2d5aab"/>
+  </svg>;
+  if (/impresora|printer|epson|brother|laserjet|deskjet|pixma/.test(tipo)) return <svg viewBox="0 0 100 112" aria-hidden="true" className="w-[78px] h-[96px]">
+    <rect x="25" y="8" width="50" height="38" rx="3" fill="#d8e2ec"/><path d="M31 18H69M31 25H64" stroke="#8a9bb0" strokeWidth="2"/><rect x="10" y="36" width="80" height="55" rx="8" fill="#1d2734" stroke="#62738a" strokeWidth="2"/><rect x="16" y="46" width="68" height="23" rx="3" fill="#344356"/><rect x="24" y="64" width="52" height="37" rx="3" fill="#d8e2ec"/><path d="M32 76H68M32 83H62M32 90H65" stroke="#8a9bb0" strokeWidth="2"/><circle cx="78" cy="43" r="3" fill="#00c347"/>
+  </svg>;
+  if (/pc|desktop|computadora|monitor|all.in.one|gabinete|torre/.test(tipo)) return <svg viewBox="0 0 100 112" aria-hidden="true" className="w-[78px] h-[96px]">
+    <rect x="7" y="16" width="86" height="66" rx="5" fill="#1d2734" stroke="#62738a" strokeWidth="2"/><rect x="12" y="21" width="76" height="55" rx="2" fill="#172b59"/><path d="M12 68 55 21H88V76H12Z" fill="#2d5aab"/><path d="M40 76 88 35V76Z" fill="#8a63bf" opacity=".8"/><path d="M45 82V94M55 82V94" stroke="#62738a" strokeWidth="4"/><rect x="29" y="94" width="42" height="5" rx="2" fill="#62738a"/>
+  </svg>;
+  if (/celular|telefono|teléfono|iphone|samsung|xiaomi|redmi|motorola|huawei|smartphone|poco\b|oppo|realme/.test(tipo)) return <MobileIcon />;
+  return <svg viewBox="0 0 100 112" aria-hidden="true" className="w-[78px] h-[96px]">
+    <rect x="12" y="24" width="76" height="66" rx="10" fill="#1d2734" stroke="#62738a" strokeWidth="2"/><rect x="19" y="31" width="62" height="48" rx="5" fill="#172b59"/><path d="M19 69 59 31H81V79H19Z" fill="#2d5aab"/><path d="M47 79 81 47V79Z" fill="#8a63bf" opacity=".8"/><circle cx="50" cy="85" r="2" fill="#a4b2c4"/>
+  </svg>;
+}
+
 export default async function SeguimientoPage({ params }: Props) {
   const { token } = await params;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) notFound();
@@ -65,7 +88,7 @@ export default async function SeguimientoPage({ params }: Props) {
             <span className="max-w-[135px] shrink-0 rounded-[3px] bg-[#00c347] px-2 py-[6px] text-center text-[11px] font-bold leading-tight text-[#001d0a]">{estado === 'Reparado' ? 'Listo para retirar' : estado === 'Pendiente' ? 'Equipo recibido' : estado}</span>
           </div>
           <div className="mt-4 flex gap-3">
-            <div className="flex w-[83px] shrink-0 items-center justify-center rounded-[7px] border border-[#2a3b49] bg-[#0a121b]"><MobileIcon /></div>
+            <div className="flex w-[83px] shrink-0 items-center justify-center rounded-[7px] border border-[#2a3b49] bg-[#0a121b]"><EquipoIcon equipo={r.equipo || ''} /></div>
             <div className="min-w-0 flex-1">
               <h2 className="mb-3 break-words text-[16px] font-bold leading-snug">{r.equipo || 'Equipo sin especificar'}</h2>
               <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-[6px] text-[12px] leading-snug">
