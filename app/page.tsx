@@ -559,8 +559,13 @@ export default function Home() {
   // ── TICKET HTML para impresora térmica 80mm ──────────────────────────────
   const generatePDF = (repair: any) => {
     const nombre = config.nombre_negocio || 'MegaByte';
-    // Ruta reservada para la futura página pública de seguimiento.
-    const seguimientoUrl = `${window.location.origin}/seguimiento/${encodeURIComponent(String(repair.orden || '').replace(/^#/, ''))}`;
+    // Token público aleatorio, distinto del número de orden.
+    // Se genera automáticamente en Supabase para reparaciones nuevas y existentes.
+    if (!repair.seguimiento_token) {
+      alert('Esta orden todavía no tiene un enlace de seguimiento. Ejecutá primero la migración SQL y recargá MegaTallerPro.');
+      return;
+    }
+    const seguimientoUrl = `${window.location.origin}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`;
     const html = `
       <!DOCTYPE html>
       <html>
