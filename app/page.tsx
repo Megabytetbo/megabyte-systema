@@ -2514,7 +2514,7 @@ export default function Home() {
                           const vencimiento = new Date(g.fecha_vencimiento);
                           const vigente = vencimiento >= ahora;
                           return (
-                            <div key={g.id} className={`flex items-center justify-between py-3 border-b last:border-0 ${v.anulada ? "opacity-65" : ""}`} style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div key={g.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-medium ${t.text}`}>{g.cliente}</p>
                                 <p className={`text-xs ${t.subtext} truncate mt-0.5`}>{g.productos} · Ticket {g.numero_venta}</p>
