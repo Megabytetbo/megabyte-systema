@@ -579,7 +579,7 @@ export default function Home() {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 12px;
             width: 72mm;
-            padding: 3mm 4mm;
+            padding: 0 4mm;
             color: #000;
           }
           .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
@@ -693,14 +693,12 @@ export default function Home() {
 
   // ── TICKET INTERNO 80x45mm ────────────────────────────────────────────────
   const generateTicketInterno = (repair: any) => {
-    const codigoNum = (repair.orden || '').replace(/\D/g, '') || '0';
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8"/>
         <title>Interno ${repair.orden}</title>
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
@@ -725,10 +723,7 @@ export default function Home() {
       </head>
       <body>
         <div class="linea"></div>
-        <div class="orden-row">
-          <span class="orden-num">${repair.orden}</span>
-          <svg id="barcode"></svg>
-        </div>
+        <div class="orden">${repair.orden}</div>
         <div class="linea"></div>
         <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
         <div class="fila"><span class="label">Tel:</span><span>${repair.telefono || '-'}</span></div>
@@ -738,12 +733,6 @@ export default function Home() {
         <div class="linea"></div>
         <script>
           window.onload = function() {
-            try {
-              JsBarcode("#barcode", "${codigoNum}", {
-                format: "CODE128", width: 1, height: 28,
-                displayValue: true, fontSize: 9, margin: 0
-              });
-            } catch (e) {}
             setTimeout(function() {
               window.addEventListener('afterprint', function() {
                 setTimeout(function() { window.close(); }, 150);
