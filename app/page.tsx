@@ -35,10 +35,11 @@ export default function Home() {
   });
   const [config, setConfig] = useState<any>({
     nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
+    msg_en_diagnostico: 'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍',
     msg_en_reparacion: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya ingresó a reparación en MegaByte \u{1F527}',
     msg_reparado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está reparado y listo para retirar \u2705',
     msg_entregado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está pronto para retirar \u2705\n\nSaldo pendiente: ${saldo}\n\nGracias por confiar en MegaByte',
-    switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
+    switch_en_diagnostico: true, switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
   const [suscripciones, setSuscripciones] = useState<any[]>([]);
@@ -516,9 +517,11 @@ export default function Home() {
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        msg_en_diagnostico: config.msg_en_diagnostico,
         msg_en_reparacion: config.msg_en_reparacion,
         msg_reparado: config.msg_reparado,
         msg_entregado: config.msg_entregado,
+        switch_en_diagnostico: config.switch_en_diagnostico,
         switch_en_reparacion: config.switch_en_reparacion,
         switch_reparado: config.switch_reparado,
         switch_entregado: config.switch_entregado,
@@ -530,9 +533,11 @@ export default function Home() {
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        msg_en_diagnostico: config.msg_en_diagnostico,
         msg_en_reparacion: config.msg_en_reparacion,
         msg_reparado: config.msg_reparado,
         msg_entregado: config.msg_entregado,
+        switch_en_diagnostico: config.switch_en_diagnostico,
         switch_en_reparacion: config.switch_en_reparacion,
         switch_reparado: config.switch_reparado,
         switch_entregado: config.switch_entregado,
@@ -3201,9 +3206,10 @@ export default function Home() {
                 {/* Mensajes automáticos */}
                 <div className={`border-t ${t.divider} pt-6`}>
                   <h3 className={`text-sm font-bold ${t.text} mb-1`}>Mensajes automáticos de WhatsApp</h3>
-                  <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{cliente}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{equipo}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{saldo}"}</code></p>
+                  <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{cliente}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{equipo}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{saldo}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{seguimiento}"}</code> (si no la incluís, el enlace se agrega al final automáticamente)</p>
                   <div className="space-y-4">
                     {[
+                      { key: 'en_diagnostico', label: 'EN DIAGNÓSTICO', msgKey: 'msg_en_diagnostico', switchKey: 'switch_en_diagnostico' },
                       { key: 'en_reparacion', label: 'EN REPARACIÓN', msgKey: 'msg_en_reparacion', switchKey: 'switch_en_reparacion' },
                       { key: 'reparado', label: 'REPARADO', msgKey: 'msg_reparado', switchKey: 'switch_reparado' },
                       { key: 'entregado', label: 'ENTREGADO', msgKey: 'msg_entregado', switchKey: 'switch_entregado' },
@@ -3223,7 +3229,7 @@ export default function Home() {
                           </div>
                         </div>
                         <textarea
-                          value={config[msgKey] || ''}
+                          value={config[msgKey] ?? (msgKey === 'msg_en_diagnostico' ? 'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍' : '')}
                           onChange={e => setConfig({...config, [msgKey]: e.target.value})}
                           disabled={!config[switchKey]}
                           className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none ${!config[switchKey] ? 'opacity-40 cursor-not-allowed' : ''}`} />
@@ -3334,15 +3340,25 @@ export default function Home() {
                                 await supabase.from('repairs').update({ estado: nuevoEstado }).eq('id', repair.id);
                                 setRepairs(repairs.map((r: any) => r.id === repair.id ? { ...r, estado: nuevoEstado } : r));
 
-                                const buildMsg = (template: string) =>
-                                  encodeURIComponent(
-                                    template
-                                      .replace(/{cliente}/g, repair.cliente)
-                                      .replace(/{equipo}/g, repair.equipo)
-                                      .replace(/{saldo}/g, repair.saldo || '0')
-                                  );
+                                const buildMsg = (template: string) => {
+                                  const seguimientoUrl = repair.seguimiento_token
+                                    ? `${window.location.origin}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
+                                    : '';
+                                  const incluyeSeguimiento = template.includes('{seguimiento}');
+                                  let texto = template
+                                    .replace(/{cliente}/g, repair.cliente)
+                                    .replace(/{equipo}/g, repair.equipo)
+                                    .replace(/{saldo}/g, String(repair.saldo ?? '0'))
+                                    .replace(/{seguimiento}/g, seguimientoUrl);
+                                  if (seguimientoUrl && !incluyeSeguimiento) {
+                                    texto += `\n\nConsultá el estado de tu reparación acá:\n${seguimientoUrl}`;
+                                  }
+                                  return encodeURIComponent(texto);
+                                };
                                 let mensaje = '';
-                                if (nuevoEstado === 'En reparación' && config.switch_en_reparacion !== false)
+                                if (nuevoEstado === 'En diagnóstico' && config.switch_en_diagnostico !== false)
+                                  mensaje = buildMsg(config.msg_en_diagnostico || 'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍');
+                                else if (nuevoEstado === 'En reparación' && config.switch_en_reparacion !== false)
                                   mensaje = buildMsg(config.msg_en_reparacion || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya ingresó a reparación 🔧');
                                 else if (nuevoEstado === 'Reparado' && config.switch_reparado !== false)
                                   mensaje = buildMsg(config.msg_reparado || 'Hola {cliente} 👋\n\nTu equipo {equipo} ya está reparado y listo para retirar ✅');
