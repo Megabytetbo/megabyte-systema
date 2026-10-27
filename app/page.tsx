@@ -35,6 +35,7 @@ export default function Home() {
   });
   const [config, setConfig] = useState<any>({
     nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
+    dominio_seguimiento: '', dominio_seguimiento_activo: false,
     msg_en_diagnostico: 'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍',
     msg_en_reparacion: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya ingresó a reparación en MegaByte \u{1F527}',
     msg_reparado: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya está reparado y listo para retirar \u2705',
@@ -507,16 +508,39 @@ export default function Home() {
     if (v) { v.document.write(html); v.document.close(); }
   };
 
+  // Solo usar el dominio personalizado cuando haya sido configurado y habilitado.
+  // El dominio debe apuntar a un despliegue que atienda /seguimiento/[token].
+  const obtenerBaseSeguimiento = () => {
+    const dominio = String(config.dominio_seguimiento || '').trim();
+    if (!config.dominio_seguimiento_activo || !dominio) return window.location.origin;
+    try {
+      const url = new URL(/^https?:\/\//i.test(dominio) ? dominio : `https://${dominio}`);
+      if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || url.search || url.hash || url.pathname !== '/') return window.location.origin;
+      return url.origin;
+    } catch { return window.location.origin; }
+  };
+
   const guardarConfig = async () => {
+    const dominio = String(config.dominio_seguimiento || '').trim();
+    if (dominio) {
+      try {
+        const u = new URL(/^https?:\/\//i.test(dominio) ? dominio : `https://${dominio}`);
+        if (u.protocol !== 'https:' || !u.hostname || u.pathname !== '/' || u.search || u.hash || u.username || u.password) throw new Error();
+      } catch { alert('Ingresá un dominio válido, por ejemplo https://www.megabyte.uy (sin rutas adicionales).'); return; }
+    }
+    if (config.dominio_seguimiento_activo && !dominio) { alert('Ingresá un dominio antes de activarlo.'); return; }
     setConfigGuardando(true);
     const { data: existing } = await supabase
       .from('configuracion').select('id').eq('user_id', user.id).single();
+    let errorGuardado: any = null;
     if (existing) {
-      await supabase.from('configuracion').update({
+      const { error } = await supabase.from('configuracion').update({
         nombre_negocio: config.nombre_negocio,
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        dominio_seguimiento: dominio,
+        dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
         msg_en_diagnostico: config.msg_en_diagnostico,
         msg_en_reparacion: config.msg_en_reparacion,
         msg_reparado: config.msg_reparado,
@@ -526,13 +550,16 @@ export default function Home() {
         switch_reparado: config.switch_reparado,
         switch_entregado: config.switch_entregado,
       }).eq('user_id', user.id);
+      errorGuardado = error;
     } else {
-      await supabase.from('configuracion').insert({
+      const { error } = await supabase.from('configuracion').insert({
         user_id: user.id,
         nombre_negocio: config.nombre_negocio,
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        dominio_seguimiento: dominio,
+        dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
         msg_en_diagnostico: config.msg_en_diagnostico,
         msg_en_reparacion: config.msg_en_reparacion,
         msg_reparado: config.msg_reparado,
@@ -542,8 +569,10 @@ export default function Home() {
         switch_reparado: config.switch_reparado,
         switch_entregado: config.switch_entregado,
       });
+      errorGuardado = error;
     }
     setConfigGuardando(false);
+    if (errorGuardado) { alert('No se pudo guardar la configuración: ' + errorGuardado.message); return; }
     alert('Configuración guardada!');
   };
 
@@ -592,7 +621,7 @@ export default function Home() {
       alert('Esta orden todavía no tiene un enlace de seguimiento. Ejecutá primero la migración SQL y recargá MegaTallerPro.');
       return;
     }
-    const seguimientoUrl = `${window.location.origin}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`;
+    const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`;
     const html = `
       <!DOCTYPE html>
       <html>
@@ -3201,6 +3230,20 @@ export default function Home() {
                       placeholder="Ej: 099 347 478"
                       className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
                   </div>
+                  <div className={`border-t ${t.divider} pt-4`}>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>DOMINIO PERSONALIZADO DE SEGUIMIENTO (OPCIONAL)</label>
+                    <input type="url" value={config.dominio_seguimiento || ''}
+                      onChange={e => setConfig({...config, dominio_seguimiento: e.target.value, dominio_seguimiento_activo: false})}
+                      placeholder="https://www.mitaller.com"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                    <p className={`text-xs ${t.subtext} mt-2`}>Debe estar conectado a un sitio que atienda /seguimiento/[token]. Si no lo activás, se usa el dominio de MegaTallerPro.</p>
+                    <label className={`mt-3 flex items-center gap-2 text-sm ${t.text}`}>
+                      <input type="checkbox" checked={!!config.dominio_seguimiento_activo}
+                        onChange={e => setConfig({...config, dominio_seguimiento_activo: e.target.checked})} />
+                      Activar dominio (solo después de configurar el DNS y el sitio)
+                    </label>
+                    <p className={`text-xs ${t.subtext} mt-2 break-all`}>Enlace: {config.dominio_seguimiento_activo && config.dominio_seguimiento ? String(config.dominio_seguimiento).replace(/\/+$/, '') : 'https://www.megatallerpro.com'}/seguimiento/...</p>
+                  </div>
                 </div>
 
                 {/* Mensajes automáticos */}
@@ -3342,7 +3385,7 @@ export default function Home() {
 
                                 const buildMsg = (template: string) => {
                                   const seguimientoUrl = repair.seguimiento_token
-                                    ? `${window.location.origin}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
+                                    ? `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
                                     : '';
                                   const incluyeSeguimiento = template.includes('{seguimiento}');
                                   let texto = template
