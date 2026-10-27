@@ -952,6 +952,8 @@ export default function Home() {
     return () => { activo = false; window.clearInterval(intervalo); };
   }, [user?.id]);
 
+  const primerNombreWhatsApp = (nombre: unknown) => String(nombre || '').trim().split(/\s+/)[0] || '';
+
   const guardarPresupuesto = async () => {
     if (!presupuestoEditor || !user) return;
     const importe = Number(presupuestoImporte);
@@ -988,7 +990,7 @@ export default function Home() {
 
     const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(data.seguimiento_token || presupuestoEditor.seguimiento_token)}`;
     const nombreNegocio = String(config.nombre_negocio || 'MegaByte');
-    const mensaje = `Hola ${data.cliente || presupuestoEditor.cliente} 👋\n\nTe informamos desde ${nombreNegocio} que ya está disponible el presupuesto de reparación de tu equipo ${data.equipo || presupuestoEditor.equipo}. 🔧\n\n💰 Presupuesto: $ ${importe.toLocaleString('es-UY')}\n\n📋 Detalle: ${presupuestoDetalle.trim()}\n\nPodés consultar el presupuesto y aprobarlo o rechazarlo desde el siguiente enlace:\n${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
+    const mensaje = `Hola ${primerNombreWhatsApp(data.cliente || presupuestoEditor.cliente)} 👋\n\nTe informamos desde ${nombreNegocio} que ya está disponible el presupuesto de reparación de tu equipo ${data.equipo || presupuestoEditor.equipo}. 🔧\n\n💰 Presupuesto: $ ${importe.toLocaleString('es-UY')}\n\n📋 Detalle: ${presupuestoDetalle.trim()}\n\nPodés consultar el presupuesto y aprobarlo o rechazarlo desde el siguiente enlace:\n${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
     if (!telefono) {
       alert('Presupuesto publicado correctamente. Esta reparación no tiene teléfono: compartí el enlace de seguimiento con el cliente para que pueda aprobar o rechazar.\n\n' + seguimientoUrl);
       return;
@@ -3571,7 +3573,7 @@ export default function Home() {
                                     : '';
                                   const incluyeSeguimiento = template.includes('{seguimiento}');
                                   let texto = template
-                                    .replace(/{cliente}/g, repair.cliente)
+                                    .replace(/{cliente}/g, primerNombreWhatsApp(repair.cliente))
                                     .replace(/{equipo}/g, repair.equipo)
                                     .replace(/{saldo}/g, String(repair.saldo ?? '0'))
                                     .replace(/{seguimiento}/g, seguimientoUrl);
