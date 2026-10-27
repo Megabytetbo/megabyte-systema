@@ -3424,7 +3424,21 @@ export default function Home() {
                                     ? `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
                                     : '';
                                   const incluyeSeguimiento = template.includes('{seguimiento}');
-                                  let texto = template
+                                  // Recuperar emojis que hayan quedado guardados como caracteres de reemplazo
+                                  // en plantillas antiguas. El enlace de WhatsApp ya usa encodeURIComponent.
+                                  const emojiEstado: Record<string, string> = {
+                                    'En diagnóstico': '🔍',
+                                    'En reparación': '🔧',
+                                    'Reparado': '✅',
+                                    'Entregado': '📦',
+                                  };
+                                  let indiceDaniado = 0;
+                                  const plantillaCorregida = template.replace(/\uFFFD+/g, () => {
+                                    const emoji = indiceDaniado === 0 ? '👋' : (emojiEstado[nuevoEstado] || '✅');
+                                    indiceDaniado++;
+                                    return emoji;
+                                  });
+                                  let texto = plantillaCorregida
                                     .replace(/{cliente}/g, repair.cliente)
                                     .replace(/{equipo}/g, repair.equipo)
                                     .replace(/{saldo}/g, String(repair.saldo ?? '0'))
