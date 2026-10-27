@@ -1,9 +1,43 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 type Props = { params: Promise<{ token: string }> };
+
+// Vista previa de WhatsApp específica para el taller de esta reparación.
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params;
+  const fallback: Metadata = {
+    title: 'Seguimiento de reparación',
+    description: 'Consultá el estado de tu reparación.',
+    openGraph: { title: 'Seguimiento de reparación', description: 'Consultá el estado de tu reparación.', type: 'website' },
+  };
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) return fallback;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return fallback;
+
+  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: reparacion } = await db.from('repairs')
+    .select('user_id').eq('seguimiento_token', token).maybeSingle();
+  if (!reparacion) return fallback;
+  const { data: empresa } = await db.from('configuracion')
+    .select('nombre_negocio,logo_url').eq('user_id', reparacion.user_id).maybeSingle();
+  const nombre = empresa?.nombre_negocio?.trim() || 'Taller de reparación';
+  const titulo = `${nombre} — Seguimiento de reparación`;
+  const descripcion = `Consultá el estado de tu reparación en ${nombre}.`;
+  const logo = empresa?.logo_url;
+  const imagenes = logo && /^https:\/\//i.test(logo) ? [{ url: logo, alt: `Logo de ${nombre}` }] : [];
+  return {
+    title: titulo,
+    description: descripcion,
+    openGraph: { title: titulo, description: descripcion, type: 'website', images: imagenes },
+    twitter: { card: 'summary', title: titulo, description: descripcion, images: imagenes.map(i => i.url) },
+  };
+}
+
 
 const PASOS = [
   { nombre: 'Equipo recibido', detalle: 'Se recibió el equipo en el taller.' },
