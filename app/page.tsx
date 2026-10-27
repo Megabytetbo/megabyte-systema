@@ -520,24 +520,30 @@ export default function Home() {
     } catch { return window.location.origin; }
   };
 
-  // Repara símbolos dañados en plantillas antiguas, sin alterar los textos personalizados.
-  // Usamos escapes Unicode para evitar que una conversión de archivos dañe los emojis.
+  // Normaliza caracteres dañados ANTES de codificar el enlace de WhatsApp.
+  // No modifica las variables ni los emojis válidos que el negocio personalizó.
   const repararEmojisWhatsApp = (plantilla: string, estado: string) => {
-    const emojiEstado: Record<string, string> = {
+    const emojiPorEstado: Record<string, string> = {
       'En diagnóstico': '\u{1F50D}',
       'En reparación': '\u{1F527}',
       'Reparado': '\u2705',
       'Entregado': '\u{1F4E6}',
     };
-    const saludo = '\u{1F44B}';
-    const emoji = emojiEstado[estado] || '\u2705';
-    return String(plantilla || '')
-      // Carácter de reemplazo (o signo ?), inmediatamente después del saludo.
-      .replace(/(Hola\s+\{cliente\})\s*(?:\uFFFD+|\?+)(?=\s|$)/gi, (_m, inicio) => `${inicio} ${saludo}`)
-      // Lo mismo al final de la frase que menciona al negocio.
-      .replace(/(MegaByte)\s*(?:\uFFFD+|\?+)(?=\s|$)/gi, (_m, inicio) => `${inicio} ${emoji}`)
-      // Resto de caracteres Unicode ya perdidos (sin intentar modificar letras válidas).
-      .replace(/\uFFFD+/g, emoji);
+    const reemplazoEstado = emojiPorEstado[estado] || '\u2705';
+    // Caracteres habituales de sustitución y secuencias de texto mal decodificado.
+    const patronDanado = /(?:\uFFFD|\u25C6\u003F|ï¿½)+/gu;
+    const normalizado = String(plantilla || '').replace(/\r\n/g, '\n');
+    const lineas = normalizado.split('\n').map((linea) => {
+      if (!patronDanado.test(linea)) return linea;
+      patronDanado.lastIndex = 0;
+      let reemplazo = reemplazoEstado;
+      if (/\bhola\b/i.test(linea)) reemplazo = '\u{1F44B}';
+      else if (/consult[aá]|enlace|seguimiento/i.test(linea)) reemplazo = '\u{1F517}';
+      else if (/gracias|confiar/i.test(linea)) reemplazo = '\u{1F64F}';
+      return linea.replace(patronDanado, reemplazo);
+    });
+    // Evita que encodeURIComponent falle por mitades de emojis (surrogates huérfanos).
+    return lineas.join('\n').replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
   };
 
   const guardarConfig = async () => {
@@ -3452,7 +3458,7 @@ export default function Home() {
                                   if (seguimientoUrl && !incluyeSeguimiento) {
                                     texto += `\n\nConsultá el estado de tu reparación acá:\n${seguimientoUrl}`;
                                   }
-                                  return encodeURIComponent(texto);
+                                  return encodeURIComponent(texto.replace(/\uFFFD/g, ''));
                                 };
                                 let mensaje = '';
                                 if (nuevoEstado === 'En diagnóstico' && config.switch_en_diagnostico !== false)
