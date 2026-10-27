@@ -520,6 +520,26 @@ export default function Home() {
     } catch { return window.location.origin; }
   };
 
+  // Repara símbolos dañados en plantillas antiguas, sin alterar los textos personalizados.
+  // Usamos escapes Unicode para evitar que una conversión de archivos dañe los emojis.
+  const repararEmojisWhatsApp = (plantilla: string, estado: string) => {
+    const emojiEstado: Record<string, string> = {
+      'En diagnóstico': '\u{1F50D}',
+      'En reparación': '\u{1F527}',
+      'Reparado': '\u2705',
+      'Entregado': '\u{1F4E6}',
+    };
+    const saludo = '\u{1F44B}';
+    const emoji = emojiEstado[estado] || '\u2705';
+    return String(plantilla || '')
+      // Carácter de reemplazo (o signo ?), inmediatamente después del saludo.
+      .replace(/(Hola\s+\{cliente\})\s*(?:\uFFFD+|\?+)(?=\s|$)/gi, (_m, inicio) => `${inicio} ${saludo}`)
+      // Lo mismo al final de la frase que menciona al negocio.
+      .replace(/(MegaByte)\s*(?:\uFFFD+|\?+)(?=\s|$)/gi, (_m, inicio) => `${inicio} ${emoji}`)
+      // Resto de caracteres Unicode ya perdidos (sin intentar modificar letras válidas).
+      .replace(/\uFFFD+/g, emoji);
+  };
+
   const guardarConfig = async () => {
     const dominio = String(config.dominio_seguimiento || '').trim();
     if (dominio) {
@@ -542,10 +562,10 @@ export default function Home() {
         logo_seguimiento_url: config.logo_seguimiento_url || null,
         dominio_seguimiento: dominio,
         dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
-        msg_en_diagnostico: config.msg_en_diagnostico,
-        msg_en_reparacion: config.msg_en_reparacion,
-        msg_reparado: config.msg_reparado,
-        msg_entregado: config.msg_entregado,
+        msg_en_diagnostico: repararEmojisWhatsApp(config.msg_en_diagnostico, 'En diagnóstico'),
+        msg_en_reparacion: repararEmojisWhatsApp(config.msg_en_reparacion, 'En reparación'),
+        msg_reparado: repararEmojisWhatsApp(config.msg_reparado, 'Reparado'),
+        msg_entregado: repararEmojisWhatsApp(config.msg_entregado, 'Entregado'),
         switch_en_diagnostico: config.switch_en_diagnostico,
         switch_en_reparacion: config.switch_en_reparacion,
         switch_reparado: config.switch_reparado,
@@ -562,10 +582,10 @@ export default function Home() {
         logo_seguimiento_url: config.logo_seguimiento_url || null,
         dominio_seguimiento: dominio,
         dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
-        msg_en_diagnostico: config.msg_en_diagnostico,
-        msg_en_reparacion: config.msg_en_reparacion,
-        msg_reparado: config.msg_reparado,
-        msg_entregado: config.msg_entregado,
+        msg_en_diagnostico: repararEmojisWhatsApp(config.msg_en_diagnostico, 'En diagnóstico'),
+        msg_en_reparacion: repararEmojisWhatsApp(config.msg_en_reparacion, 'En reparación'),
+        msg_reparado: repararEmojisWhatsApp(config.msg_reparado, 'Reparado'),
+        msg_entregado: repararEmojisWhatsApp(config.msg_entregado, 'Entregado'),
         switch_en_diagnostico: config.switch_en_diagnostico,
         switch_en_reparacion: config.switch_en_reparacion,
         switch_reparado: config.switch_reparado,
@@ -3424,21 +3444,7 @@ export default function Home() {
                                     ? `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
                                     : '';
                                   const incluyeSeguimiento = template.includes('{seguimiento}');
-                                  // Recuperar emojis que hayan quedado guardados como caracteres de reemplazo
-                                  // en plantillas antiguas. El enlace de WhatsApp ya usa encodeURIComponent.
-                                  const emojiEstado: Record<string, string> = {
-                                    'En diagnóstico': '🔍',
-                                    'En reparación': '🔧',
-                                    'Reparado': '✅',
-                                    'Entregado': '📦',
-                                  };
-                                  let indiceDaniado = 0;
-                                  const plantillaCorregida = template.replace(/\uFFFD+/g, () => {
-                                    const emoji = indiceDaniado === 0 ? '👋' : (emojiEstado[nuevoEstado] || '✅');
-                                    indiceDaniado++;
-                                    return emoji;
-                                  });
-                                  let texto = plantillaCorregida
+                                  let texto = repararEmojisWhatsApp(template, nuevoEstado)
                                     .replace(/{cliente}/g, repair.cliente)
                                     .replace(/{equipo}/g, repair.equipo)
                                     .replace(/{saldo}/g, String(repair.saldo ?? '0'))
