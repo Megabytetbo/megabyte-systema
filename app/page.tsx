@@ -22,6 +22,12 @@ export default function Home() {
   });
   const [section, setSection] = useState('reparaciones');
   const [editingRepair, setEditingRepair] = useState<any | null>(null);
+  const [presupuestoEditor, setPresupuestoEditor] = useState<any | null>(null);
+  const [presupuestoImporte, setPresupuestoImporte] = useState('');
+  const [presupuestoDetalle, setPresupuestoDetalle] = useState('');
+  const [presupuestoAviso, setPresupuestoAviso] = useState('');
+  const presupuestoEstados = useRef<Record<string,string>>({});
+  const presupuestoInicializado = useRef(false);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('megabyte_theme') !== 'light';
@@ -907,6 +913,65 @@ export default function Home() {
     `;
     const ventana = window.open('', '_blank', 'width=400,height=600');
     if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
+  // Presupuestos: lectura periódica para mostrar respuestas sin recargar.
+  useEffect(() => {
+    if (!user) { presupuestoInicializado.current = false; presupuestoEstados.current = {}; return; }
+    let activo = true;
+    const consultar = async () => {
+      const { data, error } = await supabase.from('repairs')
+        .select('id,presupuesto_estado,presupuesto_respondido_en,presupuesto_importe,presupuesto_detalle,presupuesto_publicado');
+      if (!activo || error || !data) return;
+      const anteriores = presupuestoEstados.current;
+      const nuevos: Record<string,string> = {};
+      for (const r of data) {
+        const estado = String(r.presupuesto_estado || '');
+        nuevos[String(r.id)] = estado;
+        if (presupuestoInicializado.current && (estado === 'aprobado' || estado === 'rechazado') && anteriores[String(r.id)] && anteriores[String(r.id)] !== estado) {
+          const orden = repairs.find(x => x.id === r.id);
+          setPresupuestoAviso(`${orden?.cliente || 'Un cliente'} ${estado === 'aprobado' ? 'aprobó' : 'rechazó'} el presupuesto de la orden ${orden?.orden || r.id}`);
+          try {
+            const audio = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const osc = audio.createOscillator(); const gain = audio.createGain();
+            osc.connect(gain); gain.connect(audio.destination); osc.frequency.value = 740;
+            gain.gain.value = 0.05; osc.start(); osc.stop(audio.currentTime + 0.16);
+            osc.onended = () => { void audio.close(); };
+          } catch { /* Navegador puede bloquear sonido hasta que se interactúe. */ }
+        }
+      }
+      presupuestoEstados.current = nuevos;
+      presupuestoInicializado.current = true;
+      setRepairs(prev => prev.map(r => {
+        const actualizado = data.find(x => x.id === r.id);
+        return actualizado ? { ...r, ...actualizado } : r;
+      }));
+    };
+    void consultar();
+    const intervalo = window.setInterval(() => { void consultar(); }, 15000);
+    return () => { activo = false; window.clearInterval(intervalo); };
+  }, [user?.id]);
+
+  const guardarPresupuesto = async () => {
+    if (!presupuestoEditor) return;
+    const importe = Number(presupuestoImporte);
+    if (!Number.isFinite(importe) || importe <= 0) { alert('Ingresá un importe válido mayor que cero.'); return; }
+    if (!presupuestoDetalle.trim()) { alert('Ingresá el detalle del presupuesto.'); return; }
+    const { data, error } = await supabase.from('repairs').update({
+      presupuesto_importe: importe, presupuesto_detalle: presupuestoDetalle.trim(),
+      presupuesto_publicado: true, presupuesto_estado: 'pendiente', presupuesto_respondido_en: null,
+    }).eq('id', presupuestoEditor.id).eq('user_id', user.id).select().single();
+    if (error) { alert('No se pudo publicar: ' + error.message); return; }
+    setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
+    setPresupuestoEditor(null);
+  };
+  const ocultarPresupuesto = async (repair: any) => {
+    if (!confirm('¿Ocultar el presupuesto de la página QR? Se conservará su respuesta registrada.')) return;
+    const { data, error } = await supabase.from('repairs').update({ presupuesto_publicado: false })
+      .eq('id', repair.id).eq('user_id', user.id).select().single();
+    if (error) { alert(error.message); return; }
+    setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
+    setOpenMenu(null);
   };
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
@@ -3379,7 +3444,7 @@ export default function Home() {
                 <table className="w-full border-separate border-spacing-y-0.5">
                   <thead>
                     <tr>
-                      {['Orden', 'Cliente', 'Equipo', 'Falla', 'Costo', 'Entrega', 'Saldo', 'Fecha', 'Estado', ''].map(h => (
+                      {['Orden', 'Cliente', 'Equipo', 'Falla', 'Costo', 'Entrega', 'Saldo', 'Fecha', 'Estado', 'Presupuesto', ''].map(h => (
                         <th key={h} className={`text-left px-4 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
                       ))}
                     </tr>
@@ -3457,6 +3522,15 @@ export default function Home() {
                               <option value="Entregado">Entregado {repair.se_reparo === false ? '❌' : '✅'}</option>
                             </select>
                           </td>
+                          <td className={`px-3 py-2.5 text-xs border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                            {repair.presupuesto_publicado ? (
+                              <span className={`rounded-full px-2 py-1 font-semibold whitespace-nowrap ${repair.presupuesto_estado === 'aprobado' ? 'bg-green-500/20 text-green-400' : repair.presupuesto_estado === 'rechazado' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                {repair.presupuesto_estado === 'aprobado' ? '✓ Aprobado' : repair.presupuesto_estado === 'rechazado' ? '✕ Rechazado' : '◷ Pendiente'}
+                              </span>
+                            ) : <span className={t.muted}>Sin publicar</span>}
+                            {repair.presupuesto_publicado && <div className="mt-1 whitespace-nowrap">$ {repair.presupuesto_importe}</div>}
+                            {repair.presupuesto_respondido_en && <div className={`${t.muted} mt-1 whitespace-nowrap`}>{new Date(repair.presupuesto_respondido_en).toLocaleString('es-UY')}</div>}
+                          </td>
                           <td className={`px-3 py-2.5 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
                             {openMenu === repair.id && (
                               <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
@@ -3483,6 +3557,8 @@ export default function Home() {
                                     setModalEntrega(repair);
                                   }, 50);
                                 }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
+                                <button onClick={() => { setPresupuestoEditor(repair); setPresupuestoImporte(String(repair.presupuesto_importe || '')); setPresupuestoDetalle(repair.presupuesto_detalle || ''); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} ${t.text}`}>💰 Presupuesto QR</button>
+                                {repair.presupuesto_publicado && <button onClick={() => { void ocultarPresupuesto(repair); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} ${t.text}`}>🙈 Ocultar presupuesto</button>}
                                 <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
                                 <a href={`https://wa.me/598${(repair.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
                                 <button onClick={() => { deleteRepair(repair.id); setOpenMenu(null); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
@@ -3496,6 +3572,23 @@ export default function Home() {
               </div>
             </div>
 
+            {presupuestoEditor && (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 p-4">
+                <div className={`${t.modal} w-full max-w-md rounded-2xl border p-5 space-y-4`}>
+                  <h3 className={`text-lg font-bold ${t.text}`}>Presupuesto QR · {presupuestoEditor.orden}</h3>
+                  <p className={`text-sm ${t.muted}`}>El cliente podrá aprobar o rechazar desde su enlace de seguimiento.</p>
+                  <label className={`block text-sm ${t.text}`}>Importe (UYU)
+                    <input type="number" min="0.01" step="0.01" value={presupuestoImporte} onChange={e => setPresupuestoImporte(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-600 bg-[#18232c] p-3 text-white" />
+                  </label>
+                  <label className={`block text-sm ${t.text}`}>Detalle visible para el cliente
+                    <textarea value={presupuestoDetalle} onChange={e => setPresupuestoDetalle(e.target.value)} rows={4} className="mt-1 w-full rounded-lg border border-gray-600 bg-[#18232c] p-3 text-white" />
+                  </label>
+                  {presupuestoEditor.presupuesto_estado === 'aprobado' || presupuestoEditor.presupuesto_estado === 'rechazado' ? <p className="text-sm text-yellow-400">Atención: republicar reiniciará la decisión del cliente a pendiente.</p> : null}
+                  <div className="flex justify-end gap-2"><button onClick={() => setPresupuestoEditor(null)} className="rounded-lg border px-4 py-2">Cancelar</button><button onClick={() => { void guardarPresupuesto(); }} className="rounded-lg bg-green-600 px-4 py-2 font-bold text-white">Publicar presupuesto</button></div>
+                </div>
+              </div>
+            )}
+            {presupuestoAviso && <div role="alert" className="fixed right-4 top-4 z-[10001] max-w-sm rounded-xl border border-green-500 bg-[#122b20] p-4 text-white shadow-2xl"><p className="font-semibold">🔔 Respuesta de presupuesto</p><p className="mt-1 text-sm">{presupuestoAviso}</p><button onClick={() => setPresupuestoAviso('')} className="mt-2 text-sm underline">Cerrar</button></div>}
             {/* Modal */}
             {showModal && (
               <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">

@@ -1,3 +1,4 @@
+import PresupuestoRespuesta from './PresupuestoRespuesta';
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -98,7 +99,7 @@ export default async function SeguimientoPage({ params }: Props) {
   if (!url || !key) throw new Error('Falta configurar el acceso de seguimiento en el servidor');
   const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: r, error } = await db.from('repairs')
-    .select('orden,equipo,falla,estado,fecha,comentario_publico,user_id')
+    .select('orden,equipo,falla,estado,fecha,comentario_publico,user_id,presupuesto_importe,presupuesto_detalle,presupuesto_publicado,presupuesto_estado,presupuesto_respondido_en')
     .eq('seguimiento_token', token).maybeSingle();
   if (error) throw new Error('Error al consultar la reparación');
   if (!r) notFound();
@@ -146,6 +147,7 @@ export default async function SeguimientoPage({ params }: Props) {
               </li>;
             })}
           </ol>
+          {r.presupuesto_publicado && r.presupuesto_importe != null && <PresupuestoRespuesta token={token} importe={r.presupuesto_importe} detalle={r.presupuesto_detalle || ''} estado={r.presupuesto_estado || 'pendiente'} fecha={r.presupuesto_respondido_en} />}
           <section className="mt-4 rounded-[10px] border border-[#253641] bg-[#101a23] px-3 py-3">
             <div className="flex items-center gap-2 text-[13px] font-bold"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#b8c9db" strokeWidth="1.7" aria-hidden="true"><path d="M4 4h16v13H9l-5 4V4Z"/><path d="M7 9h10M7 13h7"/></svg>Comentarios del taller</div>
             <p className="mt-3 whitespace-pre-wrap break-words text-[12px] leading-relaxed text-[#b4c3d4]">{r.comentario_publico?.trim() || 'Todavía no hay novedades adicionales para esta reparación.'}</p>
