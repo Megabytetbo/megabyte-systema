@@ -953,17 +953,55 @@ export default function Home() {
   }, [user?.id]);
 
   const guardarPresupuesto = async () => {
-    if (!presupuestoEditor) return;
+    if (!presupuestoEditor || !user) return;
     const importe = Number(presupuestoImporte);
     if (!Number.isFinite(importe) || importe <= 0) { alert('Ingresá un importe válido mayor que cero.'); return; }
     if (!presupuestoDetalle.trim()) { alert('Ingresá el detalle del presupuesto.'); return; }
+    if (!presupuestoEditor.seguimiento_token) {
+      alert('Esta reparación no tiene enlace de seguimiento QR. Recargá la aplicación y verificá el token antes de publicar.');
+      return;
+    }
+
+    // Abrir la pestaña desde el clic del usuario evita el bloqueo de ventanas
+    // emergentes al finalizar la operación asíncrona de Supabase.
+    const telefonoCrudo = String(presupuestoEditor.telefono || '').replace(/\D/g, '');
+    const telefono = telefonoCrudo.startsWith('598')
+      ? telefonoCrudo
+      : telefonoCrudo ? `598${telefonoCrudo.replace(/^0/, '')}` : '';
+    const ventanaWhatsApp = telefono ? window.open('about:blank', '_blank') : null;
+    if (ventanaWhatsApp) {
+      ventanaWhatsApp.document.title = 'Preparando aviso de presupuesto';
+      ventanaWhatsApp.document.body.textContent = 'Publicando presupuesto y preparando WhatsApp…';
+    }
+
     const { data, error } = await supabase.from('repairs').update({
       presupuesto_importe: importe, presupuesto_detalle: presupuestoDetalle.trim(),
       presupuesto_publicado: true, presupuesto_estado: 'pendiente', presupuesto_respondido_en: null,
     }).eq('id', presupuestoEditor.id).eq('user_id', user.id).select().single();
-    if (error) { alert('No se pudo publicar: ' + error.message); return; }
+    if (error) {
+      ventanaWhatsApp?.close();
+      alert('No se pudo publicar: ' + error.message);
+      return;
+    }
     setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
     setPresupuestoEditor(null);
+
+    const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(data.seguimiento_token || presupuestoEditor.seguimiento_token)}`;
+    const nombreNegocio = String(config.nombre_negocio || 'MegaByte');
+    const mensaje = `Hola ${data.cliente || presupuestoEditor.cliente} 👋\n\nTe informamos desde ${nombreNegocio} que ya está disponible el presupuesto de reparación de tu equipo ${data.equipo || presupuestoEditor.equipo}. 🔧\n\n💰 Presupuesto: $ ${importe.toLocaleString('es-UY')}\n\n📋 Detalle: ${presupuestoDetalle.trim()}\n\nPodés consultar el presupuesto y aprobarlo o rechazarlo desde el siguiente enlace:\n${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 🙏`;
+    if (!telefono) {
+      alert('Presupuesto publicado correctamente. Esta reparación no tiene teléfono: compartí el enlace de seguimiento con el cliente para que pueda aprobar o rechazar.\n\n' + seguimientoUrl);
+      return;
+    }
+    const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefono}&text=${encodeURIComponent(mensaje)}`;
+    if (ventanaWhatsApp && !ventanaWhatsApp.closed) {
+      ventanaWhatsApp.location.replace(urlWhatsApp);
+    } else {
+      // Alternativa cuando el navegador bloquea la nueva pestaña.
+      if (window.confirm('Presupuesto publicado. El navegador bloqueó WhatsApp. ¿Abrirlo ahora en esta pestaña?')) {
+        window.location.assign(urlWhatsApp);
+      }
+    }
   };
   const ocultarPresupuesto = async (repair: any) => {
     if (!confirm('¿Ocultar el presupuesto de la página QR? Se conservará su respuesta registrada.')) return;
