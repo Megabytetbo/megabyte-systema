@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select('user_id').eq('seguimiento_token', token).maybeSingle();
   if (!reparacion) return fallback;
   const { data: empresa } = await db.from('configuracion')
-    .select('nombre_negocio,logo_url').eq('user_id', reparacion.user_id).maybeSingle();
+    .select('nombre_negocio,logo_url,logo_seguimiento_url').eq('user_id', reparacion.user_id).maybeSingle();
   const nombre = empresa?.nombre_negocio?.trim() || 'Taller de reparación';
   const titulo = `${nombre} — Seguimiento de reparación`;
   const descripcion = `Consultá el estado de tu reparación en ${nombre}.`;
-  const logo = empresa?.logo_url;
+  const logo = empresa?.logo_seguimiento_url || empresa?.logo_url;
   const imagenes = logo && /^https:\/\//i.test(logo) ? [{ url: logo, alt: `Logo de ${nombre}` }] : [];
   return {
     title: titulo,
@@ -103,7 +103,7 @@ export default async function SeguimientoPage({ params }: Props) {
   if (error) throw new Error('Error al consultar la reparación');
   if (!r) notFound();
   const { data: cfg } = await db.from('configuracion')
-    .select('nombre_negocio,logo_url').eq('user_id', r.user_id).maybeSingle();
+    .select('nombre_negocio,logo_url,logo_seguimiento_url').eq('user_id', r.user_id).maybeSingle();
   const nombre = cfg?.nombre_negocio || 'MegaByte';
   const estado = r.estado || 'Pendiente';
   const actual = progreso(estado);
@@ -111,7 +111,7 @@ export default async function SeguimientoPage({ params }: Props) {
   return <main className="min-h-screen bg-[#050809] px-3 py-5 sm:py-9 text-[#f2f5f7]" style={{fontFamily:'Arial, Helvetica, sans-serif'}}>
     <div className="mx-auto max-w-[430px] overflow-hidden rounded-[19px] border border-[#1c2a2e] bg-[#090e12] shadow-[0_22px_75px_rgba(0,0,0,.65)]">
       <header className="bg-black px-5 pt-5 pb-4 text-center">
-        {cfg?.logo_url ? <img src={cfg.logo_url} alt={nombre} className="mx-auto h-auto max-h-[90px] max-w-[270px] object-contain" /> :
+        {(cfg?.logo_seguimiento_url || cfg?.logo_url) ? <img src={cfg.logo_seguimiento_url || cfg.logo_url} alt={nombre} className="mx-auto h-auto max-h-[90px] max-w-[270px] object-contain" /> :
           <div><div className="font-serif text-[39px] leading-none font-bold text-[#00b83b]">{nombre}</div><div className="mt-1 text-[10px] tracking-[.22em]">SOLUCIONES EN INFORMÁTICA</div></div>}
       </header>
       <div className="px-3 pb-4">

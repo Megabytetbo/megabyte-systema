@@ -34,7 +34,7 @@ export default function Home() {
     garantia: '', garantiaCustom: '', comentario_publico: '',
   });
   const [config, setConfig] = useState<any>({
-    nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '',
+    nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '', logo_seguimiento_url: '',
     dominio_seguimiento: '', dominio_seguimiento_activo: false,
     msg_en_diagnostico: 'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍',
     msg_en_reparacion: 'Hola {cliente} \u{1F44B}\n\nTu equipo {equipo} ya ingresó a reparación en MegaByte \u{1F527}',
@@ -539,6 +539,7 @@ export default function Home() {
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        logo_seguimiento_url: config.logo_seguimiento_url || null,
         dominio_seguimiento: dominio,
         dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
         msg_en_diagnostico: config.msg_en_diagnostico,
@@ -558,6 +559,7 @@ export default function Home() {
         direccion: config.direccion,
         telefono: config.telefono,
         logo_url: config.logo_url,
+        logo_seguimiento_url: config.logo_seguimiento_url || null,
         dominio_seguimiento: dominio,
         dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
         msg_en_diagnostico: config.msg_en_diagnostico,
@@ -583,6 +585,22 @@ export default function Home() {
     if (error) { alert('Error al subir logo: ' + error.message); return; }
     const { data } = supabase.storage.from('logos').getPublicUrl(nombre);
     setConfig({ ...config, logo_url: data.publicUrl });
+  };
+
+  const subirLogoSeguimiento = async (file: File) => {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      alert('Usá una imagen PNG, JPG o WebP.'); return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen debe pesar menos de 5 MB.'); return;
+    }
+    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    // Nombre distinto para no sobrescribir el logo térmico; URL nueva para evitar caché de WhatsApp.
+    const nombre = `seguimiento-${user.id}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('logos').upload(nombre, file, { upsert: false, contentType: file.type });
+    if (error) { alert('Error al subir el logo de seguimiento: ' + error.message); return; }
+    const { data } = supabase.storage.from('logos').getPublicUrl(nombre);
+    setConfig((prev: any) => ({ ...prev, logo_seguimiento_url: data.publicUrl }));
   };
 
   const toggleTheme = () => {
@@ -3199,7 +3217,7 @@ export default function Home() {
 
                 {/* Logo */}
                 <div className="mb-5">
-                  <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO DEL NEGOCIO</label>
+                  <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO PARA TICKETS (BLANCO Y NEGRO)</label>
                   {config.logo_url && (
                     <div className={`mb-3 p-3 ${darkMode ? 'bg-[#17232d]' : 'bg-gray-100'} rounded-xl inline-block`}>
                       <img src={config.logo_url} alt="Logo" className="max-h-20 max-w-full object-contain" />
@@ -3209,6 +3227,24 @@ export default function Home() {
                     onChange={(e) => { if (e.target.files?.[0]) subirLogo(e.target.files[0]); }}
                     className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-[#00c347] file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
                   <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG. Se mostrará en el ticket de impresión.</p>
+                </div>
+
+                {/* Logo independiente para la web del QR y las vistas previas de WhatsApp */}
+                <div className="mb-5">
+                  <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO A COLOR PARA SEGUIMIENTO WEB Y WHATSAPP</label>
+                  {(config.logo_seguimiento_url || config.logo_url) && (
+                    <div className={`mb-3 p-3 ${darkMode ? 'bg-[#17232d]' : 'bg-gray-100'} rounded-xl inline-block`}>
+                      <img src={config.logo_seguimiento_url || config.logo_url} alt="Logo de seguimiento" className="max-h-24 max-w-full object-contain" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => { if (e.target.files?.[0]) subirLogoSeguimiento(e.target.files[0]); e.target.value = ''; }}
+                    className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-[#00c347] file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
+                  <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG o WebP (máx. 5 MB). Se usa en el QR y la miniatura de WhatsApp. Guardá la configuración después de subirlo.</p>
+                  {config.logo_seguimiento_url && (
+                    <button type="button" onClick={() => setConfig((prev: any) => ({ ...prev, logo_seguimiento_url: '' }))}
+                      className={`mt-2 text-xs underline ${t.subtext}`}>Volver a usar el logo del ticket</button>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-4 mb-6">
