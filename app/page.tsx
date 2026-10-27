@@ -520,32 +520,6 @@ export default function Home() {
     } catch { return window.location.origin; }
   };
 
-  // Normaliza caracteres dañados ANTES de codificar el enlace de WhatsApp.
-  // No modifica las variables ni los emojis válidos que el negocio personalizó.
-  const repararEmojisWhatsApp = (plantilla: string, estado: string) => {
-    const emojiPorEstado: Record<string, string> = {
-      'En diagnóstico': '\u{1F50D}',
-      'En reparación': '\u{1F527}',
-      'Reparado': '\u2705',
-      'Entregado': '\u{1F4E6}',
-    };
-    const reemplazoEstado = emojiPorEstado[estado] || '\u2705';
-    // Caracteres habituales de sustitución y secuencias de texto mal decodificado.
-    const patronDanado = /(?:\uFFFD|\u25C6\u003F|ï¿½)+/gu;
-    const normalizado = String(plantilla || '').replace(/\r\n/g, '\n');
-    const lineas = normalizado.split('\n').map((linea) => {
-      if (!patronDanado.test(linea)) return linea;
-      patronDanado.lastIndex = 0;
-      let reemplazo = reemplazoEstado;
-      if (/\bhola\b/i.test(linea)) reemplazo = '\u{1F44B}';
-      else if (/consult[aá]|enlace|seguimiento/i.test(linea)) reemplazo = '\u{1F517}';
-      else if (/gracias|confiar/i.test(linea)) reemplazo = '\u{1F64F}';
-      return linea.replace(patronDanado, reemplazo);
-    });
-    // Evita que encodeURIComponent falle por mitades de emojis (surrogates huérfanos).
-    return lineas.join('\n').replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
-  };
-
   const guardarConfig = async () => {
     const dominio = String(config.dominio_seguimiento || '').trim();
     if (dominio) {
@@ -568,10 +542,10 @@ export default function Home() {
         logo_seguimiento_url: config.logo_seguimiento_url || null,
         dominio_seguimiento: dominio,
         dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
-        msg_en_diagnostico: repararEmojisWhatsApp(config.msg_en_diagnostico, 'En diagnóstico'),
-        msg_en_reparacion: repararEmojisWhatsApp(config.msg_en_reparacion, 'En reparación'),
-        msg_reparado: repararEmojisWhatsApp(config.msg_reparado, 'Reparado'),
-        msg_entregado: repararEmojisWhatsApp(config.msg_entregado, 'Entregado'),
+        msg_en_diagnostico: config.msg_en_diagnostico,
+        msg_en_reparacion: config.msg_en_reparacion,
+        msg_reparado: config.msg_reparado,
+        msg_entregado: config.msg_entregado,
         switch_en_diagnostico: config.switch_en_diagnostico,
         switch_en_reparacion: config.switch_en_reparacion,
         switch_reparado: config.switch_reparado,
@@ -588,10 +562,10 @@ export default function Home() {
         logo_seguimiento_url: config.logo_seguimiento_url || null,
         dominio_seguimiento: dominio,
         dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
-        msg_en_diagnostico: repararEmojisWhatsApp(config.msg_en_diagnostico, 'En diagnóstico'),
-        msg_en_reparacion: repararEmojisWhatsApp(config.msg_en_reparacion, 'En reparación'),
-        msg_reparado: repararEmojisWhatsApp(config.msg_reparado, 'Reparado'),
-        msg_entregado: repararEmojisWhatsApp(config.msg_entregado, 'Entregado'),
+        msg_en_diagnostico: config.msg_en_diagnostico,
+        msg_en_reparacion: config.msg_en_reparacion,
+        msg_reparado: config.msg_reparado,
+        msg_entregado: config.msg_entregado,
         switch_en_diagnostico: config.switch_en_diagnostico,
         switch_en_reparacion: config.switch_en_reparacion,
         switch_reparado: config.switch_reparado,
@@ -3450,7 +3424,7 @@ export default function Home() {
                                     ? `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
                                     : '';
                                   const incluyeSeguimiento = template.includes('{seguimiento}');
-                                  let texto = repararEmojisWhatsApp(template, nuevoEstado)
+                                  let texto = template
                                     .replace(/{cliente}/g, repair.cliente)
                                     .replace(/{equipo}/g, repair.equipo)
                                     .replace(/{saldo}/g, String(repair.saldo ?? '0'))
@@ -3458,7 +3432,7 @@ export default function Home() {
                                   if (seguimientoUrl && !incluyeSeguimiento) {
                                     texto += `\n\nConsultá el estado de tu reparación acá:\n${seguimientoUrl}`;
                                   }
-                                  return encodeURIComponent(texto.replace(/\uFFFD/g, ''));
+                                  return encodeURIComponent(texto);
                                 };
                                 let mensaje = '';
                                 if (nuevoEstado === 'En diagnóstico' && config.switch_en_diagnostico !== false)
@@ -3472,7 +3446,7 @@ export default function Home() {
 
                                 if (mensaje) {
                                   const numero = repair.telefono?.replace(/\D/g, '')?.replace(/^0/, '');
-                                  window.open(`https://wa.me/598${numero}?text=${mensaje}`, '_blank');
+                                  window.open(`https://api.whatsapp.com/send?phone=598${numero}&text=${mensaje}`, '_blank');
                                 }
                               }}
                               className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer min-w-[110px] ${estadoSelectColor[repair.estado] || (darkMode ? 'bg-[#253641] text-white' : 'bg-slate-100 text-slate-700')}`}>
