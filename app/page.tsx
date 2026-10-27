@@ -1003,6 +1003,49 @@ export default function Home() {
       }
     }
   };
+  // Registrar una respuesta recibida por WhatsApp, sin modificar la vía QR.
+  const responderPresupuestoManual = async (repair: any, decision: 'aprobado' | 'rechazado') => {
+    if (!user || !repair?.presupuesto_publicado || repair.presupuesto_estado !== 'pendiente') return;
+    const importe = Number(repair.presupuesto_importe);
+    if (decision === 'aprobado' && (!Number.isFinite(importe) || importe <= 0)) {
+      alert('El presupuesto no tiene un importe válido.'); return;
+    }
+    if (!window.confirm(`¿Registrar como ${decision === 'aprobado' ? 'APROBADO' : 'RECHAZADO'} el presupuesto de ${repair.cliente} (${repair.orden}) confirmado por WhatsApp?${decision === 'aprobado' ? `\n\nSe actualizará el costo a $ ${importe.toLocaleString('es-UY')} y se recalculará el saldo.` : ''}`)) return;
+
+    // Consultar la entrega actual para no sobrescribir anticipos posteriores.
+    const { data: actual, error: lecturaError } = await supabase.from('repairs')
+      .select('id,entrega,presupuesto_estado,presupuesto_publicado,presupuesto_importe')
+      .eq('id', repair.id).eq('user_id', user.id).single();
+    if (lecturaError || !actual) { alert('No se pudo consultar el presupuesto.'); return; }
+    if (!actual.presupuesto_publicado || actual.presupuesto_estado !== 'pendiente') {
+      alert('Este presupuesto ya fue respondido o dejó de estar disponible.');
+      setPresupuestoEditor(null); return;
+    }
+    const importeActual = Number(actual.presupuesto_importe);
+    if (decision === 'aprobado' && (!Number.isFinite(importeActual) || importeActual <= 0)) {
+      alert('El presupuesto no tiene un importe válido.'); return;
+    }
+    const entrega = Number(actual.entrega || 0);
+    const cambios: any = {
+      presupuesto_estado: decision,
+      presupuesto_respondido_en: new Date().toISOString(),
+    };
+    if (decision === 'aprobado') {
+      cambios.costo = importeActual;
+      cambios.saldo = importeActual - entrega;
+    }
+    const { data, error } = await supabase.from('repairs').update(cambios)
+      .eq('id', repair.id).eq('user_id', user.id)
+      .eq('presupuesto_publicado', true).eq('presupuesto_estado', 'pendiente')
+      .select().maybeSingle();
+    if (error) { alert('No se pudo registrar la respuesta: ' + error.message); return; }
+    if (!data) { alert('El presupuesto ya fue respondido. Recargá para ver el estado actual.'); setPresupuestoEditor(null); return; }
+    setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
+    presupuestoEstados.current[String(data.id)] = decision;
+    setPresupuestoEditor(null);
+    alert(`Presupuesto ${decision} manualmente. La respuesta también se verá desde el QR.`);
+  };
+
   const ocultarPresupuesto = async (repair: any) => {
     if (!confirm('¿Ocultar el presupuesto de la página QR? Se conservará su respuesta registrada.')) return;
     const { data, error } = await supabase.from('repairs').update({ presupuesto_publicado: false })
@@ -3621,6 +3664,16 @@ export default function Home() {
                   <label className={`block text-sm ${t.text}`}>Detalle visible para el cliente
                     <textarea value={presupuestoDetalle} onChange={e => setPresupuestoDetalle(e.target.value)} rows={4} className="mt-1 w-full rounded-lg border border-gray-600 bg-[#18232c] p-3 text-white" />
                   </label>
+                  {presupuestoEditor.presupuesto_publicado && presupuestoEditor.presupuesto_estado === 'pendiente' && (
+                    <div className="rounded-xl border border-gray-600 p-3 space-y-2">
+                      <p className={`text-sm font-semibold ${t.text}`}>Respuesta recibida por WhatsApp</p>
+                      <p className={`text-xs ${t.muted}`}>Registrá la decisión del cliente sin que tenga que usar el QR.</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" onClick={() => { void responderPresupuestoManual(presupuestoEditor, 'aprobado'); }} className="rounded-lg bg-green-600 px-3 py-2 font-bold text-white">✓ Aprobar</button>
+                        <button type="button" onClick={() => { void responderPresupuestoManual(presupuestoEditor, 'rechazado'); }} className="rounded-lg bg-red-700 px-3 py-2 font-bold text-white">✕ Rechazar</button>
+                      </div>
+                    </div>
+                  )}
                   {presupuestoEditor.presupuesto_estado === 'aprobado' || presupuestoEditor.presupuesto_estado === 'rechazado' ? <p className="text-sm text-yellow-400">Atención: republicar reiniciará la decisión del cliente a pendiente.</p> : null}
                   <div className="flex justify-end gap-2"><button onClick={() => setPresupuestoEditor(null)} className="rounded-lg border px-4 py-2">Cancelar</button><button onClick={() => { void guardarPresupuesto(); }} className="rounded-lg bg-green-600 px-4 py-2 font-bold text-white">Publicar presupuesto</button></div>
                 </div>
