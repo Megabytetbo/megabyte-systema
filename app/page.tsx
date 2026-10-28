@@ -1,36 +1,3917 @@
 'use client';
-import { useState } from 'react';
-type Props = { token: string; importe: number; detalle: string; estado: string; fecha?: string | null };
-export default function PresupuestoRespuesta({ token, importe, detalle, estado: inicial, fecha }: Props) {
-  const [estado, setEstado] = useState(inicial);
-  const [confirmacion, setConfirmacion] = useState<'aprobado' | 'rechazado' | null>(null);
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState('');
-  const responder = async () => {
-    if (!confirmacion || cargando) return;
-    setCargando(true); setError('');
-    try {
-      const res = await fetch(`/api/presupuesto/${encodeURIComponent(token)}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision: confirmacion }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'No se pudo registrar la respuesta');
-      setEstado(data.estado); setConfirmacion(null);
-    } catch (e: any) { setError(e.message || 'Error de conexión'); }
-    finally { setCargando(false); }
+
+import React, { useEffect, useRef, useState } from 'react';
+import { supabase } from './supabase';
+
+export default function Home() {
+  const [repairs, setRepairs] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [searchClientes, setSearchClientes] = useState('');
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [showModal, setShowModal] = useState(false);
+  const [guardandoOrden, setGuardandoOrden] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loginForm, setLoginForm] = useState(() => {
+    if (typeof window === 'undefined') return { email: '', password: '', recordar: false };
+    const recordar = localStorage.getItem('megabyte_recordar') === 'true';
+    const email = recordar ? (localStorage.getItem('megabyte_email') || '') : '';
+    const password = recordar ? (localStorage.getItem('megabyte_password') || '') : '';
+    return { email, password, recordar };
+  });
+  const [section, setSection] = useState('reparaciones');
+  const [editingRepair, setEditingRepair] = useState<any | null>(null);
+  const [presupuestoEditor, setPresupuestoEditor] = useState<any | null>(null);
+  const [presupuestoImporte, setPresupuestoImporte] = useState('');
+  const [presupuestoDetalle, setPresupuestoDetalle] = useState('');
+  const [presupuestoAviso, setPresupuestoAviso] = useState('');
+  const presupuestoEstados = useRef<Record<string,string>>({});
+  const presupuestoInicializado = useRef(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('megabyte_theme') !== 'light';
+    }
+    return true;
+  });
+  const [form, setForm] = useState({
+    cliente: '', tipo: '', modelo: '', falla: '',
+    telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '',
+    garantia: '', garantiaCustom: '', comentario_publico: '',
+  });
+  const [config, setConfig] = useState<any>({
+    nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '', logo_seguimiento_url: '',
+    dominio_seguimiento: '', dominio_seguimiento_activo: false,
+    msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+    msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+    msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+    msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚',
+    switch_en_diagnostico: true, switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
+  });
+  const [configGuardando, setConfigGuardando] = useState(false);
+  const [suscripciones, setSuscripciones] = useState<any[]>([]);
+  const [showAdminModal, setShowAdminModal] = useState<any | null>(null);
+  const [adminSearch, setAdminSearch] = useState('');
+  const [adminFiltro, setAdminFiltro] = useState('todos');
+  const [adminOrden, setAdminOrden] = useState('vencimiento');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [modalEntrega, setModalEntrega] = useState<any | null>(null);
+  const [entregaForm, setEntregaForm] = useState({ costo: '', entrega: '', garantia: '', garantiaCustom: '', seReparo: true });
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [showRegistro, setShowRegistro] = useState(false);
+  // ── Punto de ventas ──────────────────────────────────────────────────────
+  const [productos, setProductos] = useState<any[]>([]);
+  const [carrito, setCarrito] = useState<any[]>([]);
+  const [busquedaPdv, setBusquedaPdv] = useState('');
+  const [busquedaInventario, setBusquedaInventario] = useState('');
+  const [showAddProducto, setShowAddProducto] = useState(false);
+  const [productoForm, setProductoForm] = useState({ nombre: '', precio: '', stock: '', codigo_barras: '' });
+  const [formaPagoPdv, setFormaPagoPdv] = useState('Efectivo');
+  const [ticketVenta, setTicketVenta] = useState<any | null>(null);
+  const [tieneGarantiaVenta, setTieneGarantiaVenta] = useState(false);
+  const [mesesGarantiaVenta, setMesesGarantiaVenta] = useState('3');
+  const [clienteGarantiaVenta, setClienteGarantiaVenta] = useState('');
+  const [telefonoGarantiaVenta, setTelefonoGarantiaVenta] = useState('');
+  const [montoRecibidoPdv, setMontoRecibidoPdv] = useState('');
+  const [garantiasVentasList, setGarantiasVentasList] = useState<any[]>([]);
+  const [busquedaGarantiasVentas, setBusquedaGarantiasVentas] = useState('');
+  const [ventasList, setVentasList] = useState<any[]>([]);
+  const [eliminandoVentaId, setEliminandoVentaId] = useState<number | null>(null);
+  const [subVenta, setSubVenta] = useState<'vender' | 'finanzas' | 'historial' | 'garantias'>('vender');
+  const [busquedaHistorial, setBusquedaHistorial] = useState('');
+  const [editingProducto, setEditingProducto] = useState<any | null>(null);
+  const [showLanding, setShowLanding] = useState(true);
+  const [showNuevaPassword, setShowNuevaPassword] = useState(false);
+  const [nuevaPassword, setNuevaPassword] = useState('');
+  const [nuevaPasswordConfirm, setNuevaPasswordConfirm] = useState('');
+  const [showRecuperar, setShowRecuperar] = useState(false);
+  const [recuperarEmail, setRecuperarEmail] = useState('');
+  const [recuperarEnviado, setRecuperarEnviado] = useState(false);
+  const [registroForm, setRegistroForm] = useState({ nombre: '', email: '', password: '', confirmar: '' });
+  const [registrando, setRegistrando] = useState(false);
+  const [suscripcionActual, setSuscripcionActual] = useState<any | null>(null);
+  const [accesoVerificado, setAccesoVerificado] = useState(false);
+  const [editingCliente, setEditingCliente] = useState<any | null>(null);
+  const [editClienteForm, setEditClienteForm] = useState({ cliente: '', telefono: '' });
+
+  // ── Estado calculadoras ───────────────────────────────────────────────────
+  const [calcDisplay, setCalcDisplay] = useState('0');
+  const [calcExpr, setCalcExpr] = useState('');
+  const [calcVal, setCalcVal] = useState('0');
+  const [calcPrev, setCalcPrev] = useState<number | null>(null);
+  const [calcOper, setCalcOper] = useState<string | null>(null);
+  const [calcNewNum, setCalcNewNum] = useState(false);
+  const [pCosto, setPCosto] = useState('');
+  const [pMano, setPMano] = useState('');
+  const [pGanancia, setPGanancia] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('calc_ganancia') || '30') : '30');
+  const [pDescuento, setPDescuento] = useState('');
+  const [pEntrega, setPEntrega] = useState('');
+  const [ivaBase, setIvaBase] = useState('');
+  const [ivaFinal, setIvaFinal] = useState('');
+  const [ivaPais, setIvaPais] = useState('22');
+  const [ivaCustom, setIvaCustom] = useState('');
+  const [calcFocused, setCalcFocused] = useState(false);
+  const calcValRef = useRef('0');
+
+  // ── Detectar reset de contraseña ─────────────────────────────────────────
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      setShowNuevaPassword(true);
+      setShowLanding(false);
+    }
+  }, []);
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) setUser(session.user);
+    };
+    checkUser();
+    const storedToken = localStorage.getItem('megabyte_session_token');
+    if (storedToken) setSessionToken(storedToken);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowNuevaPassword(true);
+        setShowLanding(false);
+        return;
+      }
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Verificar sesión activa cada 30 segundos ──────────────────────────────
+  useEffect(() => {
+    if (!user || !sessionToken) return;
+    if (localStorage.getItem('megabyte_is_admin') === 'true') return;
+    const verificarSesion = async () => {
+      if (localStorage.getItem('megabyte_is_admin') === 'true') return;
+      const { data } = await supabase.from('sesiones_activas')
+        .select('session_token').eq('user_id', user.id);
+      const tokens = (data || []).map((s: any) => s.session_token);
+      if (tokens.length > 0 && !tokens.includes(sessionToken)) {
+        alert('Tu sesión fue cerrada porque se alcanzó el límite de dispositivos conectados.');
+        await supabase.auth.signOut();
+        localStorage.removeItem('megabyte_recordar');
+        localStorage.removeItem('megabyte_session_token');
+        setUser(null);
+        setSessionToken(null);
+      }
+    };
+    verificarSesion();
+    const interval = setInterval(verificarSesion, 30000);
+    return () => clearInterval(interval);
+  }, [user, sessionToken]);
+
+  // ── Cargar reparaciones y configuracion ──────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    const loadRepairs = async () => {
+      const { data, error } = await supabase
+        .from('repairs').select('*').order('id', { ascending: false });
+      if (data) setRepairs(data);
+      if (error) console.error(error);
+    };
+    const loadClientes = async () => {
+      const { data, error } = await supabase
+        .from('clientes').select('*').order('id', { ascending: false });
+      if (data) setClientes(data);
+      if (error) console.error(error);
+    };
+    const loadConfig = async () => {
+      const { data } = await supabase
+        .from('configuracion').select('*').eq('user_id', user.id).single();
+      if (data) {
+        // Aplicar una sola vez los mensajes acordados. Luego se pueden editar normalmente.
+        // Se usa una clave por usuario para no reescribir sus personalizaciones futuras.
+        const mensajesDefinitivos: Record<string, string> = {
+          msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+          msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+          msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+          msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚',
+        };
+        const versionMensajes = `megatallerpro_mensajes_definitivos_v3_${user.id}`;
+        if (localStorage.getItem(versionMensajes) !== 'aplicado') {
+          const { error: errorMensajes } = await supabase.from('configuracion')
+            .update(mensajesDefinitivos).eq('user_id', user.id);
+          if (errorMensajes) {
+            console.error('No se pudieron guardar los mensajes definitivos:', errorMensajes);
+            // Mostrar el texto acordado durante esta sesión aunque falle la escritura.
+            setConfig({ ...data, ...mensajesDefinitivos });
+          } else {
+            localStorage.setItem(versionMensajes, 'aplicado');
+            setConfig({ ...data, ...mensajesDefinitivos });
+          }
+        } else {
+          setConfig(data);
+        }
+        if (data.is_admin) {
+          cargarSuscripciones();
+          localStorage.setItem('megabyte_is_admin', 'true');
+        } else {
+          localStorage.removeItem('megabyte_is_admin');
+        }
+      }
+    };
+    loadRepairs();
+    loadClientes();
+    loadConfig();
+    const loadProductos = async () => {
+      const { data } = await supabase.from('productos').select('*').order('nombre');
+      if (data) setProductos(data);
+    };
+    loadProductos();
+    const loadVentas = async () => {
+      const { data } = await supabase.from('ventas').select('*').order('fecha', { ascending: false });
+      if (data) setVentasList(data);
+    };
+    loadVentas();
+    const loadGarantiasVentas = async () => {
+      const { data } = await supabase.from('garantias_ventas').select('*').order('fecha_venta', { ascending: false });
+      if (data) setGarantiasVentasList(data);
+    };
+    loadGarantiasVentas();
+    // Verificar suscripcion del usuario
+    const verificarAcceso = async () => {
+      const { data } = await supabase.from('suscripciones')
+        .select('*').eq('email', user.email).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      setSuscripcionActual(data || null);
+      setAccesoVerificado(true);
+    };
+    verificarAcceso();
+  }, [user]);
+
+  // ── Login / Logout ────────────────────────────────────────────────────────
+  const handleRegistro = async () => {
+    if (!registroForm.nombre.trim()) { alert('Ingresá el nombre de tu taller'); return; }
+    if (!registroForm.email.trim()) { alert('Ingresá tu email'); return; }
+    if (registroForm.password.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+    if (registroForm.password !== registroForm.confirmar) { alert('Las contraseñas no coinciden'); return; }
+    setRegistrando(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: registroForm.email,
+      password: registroForm.password,
+    });
+    if (error) { alert('Error: ' + error.message); setRegistrando(false); return; }
+    if (data.user) {
+      // Verificar si ya existe antes de insertar
+      const { data: existente } = await supabase.from('suscripciones')
+        .select('id').eq('email', registroForm.email).maybeSingle();
+      if (!existente) {
+        await supabase.from('suscripciones').insert({
+          user_id: data.user.id,
+          email: registroForm.email,
+          nombre_taller: registroForm.nombre,
+          plan: 'basic',
+          estado: 'trial',
+          // fecha_vencimiento se calcula en Supabase: CURRENT_DATE + 5 days
+        });
+      }
+      try {
+        await supabase.functions.invoke('Bienvenida', {
+          body: { email: registroForm.email, nombre_taller: registroForm.nombre },
+        });
+      } catch (e) { console.error('Email bienvenida error:', e); }
+      alert('✅ Cuenta creada. Tenés 5 días de prueba gratis. ¡Bienvenido!');
+      setShowRegistro(false);
+      setRegistroForm({ nombre: '', email: '', password: '', confirmar: '' });
+    }
+    setRegistrando(false);
   };
-  return <section className="mt-4 rounded-[10px] border border-[#1e6b42] bg-[#0d211a] px-4 py-4">
-    <h2 className="text-[15px] font-bold text-white">💰 Presupuesto de reparación</h2>
-    <div className="mt-4 rounded-lg border border-[#2a7650] bg-[#143427] px-3 py-3">
-      <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-[#72e6a2]">📋 Detalle del presupuesto</p>
-      <p className="whitespace-pre-wrap break-words text-[15px] font-medium leading-relaxed text-white">{detalle}</p>
+
+  const handleRecuperar = async () => {
+    if (!recuperarEmail.trim()) { alert('Ingresá tu email'); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(recuperarEmail, {
+      redirectTo: window.location.origin,
+    });
+    if (error) { alert('Error: ' + error.message); return; }
+    setRecuperarEnviado(true);
+  };
+
+  const handleNuevaPassword = async () => {
+    if (nuevaPassword.length < 6) { alert('La contraseña debe tener al menos 6 caracteres'); return; }
+    if (nuevaPassword !== nuevaPasswordConfirm) { alert('Las contraseñas no coinciden'); return; }
+    const { error } = await supabase.auth.updateUser({ password: nuevaPassword });
+    if (error) { alert('Error: ' + error.message); return; }
+    alert('✅ Contraseña actualizada correctamente');
+    setShowNuevaPassword(false);
+    setNuevaPassword('');
+    setNuevaPasswordConfirm('');
+    window.location.hash = '';
+  };
+
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginForm.email,
+      password: loginForm.password,
+    });
+    if (error) { alert('Usuario o contraseña incorrectos'); return; }
+    if (data.user) {
+      if (loginForm.recordar) {
+        localStorage.setItem('megabyte_recordar', 'true');
+        localStorage.setItem('megabyte_email', loginForm.email);
+        localStorage.setItem('megabyte_password', loginForm.password);
+      } else {
+        localStorage.removeItem('megabyte_recordar');
+        localStorage.removeItem('megabyte_email');
+        localStorage.removeItem('megabyte_password');
+      }
+
+      // Verificar plan del usuario para definir el límite de sesiones simultáneas
+      const { data: configData } = await supabase.from('configuracion')
+        .select('is_admin').eq('user_id', data.user.id).single();
+      const esAdmin = configData?.is_admin === true;
+
+      let limiteSesiones = 1;
+      if (!esAdmin) {
+        const { data: subData } = await supabase.from('suscripciones')
+          .select('plan').eq('email', data.user.email).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        limiteSesiones = subData?.plan === 'pro' ? 3 : 1;
+      } else {
+        limiteSesiones = 999;
+      }
+
+      const token = crypto.randomUUID();
+
+      // Traer sesiones activas actuales del usuario, ordenadas por más reciente
+      const { data: sesionesExistentes } = await supabase.from('sesiones_activas')
+        .select('id, session_token, updated_at')
+        .eq('user_id', data.user.id)
+        .order('updated_at', { ascending: false });
+
+      const sesiones = sesionesExistentes || [];
+      // Si ya alcanzó el límite, eliminar las más antiguas para dejar lugar a la nueva
+      if (sesiones.length >= limiteSesiones) {
+        const aEliminar = sesiones.slice(limiteSesiones - 1);
+        for (const s of aEliminar) {
+          await supabase.from('sesiones_activas').delete().eq('id', s.id);
+        }
+      }
+
+      await supabase.from('sesiones_activas').insert({
+        user_id: data.user.id, session_token: token, updated_at: new Date().toISOString()
+      });
+
+      localStorage.setItem('megabyte_session_token', token);
+      setSessionToken(token);
+      setUser(data.user);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (user && sessionToken) {
+      await supabase.from('sesiones_activas').delete()
+        .eq('user_id', user.id).eq('session_token', sessionToken);
+    }
+    await supabase.auth.signOut();
+    localStorage.removeItem('megabyte_recordar');
+    localStorage.removeItem('megabyte_email');
+    localStorage.removeItem('megabyte_password');
+    localStorage.removeItem('megabyte_session_token');
+    localStorage.removeItem('megabyte_is_admin');
+    setUser(null);
+    setSessionToken(null);
+  };
+
+  const guardarEdicionCliente = async () => {
+    if (!editingCliente) return;
+    const telOriginal = (editingCliente.telefono || '').replace(/\D/g, '');
+    const repsAEditar = repairs.filter((r: any) =>
+      r.cliente === editingCliente.cliente &&
+      (r.telefono || '').replace(/\D/g, '') === telOriginal
+    );
+    for (const r of repsAEditar) {
+      await supabase.from('repairs')
+        .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
+        .eq('id', r.id);
+    }
+    const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
+    setRepairs(data || []);
+
+    // Actualizar también la tabla persistente de clientes
+    const { data: actualizado, error: errUpdate } = await supabase
+      .from('clientes')
+      .update({ cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null })
+      .eq('user_id', user.id)
+      .eq('cliente', editingCliente.cliente)
+      .select();
+    if (!errUpdate && (!actualizado || actualizado.length === 0)) {
+      // El cliente no existía aún en la tabla persistente (datos viejos): lo creamos
+      await supabase.from('clientes').upsert(
+        { user_id: user.id, cliente: editClienteForm.cliente, telefono: editClienteForm.telefono || null },
+        { onConflict: 'user_id,cliente' }
+      );
+    }
+    const { data: clientesData } = await supabase.from('clientes').select('*').order('id', { ascending: false });
+    setClientes(clientesData || []);
+
+    setEditingCliente(null);
+  };
+
+  const cargarSuscripciones = async () => {
+    const { data } = await supabase.from('suscripciones').select('*').order('created_at', { ascending: false });
+    setSuscripciones(data || []);
+  };
+
+  const toggleEstado = async (id: string, estadoActual: string) => {
+    const nuevoEstado = estadoActual === 'activo' ? 'inactivo' : 'activo';
+    await supabase.from('suscripciones').update({ estado: nuevoEstado }).eq('id', id);
+    await cargarSuscripciones();
+  };
+
+  const guardarSuscripcion = async (sub: any) => {
+    if (sub.id) {
+      await supabase.from('suscripciones').update({
+        nombre_taller: sub.nombre_taller, email: sub.email,
+        plan: sub.plan, estado: sub.estado, fecha_vencimiento: sub.fecha_vencimiento,
+      }).eq('id', sub.id);
+    } else {
+      await supabase.from('suscripciones').insert({
+        nombre_taller: sub.nombre_taller, email: sub.email,
+        plan: sub.plan, estado: sub.estado, fecha_vencimiento: sub.fecha_vencimiento,
+      });
+    }
+    await cargarSuscripciones();
+    setShowAdminModal(null);
+  };
+
+  const confirmarEntrega = async () => {
+    if (!modalEntrega) return;
+    const costo = Number(entregaForm.costo || 0);
+    const entrega = Number(entregaForm.entrega || 0);
+    const saldo = costo - entrega;
+    const garantia = entregaForm.garantia === 'otro' ? entregaForm.garantiaCustom : entregaForm.garantia;
+    const fecha_entrega = new Date().toLocaleString('es-UY', {
+      hour12: false, day: '2-digit', month: '2-digit',
+      year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    await supabase.from('repairs').update({
+      costo, entrega, saldo, estado: 'Entregado', garantia, fecha_entrega, se_reparo: entregaForm.seReparo,
+    }).eq('id', modalEntrega.id);
+    const { data } = await supabase.from('repairs').select('*').order('id', { ascending: false });
+    setRepairs(data || []);
+    generateTicketEntrega({ ...modalEntrega, costo, entrega, saldo, garantia, fecha_entrega });
+    setModalEntrega(null);
+  };
+
+  // Anulación transaccional: conserva la venta y devuelve el stock una sola vez.
+  const anularVenta = async (venta: any) => {
+    if (eliminandoVentaId !== null || !user || venta.anulada) return;
+    if (!window.confirm(`¿Anular la venta ${venta.numero_venta} por $ ${Number(venta.total || 0).toLocaleString('es-UY')}?\n\nLa venta seguirá visible como ANULADA y los productos volverán al stock.`)) return;
+    setEliminandoVentaId(venta.id);
+    try {
+      const { error } = await supabase.rpc('anular_venta_y_reponer_stock', { p_venta_id: venta.id });
+      if (error) throw error;
+      const { data: ventasActualizadas, error: errorVentas } = await supabase.from('ventas').select('*').order('fecha', { ascending: false });
+      const { data: productosActualizados, error: errorProductos } = await supabase.from('productos').select('*').order('nombre');
+      if (errorVentas || errorProductos) throw errorVentas || errorProductos;
+      setVentasList(ventasActualizadas || []);
+      setProductos(productosActualizados || []);
+      alert(`Venta ${venta.numero_venta} anulada. Stock reintegrado.`);
+    } catch (error: any) {
+      alert('No se pudo completar o actualizar la anulación: ' + (error?.message || String(error)));
+    } finally {
+      setEliminandoVentaId(null);
+    }
+  };
+
+  const exportarReparacionesPDF = () => {
+    const nombre = config.nombre_negocio || 'Mi Taller';
+    const fecha = new Date().toLocaleDateString('es-UY');
+    const totalCobrado = repairs.reduce((acc: number, r: any) => acc + Number(r.entrega || 0), 0);
+    const filas = repairs.map((r: any) => `
+      <tr>
+        <td>${r.orden || '-'}</td>
+        <td>${r.fecha ? r.fecha.split(',')[0] : '-'}</td>
+        <td>${r.cliente || '-'}</td>
+        <td>${r.equipo || '-'}</td>
+        <td>${r.estado || '-'}</td>
+        <td>$ ${r.costo || 0}</td>
+      </tr>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reparaciones</title>
+      <style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px}h1{font-size:18px;margin:0 0 4px}.sub{color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#111;color:white;padding:6px 8px;text-align:left;font-size:10px}td{padding:5px 8px;border-bottom:1px solid #eee}tr:nth-child(even)td{background:#f9f9f9}.res{margin-top:16px;padding:10px;background:#f3f4f6;border-radius:6px;font-size:12px}@media print{@page{margin:15mm}}</style>
+      </head><body>
+      <h1>${nombre}</h1><div class="sub">Reparaciones exportadas — ${fecha}</div>
+      <table><thead><tr><th>Orden</th><th>Fecha</th><th>Cliente</th><th>Equipo</th><th>Estado</th><th>Costo</th></tr></thead>
+      <tbody>${filas}</tbody></table>
+      <div class="res"><strong>Total:</strong> ${repairs.length} reparaciones &nbsp;|&nbsp; <strong>Cobrado:</strong> $ ${totalCobrado}</div>
+      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}</script>
+      </body></html>`;
+    const v = window.open('', '_blank', 'width=900,height=700');
+    if (v) { v.document.write(html); v.document.close(); }
+  };
+
+  const exportarClientesPDF = () => {
+    const nombre = config.nombre_negocio || 'Mi Taller';
+    const fecha = new Date().toLocaleDateString('es-UY');
+    const clientesMap: any = {};
+    repairs.forEach((r: any) => {
+      const key = `${r.cliente}||${r.telefono || ''}`;
+      if (!clientesMap[key]) clientesMap[key] = { cliente: r.cliente, telefono: r.telefono, cantidad: 0, total: 0 };
+      clientesMap[key].cantidad += 1;
+      clientesMap[key].total += Number(r.costo || 0);
+    });
+    const clientes = Object.values(clientesMap);
+    const filas = clientes.map((c: any) => `
+      <tr>
+        <td>${c.cliente || '-'}</td>
+        <td>${(c.telefono || '').replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+        <td>${c.cantidad}</td>
+        <td>$ ${c.total}</td>
+      </tr>`).join('');
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Clientes</title>
+      <style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px}h1{font-size:18px;margin:0 0 4px}.sub{color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#111;color:white;padding:6px 8px;text-align:left;font-size:10px}td{padding:5px 8px;border-bottom:1px solid #eee}tr:nth-child(even)td{background:#f9f9f9}.res{margin-top:16px;padding:10px;background:#f3f4f6;border-radius:6px;font-size:12px}@media print{@page{margin:15mm}}</style>
+      </head><body>
+      <h1>${nombre}</h1><div class="sub">Directorio de clientes — ${fecha}</div>
+      <table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Reparaciones</th><th>Total</th></tr></thead>
+      <tbody>${filas}</tbody></table>
+      <div class="res"><strong>Total clientes:</strong> ${clientes.length}</div>
+      <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}}</script>
+      </body></html>`;
+    const v = window.open('', '_blank', 'width=900,height=700');
+    if (v) { v.document.write(html); v.document.close(); }
+  };
+
+  // Solo usar el dominio personalizado cuando haya sido configurado y habilitado.
+  // El dominio debe apuntar a un despliegue que atienda /seguimiento/[token].
+  const obtenerBaseSeguimiento = () => {
+    const dominio = String(config.dominio_seguimiento || '').trim();
+    if (!config.dominio_seguimiento_activo || !dominio) return window.location.origin;
+    try {
+      const url = new URL(/^https?:\/\//i.test(dominio) ? dominio : `https://${dominio}`);
+      if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || url.search || url.hash || url.pathname !== '/') return window.location.origin;
+      return url.origin;
+    } catch { return window.location.origin; }
+  };
+
+  const guardarConfig = async () => {
+    const dominio = String(config.dominio_seguimiento || '').trim();
+    if (dominio) {
+      try {
+        const u = new URL(/^https?:\/\//i.test(dominio) ? dominio : `https://${dominio}`);
+        if (u.protocol !== 'https:' || !u.hostname || u.pathname !== '/' || u.search || u.hash || u.username || u.password) throw new Error();
+      } catch { alert('Ingresá un dominio válido, por ejemplo https://www.megabyte.uy (sin rutas adicionales).'); return; }
+    }
+    if (config.dominio_seguimiento_activo && !dominio) { alert('Ingresá un dominio antes de activarlo.'); return; }
+    setConfigGuardando(true);
+    const { data: existing } = await supabase
+      .from('configuracion').select('id').eq('user_id', user.id).single();
+    let errorGuardado: any = null;
+    if (existing) {
+      const { error } = await supabase.from('configuracion').update({
+        nombre_negocio: config.nombre_negocio,
+        direccion: config.direccion,
+        telefono: config.telefono,
+        logo_url: config.logo_url,
+        logo_seguimiento_url: config.logo_seguimiento_url || null,
+        dominio_seguimiento: dominio,
+        dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
+        msg_en_diagnostico: config.msg_en_diagnostico,
+        msg_en_reparacion: config.msg_en_reparacion,
+        msg_reparado: config.msg_reparado,
+        msg_entregado: config.msg_entregado,
+        switch_en_diagnostico: config.switch_en_diagnostico,
+        switch_en_reparacion: config.switch_en_reparacion,
+        switch_reparado: config.switch_reparado,
+        switch_entregado: config.switch_entregado,
+      }).eq('user_id', user.id);
+      errorGuardado = error;
+    } else {
+      const { error } = await supabase.from('configuracion').insert({
+        user_id: user.id,
+        nombre_negocio: config.nombre_negocio,
+        direccion: config.direccion,
+        telefono: config.telefono,
+        logo_url: config.logo_url,
+        logo_seguimiento_url: config.logo_seguimiento_url || null,
+        dominio_seguimiento: dominio,
+        dominio_seguimiento_activo: !!config.dominio_seguimiento_activo,
+        msg_en_diagnostico: config.msg_en_diagnostico,
+        msg_en_reparacion: config.msg_en_reparacion,
+        msg_reparado: config.msg_reparado,
+        msg_entregado: config.msg_entregado,
+        switch_en_diagnostico: config.switch_en_diagnostico,
+        switch_en_reparacion: config.switch_en_reparacion,
+        switch_reparado: config.switch_reparado,
+        switch_entregado: config.switch_entregado,
+      });
+      errorGuardado = error;
+    }
+    setConfigGuardando(false);
+    if (errorGuardado) { alert('No se pudo guardar la configuración: ' + errorGuardado.message); return; }
+    alert('Configuración guardada!');
+  };
+
+  const subirLogo = async (file: File) => {
+    const ext = file.name.split('.').pop();
+    const nombre = `logo-${user.id}.${ext}`;
+    const { error } = await supabase.storage.from('logos').upload(nombre, file, { upsert: true });
+    if (error) { alert('Error al subir logo: ' + error.message); return; }
+    const { data } = supabase.storage.from('logos').getPublicUrl(nombre);
+    setConfig({ ...config, logo_url: data.publicUrl });
+  };
+
+  const subirLogoSeguimiento = async (file: File) => {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      alert('Usá una imagen PNG, JPG o WebP.'); return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen debe pesar menos de 5 MB.'); return;
+    }
+    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    // Nombre distinto para no sobrescribir el logo térmico; URL nueva para evitar caché de WhatsApp.
+    const nombre = `seguimiento-${user.id}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('logos').upload(nombre, file, { upsert: false, contentType: file.type });
+    if (error) { alert('Error al subir el logo de seguimiento: ' + error.message); return; }
+    const { data } = supabase.storage.from('logos').getPublicUrl(nombre);
+    setConfig((prev: any) => ({ ...prev, logo_seguimiento_url: data.publicUrl }));
+  };
+
+  const toggleTheme = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    localStorage.setItem('megabyte_theme', next ? 'dark' : 'light');
+  };
+
+  // Clases dinámicas según tema
+  const t = darkMode ? {
+    bg: 'bg-[#050809]', sidebar: 'bg-[#111920] border-[#253641]', card: 'bg-[#111920] border-[#253641]',
+    input: 'bg-[#17232d] border-[#293946] text-white placeholder-[#60717e] focus:border-[#00c347]',
+    text: 'text-white', subtext: 'text-white', muted: 'text-white',
+    row: 'border-[#253641] hover:bg-[#1b2832]/40', navHover: 'hover:text-white hover:bg-[#1b2832]',
+    navActive: 'bg-[#00c347]/10 text-[#00d957]', divider: 'border-[#253641]',
+    modal: 'bg-[#111920] border-[#253641]', menuBg: 'bg-[#17232d] border-[#293946]',
+    menuItem: 'hover:bg-[#253641]', badge: 'bg-[#17232d]', select: 'bg-[#17232d] border-[#293946] text-white',
+    tableHead: 'text-white',
+  } : {
+    bg: 'bg-slate-100', sidebar: 'bg-white border-slate-200', card: 'bg-white border-slate-200',
+    input: 'bg-slate-50 border-slate-200 text-gray-900 placeholder-slate-400 focus:border-[#00c347]',
+    text: 'text-gray-900', subtext: 'text-slate-400', muted: 'text-slate-500',
+    row: 'border-slate-100 hover:bg-slate-50', navHover: 'hover:text-gray-900 hover:bg-slate-100',
+    navActive: 'bg-[#00c347]/10 text-green-600', divider: 'border-slate-200',
+    modal: 'bg-white border-slate-200', menuBg: 'bg-white border-slate-200',
+    menuItem: 'hover:bg-slate-100', badge: 'bg-slate-100', select: 'bg-slate-50 border-slate-200 text-gray-900',
+    tableHead: 'text-slate-400',
+  };
+
+  // ── TICKET HTML para impresora térmica 80mm ──────────────────────────────
+  const generatePDF = (repair: any) => {
+    const nombre = config.nombre_negocio || 'MegaByte';
+    // Token público aleatorio, distinto del número de orden.
+    // Se genera automáticamente en Supabase para reparaciones nuevas y existentes.
+    if (!repair.seguimiento_token) {
+      alert('Esta orden todavía no tiene un enlace de seguimiento. Ejecutá primero la migración SQL y recargá MegaTallerPro.');
+      return;
+    }
+    const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Ticket ${repair.orden}</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            width: 72mm;
+            padding: 0 4mm;
+            color: #000;
+          }
+          .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
+          .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
+          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+          .label { font-weight: bold; }
+          .bloque { margin-bottom: 3px; }
+          .cabecera-orden { display:flex; justify-content:space-between; align-items:end; margin: 3px 0 4px; gap:4px; }
+          .tipo-ticket { font-size: 11px; font-weight: bold; letter-spacing: .2px; }
+          .fecha-orden { font-size:10px; text-align:right; white-space:nowrap; padding-bottom:2px; }
+          .numero-orden { font-size: 20px; font-weight: 900; letter-spacing: 1px; line-height: 1.1; }
+          .seccion { font-size: 12px; font-weight: bold; margin-bottom: 3px; }
+          .fila span:last-child { text-align: right; overflow-wrap: anywhere; max-width: 67%; }
+          .fila-destacada { border-top: 1px dotted #000; padding-top: 3px; margin-top: 2px; }
+          .linea-suave { border-top: 1px dashed #000; margin: 4px 0; }
+          .seguimiento { display:flex; align-items:center; justify-content:flex-start; gap:7px; margin:4px 0; page-break-inside:avoid; }
+          .seguimiento-texto { max-width:37mm; font-size:11px; font-weight:bold; line-height:1.2; }
+          #qr-seguimiento { width:15mm; height:15mm; flex-shrink:0; }
+          #qr-seguimiento img, #qr-seguimiento canvas { width:15mm !important; height:15mm !important; display:block; }
+          .legal { font-size: 10px; text-align: left; margin-top: 4px; line-height: 1.4; }
+          .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
+          @media print {
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm auto; }
+          }
+        </style>
+      </head>
+      <body>
+        ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
+        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ''}
+        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ''}
+        <div class="linea-suave"></div>
+        <div class="cabecera-orden">
+          <div><div class="tipo-ticket">ORDEN DE REPARACIÓN</div><div class="numero-orden">${repair.orden}</div></div>
+          <div class="fecha-orden">Fecha: ${repair.fecha || '-'}</div>
+        </div>
+        <div class="linea-suave"></div>
+        <div class="bloque">
+          <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
+          <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="seccion">Falla:</div>
+          <div style="margin-top:2px">${repair.falla}</div>
+        </div>
+
+        ${repair.trabajo ? `
+        <div class="linea"></div>
+        <div class="bloque">
+          <div class="seccion">Trabajo realizado:</div>
+          <div style="margin-top:2px">${repair.trabajo}</div>
+        </div>` : ''}
+
+        <div class="linea"></div>
+        <div class="bloque">
+          <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
+          <div class="fila"><span class="label">Entrega:</span><span>$ ${repair.entrega || 0}</span></div>
+          <div class="fila label fila-destacada"><span>Saldo:</span><span>$ ${repair.saldo || 0}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Estado:</span><span>${repair.estado}</span></div>
+          
+        </div>
+        <div class="linea"></div>
+
+        <div class="seguimiento" id="bloque-seguimiento">
+          <div id="qr-seguimiento"></div>
+          <div class="seguimiento-texto">ESCANEÁ ESTE QR PARA VER EL ESTADO DE TU REPARACIÓN</div>
+        </div>
+        <div class="footer">Gracias por confiar en ${nombre}</div>
+        <div class="footer">Conserve este comprobante</div>
+        <div class="linea"></div>
+        <div class="legal">Pasados los 90 dias la empresa no se responsabiliza por los equipos y se tomaran como abandono, pudiendo disponer de los mismos como forma de pago por el servicio brindado.</div>
+
+        <script>
+          window.onload = async function() {
+            window.addEventListener('afterprint', function() {
+              setTimeout(function() { window.close(); }, 150);
+            }, { once: true });
+            try {
+              if (!window.QRCode) throw new Error('No se cargó el generador QR');
+              new window.QRCode(document.getElementById('qr-seguimiento'), {
+                text: ${JSON.stringify(seguimientoUrl)}, width: 180, height: 180,
+                colorDark: '#000000', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.M
+              });
+            } catch (error) {
+              console.error('Error generando QR:', error);
+              document.getElementById('bloque-seguimiento').innerHTML = '<div style="font-size:10px">No se pudo generar el QR. Reintentá la impresión.</div>'; 
+            }
+            // Esperar a que el logo y el QR estén listos antes de imprimir.
+            await Promise.all(Array.from(document.images).map(function(img) {
+              return img.complete ? Promise.resolve() : new Promise(function(resolve) {
+                img.onload = resolve; img.onerror = resolve;
+              });
+            }));
+            window.focus();
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
+  // ── TICKET INTERNO 80x45mm ────────────────────────────────────────────────
+  const generateTicketInterno = (repair: any) => {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Interno ${repair.orden}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            width: 72mm;
+            padding: 2mm 4mm;
+            color: #000;
+          }
+          .linea { border-top: 1.5px solid #000; margin: 4px 0; }
+          .orden { font-size: 26px; font-weight: 900; text-align: center; letter-spacing: 2px; margin: 4px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 12px; }
+          .label { font-weight: bold; }
+          .falla-label { font-weight: bold; font-size: 11px; margin-bottom: 2px; }
+          .orden-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
+          .orden-num { font-size: 26px; font-weight: 900; letter-spacing: 2px; }
+          @media print {
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm auto; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="linea"></div>
+        <div class="orden">${repair.orden}</div>
+        <div class="linea"></div>
+        <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
+        <div class="fila"><span class="label">Tel:</span><span>${repair.telefono || '-'}</span></div>
+        <div class="linea"></div>
+        <div class="falla-label">Falla:</div>
+        <div style="font-size:11px">${repair.falla}</div>
+        <div class="linea"></div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.addEventListener('afterprint', function() {
+                setTimeout(function() { window.close(); }, 150);
+              }, { once: true });
+              window.focus();
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    const ventana = window.open('', '_blank', 'width=380,height=400');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
+  // ── TICKET ENTREGA 80mm ──────────────────────────────────────────────────
+  const generateTicketEntrega = (repair: any) => {
+    const nombre = config.nombre_negocio || 'MegaByte';
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Entrega ${repair.orden}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            width: 72mm;
+            padding: 3mm 4mm;
+            color: #000;
+            position: relative;
+          }
+          .titulo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 2px; letter-spacing: 1px; }
+          .subtitulo { font-size: 11px; text-align: center; margin-bottom: 1px; }
+          .linea { border-top: 1.5px solid #000; margin: 5px 0; }
+          .fila { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+          .label { font-weight: bold; }
+          .bloque { margin-bottom: 3px; }
+          .footer { text-align: center; font-size: 11px; margin-top: 3px; font-weight: bold; }
+          .sello {
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            padding: 4px 0;
+            margin-top: 4px;
+          }
+          @media print {
+            body { width: 72mm; }
+            @page { margin: 0; size: 80mm auto; }
+          }
+        </style>
+      </head>
+      <body>
+        
+        ${config.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>` : `<div class="titulo">${nombre}</div>`}
+        ${config.direccion ? `<div class="subtitulo">${config.direccion}</div>` : ""}
+        ${config.telefono ? `<div class="subtitulo">Tel: ${config.telefono}</div>` : ""}
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Orden:</span><span>${repair.orden}</span></div>
+          <div class="fila"><span class="label">Cliente:</span><span>${repair.cliente}</span></div>
+          <div class="fila"><span class="label">Equipo:</span><span>${repair.equipo}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Costo total:</span><span>$ ${repair.costo || 0}</span></div>
+        </div>
+        <div class="linea"></div>
+
+        <div class="bloque">
+          <div class="fila"><span class="label">Entrega:</span><span>${repair.fecha_entrega || repair.fecha}</span></div>
+          ${repair.garantia ? `<div class="fila"><span class="label">Garantía:</span><span>${repair.garantia}</span></div>` : ''}
+        </div>
+        <div class="linea"></div>
+
+        <div class="sello">ENTREGADO</div>
+        <div class="footer">Gracias por confiar en ${nombre}</div>
+
+        <script>
+          window.onload = function() {
+            window.addEventListener('afterprint', function() {
+              setTimeout(function() { window.close(); }, 150);
+            }, { once: true });
+            window.focus();
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    if (ventana) { ventana.document.write(html); ventana.document.close(); }
+  };
+
+  // Presupuestos: lectura periódica para mostrar respuestas sin recargar.
+  useEffect(() => {
+    if (!user) { presupuestoInicializado.current = false; presupuestoEstados.current = {}; return; }
+    let activo = true;
+    const consultar = async () => {
+      const { data, error } = await supabase.from('repairs')
+        .select('id,presupuesto_estado,presupuesto_respondido_en,presupuesto_importe,presupuesto_detalle,presupuesto_publicado');
+      if (!activo || error || !data) return;
+      const anteriores = presupuestoEstados.current;
+      const nuevos: Record<string,string> = {};
+      for (const r of data) {
+        const estado = String(r.presupuesto_estado || '');
+        nuevos[String(r.id)] = estado;
+        if (presupuestoInicializado.current && (estado === 'aprobado' || estado === 'rechazado') && anteriores[String(r.id)] && anteriores[String(r.id)] !== estado) {
+          const orden = repairs.find(x => x.id === r.id);
+          setPresupuestoAviso(`${orden?.cliente || 'Un cliente'} ${estado === 'aprobado' ? 'aprobó' : 'rechazó'} el presupuesto de la orden ${orden?.orden || r.id}`);
+          try {
+            const audio = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const osc = audio.createOscillator(); const gain = audio.createGain();
+            osc.connect(gain); gain.connect(audio.destination); osc.frequency.value = 740;
+            gain.gain.value = 0.05; osc.start(); osc.stop(audio.currentTime + 0.16);
+            osc.onended = () => { void audio.close(); };
+          } catch { /* Navegador puede bloquear sonido hasta que se interactúe. */ }
+        }
+      }
+      presupuestoEstados.current = nuevos;
+      presupuestoInicializado.current = true;
+      setRepairs(prev => prev.map(r => {
+        const actualizado = data.find(x => x.id === r.id);
+        return actualizado ? { ...r, ...actualizado } : r;
+      }));
+    };
+    void consultar();
+    const intervalo = window.setInterval(() => { void consultar(); }, 15000);
+    return () => { activo = false; window.clearInterval(intervalo); };
+  }, [user?.id]);
+
+  const primerNombreWhatsApp = (nombre: unknown) => String(nombre || '').trim().split(/\s+/)[0] || '';
+
+  const guardarPresupuesto = async () => {
+    if (!presupuestoEditor || !user) return;
+    const importe = Number(presupuestoImporte);
+    if (!Number.isFinite(importe) || importe <= 0) { alert('Ingresá un importe válido mayor que cero.'); return; }
+    if (!presupuestoDetalle.trim()) { alert('Ingresá el detalle del presupuesto.'); return; }
+    if (!presupuestoEditor.seguimiento_token) {
+      alert('Esta reparación no tiene enlace de seguimiento QR. Recargá la aplicación y verificá el token antes de publicar.');
+      return;
+    }
+
+    // Abrir la pestaña desde el clic del usuario evita el bloqueo de ventanas
+    // emergentes al finalizar la operación asíncrona de Supabase.
+    const telefonoCrudo = String(presupuestoEditor.telefono || '').replace(/\D/g, '');
+    const telefono = telefonoCrudo.startsWith('598')
+      ? telefonoCrudo
+      : telefonoCrudo ? `598${telefonoCrudo.replace(/^0/, '')}` : '';
+    const ventanaWhatsApp = telefono ? window.open('about:blank', '_blank') : null;
+    if (ventanaWhatsApp) {
+      ventanaWhatsApp.document.title = 'Preparando aviso de presupuesto';
+      ventanaWhatsApp.document.body.textContent = 'Publicando presupuesto y preparando WhatsApp…';
+    }
+
+    const { data, error } = await supabase.from('repairs').update({
+      presupuesto_importe: importe, presupuesto_detalle: presupuestoDetalle.trim(),
+      presupuesto_publicado: true, presupuesto_estado: 'pendiente', presupuesto_respondido_en: null,
+    }).eq('id', presupuestoEditor.id).eq('user_id', user.id).select().single();
+    if (error) {
+      ventanaWhatsApp?.close();
+      alert('No se pudo publicar: ' + error.message);
+      return;
+    }
+    setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
+    setPresupuestoEditor(null);
+
+    const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(data.seguimiento_token || presupuestoEditor.seguimiento_token)}`;
+    const nombreNegocio = String(config.nombre_negocio || 'MegaByte');
+    const mensaje = `Hola ${primerNombreWhatsApp(data.cliente || presupuestoEditor.cliente)} 👋\n\n🔧 El presupuesto para tu equipo ya está disponible.\n\n💰 Importe: $ ${importe.toLocaleString('es-UY')}\n\n📋 Consultá todos los detalles en el siguiente enlace:\n🔗 ${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
+    if (!telefono) {
+      alert('Presupuesto publicado correctamente. Esta reparación no tiene teléfono: compartí el enlace de seguimiento con el cliente para que pueda aprobar o rechazar.\n\n' + seguimientoUrl);
+      return;
+    }
+    const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefono}&text=${encodeURIComponent(mensaje)}`;
+    if (ventanaWhatsApp && !ventanaWhatsApp.closed) {
+      ventanaWhatsApp.location.replace(urlWhatsApp);
+    } else {
+      // Alternativa cuando el navegador bloquea la nueva pestaña.
+      if (window.confirm('Presupuesto publicado. El navegador bloqueó WhatsApp. ¿Abrirlo ahora en esta pestaña?')) {
+        window.location.assign(urlWhatsApp);
+      }
+    }
+  };
+  // Registrar una respuesta recibida por WhatsApp, sin modificar la vía QR.
+  const responderPresupuestoManual = async (repair: any, decision: 'aprobado' | 'rechazado') => {
+    if (!user || !repair?.presupuesto_publicado || repair.presupuesto_estado !== 'pendiente') return;
+    const importe = Number(repair.presupuesto_importe);
+    if (decision === 'aprobado' && (!Number.isFinite(importe) || importe <= 0)) {
+      alert('El presupuesto no tiene un importe válido.'); return;
+    }
+    if (!window.confirm(`¿Registrar como ${decision === 'aprobado' ? 'APROBADO' : 'RECHAZADO'} el presupuesto de ${repair.cliente} (${repair.orden}) confirmado por WhatsApp?${decision === 'aprobado' ? `\n\nSe actualizará el costo a $ ${importe.toLocaleString('es-UY')} y se recalculará el saldo.` : ''}`)) return;
+
+    // Consultar la entrega actual para no sobrescribir anticipos posteriores.
+    const { data: actual, error: lecturaError } = await supabase.from('repairs')
+      .select('id,entrega,presupuesto_estado,presupuesto_publicado,presupuesto_importe')
+      .eq('id', repair.id).eq('user_id', user.id).single();
+    if (lecturaError || !actual) { alert('No se pudo consultar el presupuesto.'); return; }
+    if (!actual.presupuesto_publicado || actual.presupuesto_estado !== 'pendiente') {
+      alert('Este presupuesto ya fue respondido o dejó de estar disponible.');
+      setPresupuestoEditor(null); return;
+    }
+    const importeActual = Number(actual.presupuesto_importe);
+    if (decision === 'aprobado' && (!Number.isFinite(importeActual) || importeActual <= 0)) {
+      alert('El presupuesto no tiene un importe válido.'); return;
+    }
+    const entrega = Number(actual.entrega || 0);
+    const cambios: any = {
+      presupuesto_estado: decision,
+      presupuesto_respondido_en: new Date().toISOString(),
+    };
+    if (decision === 'aprobado') {
+      cambios.costo = importeActual;
+      cambios.saldo = importeActual - entrega;
+    }
+    const { data, error } = await supabase.from('repairs').update(cambios)
+      .eq('id', repair.id).eq('user_id', user.id)
+      .eq('presupuesto_publicado', true).eq('presupuesto_estado', 'pendiente')
+      .select().maybeSingle();
+    if (error) { alert('No se pudo registrar la respuesta: ' + error.message); return; }
+    if (!data) { alert('El presupuesto ya fue respondido. Recargá para ver el estado actual.'); setPresupuestoEditor(null); return; }
+    setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
+    presupuestoEstados.current[String(data.id)] = decision;
+    setPresupuestoEditor(null);
+    alert(`Presupuesto ${decision} manualmente. La respuesta también se verá desde el QR.`);
+  };
+
+  const ocultarPresupuesto = async (repair: any) => {
+    if (!confirm('¿Ocultar el presupuesto de la página QR? Se conservará su respuesta registrada.')) return;
+    const { data, error } = await supabase.from('repairs').update({ presupuesto_publicado: false })
+      .eq('id', repair.id).eq('user_id', user.id).select().single();
+    if (error) { alert(error.message); return; }
+    setRepairs(prev => prev.map(r => r.id === data.id ? { ...r, ...data } : r));
+    setOpenMenu(null);
+  };
+
+  // ── CRUD ──────────────────────────────────────────────────────────────────
+  const addRepair = async () => {
+    if (!form.cliente) { alert('Falta cliente'); return; }
+    if (guardandoOrden) return;
+    setGuardandoOrden(true);
+    const costo = Number(form.costo || 0);
+    const entrega = Number(form.entrega || 0);
+    const saldo = costo - entrega;
+
+    if (editingRepair) {
+      const { error } = await supabase.from('repairs').update({
+        cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
+        falla: form.falla, telefono: form.telefono,
+        contrasena: form.contrasena, trabajo: form.trabajo,
+        costo, entrega, saldo, comentario_publico: form.comentario_publico.trim(),
+      }).eq('id', editingRepair.id);
+
+      if (error) { alert('No se pudieron guardar los cambios: ' + error.message); setGuardandoOrden(false); return; }
+      if (!error) {
+        setRepairs(repairs.map((r) => r.id === editingRepair.id
+          ? { ...r, cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`, falla: form.falla, telefono: form.telefono, contrasena: form.contrasena, trabajo: form.trabajo, costo, entrega, saldo, comentario_publico: form.comentario_publico.trim() }
+          : r));
+      }
+    } else {
+      const numerosExistentes = repairs
+        .map((r: any) => parseInt((r.orden || '').replace('#', ''), 10))
+        .filter((n: number) => !isNaN(n));
+      const numeroOrden = numerosExistentes.length > 0 ? Math.max(...numerosExistentes) + 1 : 1;
+      const nuevoRepair = {
+        orden: `#${numeroOrden.toString().padStart(4, '0')}`,
+        cliente: form.cliente, equipo: `${form.tipo} - ${form.modelo}`,
+        falla: form.falla, telefono: form.telefono,
+        contrasena: form.contrasena, trabajo: form.trabajo,
+        costo, entrega, saldo, estado: 'Pendiente', comentario_publico: form.comentario_publico.trim(),
+        user_id: user.id,
+        garantia: form.garantia === 'otro' ? form.garantiaCustom : form.garantia,
+        fecha: new Date().toLocaleString('es-UY', {
+          hour12: false, day: '2-digit', month: '2-digit',
+          year: 'numeric', hour: '2-digit', minute: '2-digit',
+        }),
+      };
+      const { data, error } = await supabase.from('repairs').insert([nuevoRepair]).select();
+      if (error) { console.error(error); alert(error.message); setGuardandoOrden(false); return; }
+      if (data) setRepairs([data[0], ...repairs]);
+
+      // Guardar/actualizar cliente en tabla persistente
+      const { data: clienteData, error: clienteError } = await supabase
+        .from('clientes')
+        .upsert(
+          { user_id: user.id, cliente: form.cliente, telefono: form.telefono || null },
+          { onConflict: 'user_id,cliente' }
+        )
+        .select();
+      if (!clienteError && clienteData && clienteData[0]) {
+        const yaExiste = clientes.some((c: any) => c.id === clienteData[0].id);
+        setClientes(yaExiste
+          ? clientes.map((c: any) => c.id === clienteData[0].id ? clienteData[0] : c)
+          : [clienteData[0], ...clientes]);
+      }
+    }
+
+    setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '', comentario_publico: '' });
+    setEditingRepair(null);
+    setShowModal(false);
+    setGuardandoOrden(false);
+  };
+
+  const deleteRepair = async (id: number) => {
+    if (!confirm('¿Eliminar esta orden?')) return;
+    const { error } = await supabase.from('repairs').delete().eq('id', id);
+    if (!error) setRepairs(repairs.filter((r) => r.id !== id));
+  };
+
+  const editRepair = (repair: any) => {
+    const partes = repair.equipo.split(' - ');
+    setForm({
+      cliente: repair.cliente || '', tipo: partes[0] || '', modelo: partes[1] || '',
+      falla: repair.falla || '', telefono: repair.telefono || '',
+      contrasena: repair.contrasena || '', trabajo: repair.trabajo || '',
+      garantia: repair.garantia || '', garantiaCustom: '', comentario_publico: repair.comentario_publico || '',
+      costo: String(repair.costo || ''), entrega: String(repair.entrega || ''), saldo: String(repair.saldo || ''),
+    });
+    setEditingRepair(repair);
+    setShowModal(true);
+  };
+
+  // ── Teclado calculadora ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (section !== 'calculadora') return;
+    const handleKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); document.querySelector<HTMLButtonElement>(`button[data-calc="num:${e.key}"]`)?.click(); }
+      else if (e.key === '+') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:+"]')?.click(); }
+      else if (e.key === '-') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:-"]')?.click(); }
+      else if (e.key === '*') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:*"]')?.click(); }
+      else if (e.key === '/') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="op:/"]')?.click(); }
+      else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="equals"]')?.click(); }
+      else if (e.key === 'Backspace') {
+        e.preventDefault();
+        const cv = calcValRef.current;
+        const nv = cv.length > 1 ? cv.slice(0, -1) : '0';
+        calcValRef.current = nv;
+        setCalcVal(nv);
+        setCalcDisplay(nv === '0' ? '0' : parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
+      }
+      else if (e.key === '.') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="dot"]')?.click(); }
+      else if (e.key === '%') { e.preventDefault(); document.querySelector<HTMLButtonElement>('button[data-calc="percent"]')?.click(); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [section]);
+
+  // ── Gráficas de finanzas ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (section !== 'finanzas') return;
+    const loadCharts = () => {
+      if (typeof window === 'undefined') return;
+      const win = window as any;
+      const renderCharts = () => {
+        const Chart = win.Chart;
+        if (!Chart) return;
+        ['chartMeses','chartEstados','chartEquipos'].forEach(id => {
+          const existing = Chart.getChart(id);
+          if (existing) existing.destroy();
+        });
+        const isDark = document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        const tickColor = isDark ? '#888' : '#aaa';
+
+        const mesesLabelsL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const ing = Array(12).fill(0);
+        const cob = Array(12).fill(0);
+        repairs.forEach((r: any) => {
+          if (r.fecha) {
+            const parts = r.fecha.split('/');
+            const mes = parts.length === 3 ? parseInt(parts[1]) - 1 : new Date(r.fecha).getMonth();
+            if (mes >= 0 && mes < 12) {
+              ing[mes] += Number(r.costo || 0);
+              cob[mes] += Number(r.entrega || 0);
+            }
+          }
+        });
+        const mesesFiltrados = mesesLabelsL.map((l, i) => ({ label: l, facturado: ing[i], cobrado: cob[i] }))
+          .filter(m => m.facturado > 0 || m.cobrado > 0);
+
+        const estadosList = [
+          { label: 'Pendiente', count: repairs.filter((r: any) => r.estado === 'Pendiente').length, color: '#EF9F27' },
+          { label: 'En diagnóstico', count: repairs.filter((r: any) => r.estado === 'En diagnóstico').length, color: '#D69E31' },
+          { label: 'En diagnóstico', count: repairs.filter(r => r.estado === 'En diagnóstico').length, color: '#D69E31' },
+    { label: 'En reparación', count: repairs.filter((r: any) => r.estado === 'En reparación').length, color: '#378ADD' },
+          { label: 'Reparado', count: repairs.filter((r: any) => r.estado === 'Reparado').length, color: '#639922' },
+          { label: 'Entregado', count: repairs.filter((r: any) => r.estado === 'Entregado').length, color: '#888780' },
+        ].filter(e => e.count > 0);
+
+        const eqCount: any = {};
+        repairs.forEach((r: any) => { eqCount[r.equipo] = (eqCount[r.equipo] || 0) + 1; });
+        const equiposList = Object.entries(eqCount).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+
+        const c1 = document.getElementById('chartMeses');
+        if (c1) new Chart(c1, {
+          type: 'bar',
+          data: {
+            labels: mesesFiltrados.map((m: any) => m.label),
+            datasets: [
+              { label: 'Facturado', data: mesesFiltrados.map((m: any) => m.facturado), backgroundColor: '#378ADD', borderRadius: 4 },
+              { label: 'Cobrado', data: mesesFiltrados.map((m: any) => m.cobrado), backgroundColor: '#639922', borderRadius: 4 },
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false } },
+                      y: { ticks: { color: tickColor, font: { size: 11 }, callback: (v: any) => '$' + v }, grid: { color: gridColor }, border: { display: false } } } }
+        });
+
+        const c2 = document.getElementById('chartEstados');
+        if (c2) new Chart(c2, {
+          type: 'doughnut',
+          data: { labels: estadosList.map((e: any) => e.label), datasets: [{ data: estadosList.map((e: any) => e.count), backgroundColor: estadosList.map((e: any) => e.color), borderWidth: 0, hoverOffset: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+        });
+
+        const c3 = document.getElementById('chartEquipos');
+        if (c3) new Chart(c3, {
+          type: 'bar',
+          data: { labels: equiposList.map((e: any) => e[0]), datasets: [{ data: equiposList.map((e: any) => e[1]), backgroundColor: '#534AB7', borderRadius: 4 }] },
+          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false } },
+                      y: { ticks: { color: tickColor, font: { size: 11 } }, grid: { display: false }, border: { display: false } } } }
+        });
+      };
+
+      if (win.Chart) {
+        setTimeout(renderCharts, 50);
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+        script.onload = () => setTimeout(renderCharts, 50);
+        document.head.appendChild(script);
+      }
+    };
+    const timer = setTimeout(loadCharts, 100);
+    return () => clearTimeout(timer);
+  }, [section, repairs]);
+
+  // ── Gráfica de ventas por mes (Finanzas de Ventas) ──────────────────────────
+  useEffect(() => {
+    if (section !== 'ventas' || subVenta !== 'finanzas') return;
+    const loadChartVentas = () => {
+      if (typeof window === 'undefined') return;
+      const win = window as any;
+      const renderChartVentas = () => {
+        const Chart = win.Chart;
+        if (!Chart) return;
+        const existing = Chart.getChart('chartVentasMeses');
+        if (existing) existing.destroy();
+        const c = document.getElementById('chartVentasMeses');
+        if (!c) return;
+        const isDark = document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+        const tickColor = isDark ? '#888' : '#aaa';
+
+        const mesesLabelsV = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const totalesPorMes: { [key: string]: number } = {};
+        ventasList.filter((v: any) => !v.anulada).forEach((v: any) => {
+          const d = new Date(v.fecha);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          totalesPorMes[key] = (totalesPorMes[key] || 0) + Number(v.total || 0);
+        });
+        const clavesOrdenadas = Object.keys(totalesPorMes).sort();
+        const labelsFinal = clavesOrdenadas.map(k => {
+          const [anio, mes] = k.split('-').map(Number);
+          return `${mesesLabelsV[mes]} ${String(anio).slice(2)}`;
+        });
+        const datosFinal = clavesOrdenadas.map(k => totalesPorMes[k]);
+
+        new Chart(c, {
+          type: 'bar',
+          data: {
+            labels: labelsFinal,
+            datasets: [{ label: 'Vendido', data: datosFinal, backgroundColor: '#22c55e', borderRadius: 4 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: tickColor, font: { size: 11 } }, grid: { color: gridColor }, border: { display: false } },
+                      y: { ticks: { color: tickColor, font: { size: 11 }, callback: (v: any) => '$' + v }, grid: { color: gridColor }, border: { display: false } } } }
+        });
+      };
+
+      if (win.Chart) {
+        setTimeout(renderChartVentas, 50);
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+        script.onload = () => setTimeout(renderChartVentas, 50);
+        document.head.appendChild(script);
+      }
+    };
+    const timer = setTimeout(loadChartVentas, 100);
+    return () => clearTimeout(timer);
+  }, [section, subVenta, ventasList]);
+
+  // ── Estadísticas ──────────────────────────────────────────────────────────
+  const totalCobrado = repairs.reduce((acc, r) => acc + Number(r.entrega || 0), 0);
+  const totalPendiente = repairs.reduce((acc, r) => acc + Number(r.saldo || 0), 0);
+  const totalTrabajos = repairs.reduce((acc, r) => acc + Number(r.costo || 0), 0);
+  const promedio = repairs.length > 0 ? Math.round(totalTrabajos / repairs.length) : 0;
+
+  const equiposCount: any = {};
+  repairs.forEach((r) => { equiposCount[r.equipo] = (equiposCount[r.equipo] || 0) + 1; });
+  const equipoTop = Object.keys(equiposCount).sort((a, b) => equiposCount[b] - equiposCount[a])[0] || 'Sin datos';
+
+  const clientesCount: any = {};
+  repairs.forEach((r) => { clientesCount[r.cliente] = (clientesCount[r.cliente] || 0) + Number(r.costo || 0); });
+  const clienteVIP = Object.keys(clientesCount).sort((a, b) => clientesCount[b] - clientesCount[a])[0] || 'Sin datos';
+
+  // ── Datos para gráficas de finanzas ─────────────────────────────────────
+  const mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const ingresosPorMes = Array(12).fill(0);
+  const cobradoPorMes = Array(12).fill(0);
+  repairs.forEach((r) => {
+    if (r.fecha) {
+      const parts = r.fecha.split('/');
+      const mes = parts.length === 3 ? parseInt(parts[1]) - 1 : new Date(r.fecha).getMonth();
+      if (mes >= 0 && mes < 12) {
+        ingresosPorMes[mes] += Number(r.costo || 0);
+        cobradoPorMes[mes] += Number(r.entrega || 0);
+      }
+    }
+  });
+  const mesesConDatos = mesesLabels.map((l, i) => ({ label: l, facturado: ingresosPorMes[i], cobrado: cobradoPorMes[i] }))
+    .filter(m => m.facturado > 0 || m.cobrado > 0);
+  const estadosData = [
+    { label: 'Pendiente', count: repairs.filter(r => r.estado === 'Pendiente').length, color: '#EF9F27' },
+    { label: 'En reparación', count: repairs.filter(r => r.estado === 'En reparación').length, color: '#378ADD' },
+    { label: 'Reparado', count: repairs.filter(r => r.estado === 'Reparado').length, color: '#639922' },
+    { label: 'Entregado', count: repairs.filter(r => r.estado === 'Entregado').length, color: '#888780' },
+  ].filter(e => e.count > 0);
+  const equiposData = Object.entries(equiposCount)
+    .sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+
+  const getNivelCliente = (cantidad: number) => {
+    if (cantidad >= 5) return { texto: 'VIP ⭐', color: 'text-yellow-400' };
+    if (cantidad >= 3) return { texto: 'Frecuente', color: 'text-blue-400' };
+    return { texto: 'Normal', color: 'text-white' };
+  };
+
+  const estadoColor: any = {
+    'Pendiente': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+    'En diagnóstico': 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+    'En reparación': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+    'Reparado': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+    'Entregado': 'bg-[#00c347]/20 text-[#00d957] border border-[#00c347]/30',
+  };
+
+  const estadoSelectColor: any = darkMode ? {
+    'En diagnóstico': 'bg-amber-500/20 text-amber-400',
+    'Pendiente': 'bg-yellow-500/20 text-yellow-400',
+    'En reparación': 'bg-blue-500/20 text-blue-400',
+    'Reparado': 'bg-purple-500/20 text-purple-400',
+    'Entregado': 'bg-[#00c347]/20 text-[#00d957]',
+  } : {
+    'En diagnóstico': 'bg-amber-100 text-amber-800',
+    'Pendiente': 'bg-amber-100 text-amber-800',
+    'En reparación': 'bg-blue-100 text-blue-800',
+    'Reparado': 'bg-purple-100 text-purple-800',
+    'Entregado': 'bg-green-100 text-green-800',
+  };
+
+  // ── Login screen ──────────────────────────────────────────────────────────
+  // ── Verificar acceso por suscripcion ────────────────────────────────────
+  if (user && accesoVerificado && !config.is_admin && suscripcionActual) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const vencimiento = suscripcionActual.fecha_vencimiento ? new Date(suscripcionActual.fecha_vencimiento) : null;
+    const vencido = vencimiento ? vencimiento < hoy : false;
+    const inactivo = suscripcionActual.estado === 'inactivo';
+    const esTrial = suscripcionActual.estado === 'trial';
+    const diasRestantes = vencimiento ? Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+    if (inactivo || (esTrial && vencido) || (suscripcionActual.estado === 'activo' && vencido)) {
+      return (
+        <div className="min-h-screen bg-[#050809] flex items-center justify-center p-6">
+          <div className="w-full max-w-sm text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/20 mb-6">
+              <span className="text-3xl">🔒</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Acceso bloqueado</h1>
+            <p className="text-white text-sm mb-2">
+              {inactivo ? 'Tu cuenta está inactiva.' : 'Tu período de prueba ha vencido.'}
+            </p>
+            <p className="text-white text-xs mb-6">Elegí un plan para continuar usando MegaTallerPro.</p>
+            <div className="flex flex-col gap-3 mb-4">
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/b2721abc-1fff-4b32-a8a4-aecf84944aa7"
+                target="_blank"
+                className="w-full border border-[#293946] hover:border-[#00c347] text-white font-bold py-3 rounded-xl transition-colors text-sm text-center">
+                Plan Basic — $15/mes
+              </a>
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
+                target="_blank"
+                className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-3 rounded-xl transition-colors text-sm text-center">
+                Plan Pro — $22/mes ⭐
+              </a>
+            </div>
+            <button onClick={handleLogout}
+              className="w-full bg-[#17232d] hover:bg-[#253641] text-white py-2.5 rounded-xl transition-colors text-xs">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  if (showNuevaPassword) {
+    return (
+      <div className="min-h-screen bg-[#050809] flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+              <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-20 w-auto object-contain" />
+            </div>
+          </div>
+          <div className="bg-[#111920] border border-[#253641] rounded-2xl p-8 flex flex-col gap-4">
+            <h2 className="text-white font-bold text-lg">Nueva contraseña</h2>
+            <div>
+              <label className="text-xs text-white font-medium mb-1 block">Nueva contraseña</label>
+              <input type="password" placeholder="Mínimo 6 caracteres" value={nuevaPassword}
+                onChange={e => setNuevaPassword(e.target.value)}
+                className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-white font-medium mb-1 block">Confirmar contraseña</label>
+              <input type="password" placeholder="Repetí la contraseña" value={nuevaPasswordConfirm}
+                onChange={e => setNuevaPasswordConfirm(e.target.value)}
+                className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+            </div>
+            <button onClick={handleNuevaPassword}
+              className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+              Guardar contraseña
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user && showLanding) {
+    return (
+      <div className="min-h-screen bg-[#050809] text-white overflow-y-auto">
+        {/* Header */}
+        <div className="border-b border-[#253641] px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-16 w-auto object-contain" />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
+              className="text-white hover:text-white text-sm px-4 py-2 transition-colors">
+              Iniciar sesión
+            </button>
+            <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
+              className="bg-[#00c347] hover:bg-[#00d957] text-black text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+              Registrarse
+            </button>
+          </div>
+        </div>
+
+        {/* Hero */}
+        <div className="text-center px-6 py-16">
+          <div className="flex justify-center mb-8">
+            <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-44 w-auto object-contain" />
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-4 leading-tight">El sistema de gestión<br/>para talleres técnicos</h1>
+          <p className="text-white text-lg mb-8 max-w-md mx-auto">Simple, rápido y desde cualquier dispositivo. Controlá tus reparaciones, clientes y finanzas en un solo lugar.</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => { setShowLanding(false); setShowRegistro(true); }}
+              className="bg-[#00c347] hover:bg-[#00d957] text-black font-bold px-6 py-3 rounded-xl transition-colors text-sm">
+              Probá gratis 5 días
+            </button>
+            <button onClick={() => { setShowLanding(false); setShowRegistro(false); }}
+              className="border border-[#293946] hover:border-zinc-500 text-white px-6 py-3 rounded-xl transition-colors text-sm">
+              Iniciar sesión
+            </button>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="px-6 pb-12 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-12">
+            {[
+              ['📋', 'Reparaciones', 'Seguí cada orden de trabajo'],
+              ['👥', 'Clientes', 'Directorio con historial completo'],
+              ['🖨️', 'Tickets', 'Imprimí con un click'],
+              ['💬', 'WhatsApp', 'Avisos automáticos de estado'],
+              ['💰', 'Finanzas', 'Control de ingresos y saldos'],
+              ['📱', 'Mobile', 'Funciona en cualquier dispositivo'],
+            ].map(([icon, title, desc]) => (
+              <div key={title} className="bg-[#111920] border border-[#253641] rounded-xl p-4 text-center">
+                <div className="text-2xl mb-2">{icon}</div>
+                <p className="text-sm font-medium text-white mb-1">{title}</p>
+                <p className="text-xs text-white">{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Novedades Pro */}
+          <div className="bg-gradient-to-br from-green-500/10 to-zinc-900 border border-[#00c347]/30 rounded-2xl p-6 mb-12">
+            <div className="flex items-center gap-2 justify-center mb-1">
+              <span className="text-xs bg-[#00c347] text-black font-bold px-2.5 py-1 rounded-full">NUEVO</span>
+              <h2 className="text-xl font-bold text-white">Potenciá tu taller con el Plan Pro</h2>
+            </div>
+            <p className="text-sm text-white text-center mb-6 max-w-lg mx-auto">Herramientas profesionales para que vendas más y tengas el control total de tu negocio.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {[
+                ['🛒', 'Punto de venta', 'Vendé productos con lector de código de barras y generá tickets al instante.'],
+                ['📊', 'Finanzas avanzadas', 'Comparativas mensuales, proyecciones, ranking de clientes y saldos pendientes.'],
+                ['💻', 'Multi-dispositivo', 'Usá tu cuenta en hasta 3 dispositivos a la vez, ideal para varios puestos.'],
+              ].map(([icon, title, desc]) => (
+                <div key={title} className="bg-[#111920]/60 border border-[#253641] rounded-xl p-4">
+                  <div className="text-2xl mb-2">{icon}</div>
+                  <p className="text-sm font-semibold text-white mb-1">{title}</p>
+                  <p className="text-xs text-white">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Planes */}
+          <h2 className="text-xl font-bold text-white text-center mb-6">Elegí tu plan</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+            <div className="bg-[#111920] border border-[#253641] rounded-2xl p-6">
+              <p className="text-xs text-white uppercase tracking-wider font-medium mb-2">Basic</p>
+              <p className="text-3xl font-bold text-white mb-1">$15 <span className="text-base font-normal text-white">/ mes</span></p>
+              <p className="text-sm text-white mb-4">1 taller</p>
+              <div className="flex flex-col gap-2 mb-6">
+                {['Reparaciones ilimitadas', 'Clientes y tickets', 'WhatsApp automático', 'Finanzas'].map(f => (
+                  <div key={f} className="flex items-center gap-2 text-sm text-white">
+                    <span className="text-[#00d957]">✓</span> {f}
+                  </div>
+                ))}
+              </div>
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/b2721abc-1fff-4b32-a8a4-aecf84944aa7"
+                target="_blank"
+                className="w-full border border-[#293946] hover:border-[#00c347] text-white py-2.5 rounded-xl text-sm transition-colors text-center block">
+                Suscribirse — $15/mes
+              </a>
+            </div>
+
+            <div className="bg-[#111920] border-2 border-[#00c347] rounded-2xl p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00c347] text-black text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Más popular</div>
+              <p className="text-xs text-white uppercase tracking-wider font-medium mb-2">Pro</p>
+              <p className="text-3xl font-bold text-white mb-1">$22 <span className="text-base font-normal text-white">/ mes</span></p>
+              <p className="text-sm text-white mb-4">Hasta 3 talleres</p>
+              <div className="flex flex-col gap-2 mb-6">
+                {['Todo lo del plan Basic', 'Punto de venta con escáner', 'Finanzas avanzadas', 'Hasta 3 dispositivos', 'Soporte prioritario'].map(f => (
+                  <div key={f} className="flex items-center gap-2 text-sm text-white">
+                    <span className="text-[#00d957]">✓</span> {f}
+                  </div>
+                ))}
+              </div>
+              <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
+                target="_blank"
+                className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-2.5 rounded-xl text-sm transition-colors text-center block">
+                Suscribirse — $22/mes
+              </a>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center text-sm text-white">
+            <p>Sin compromisos · Cancelá cuando quieras · 5 días gratis</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+      <div className="min-h-screen bg-[#050809] flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-10">
+            <div className="flex justify-center mb-6">
+              <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-24 w-auto object-contain" />
+            </div>
+            <p className="text-white text-sm mt-1">Sistema de gestión técnica</p>
+          </div>
+
+          {!showRegistro ? (
+            <div className="bg-[#111920] border border-[#253641] rounded-2xl p-8 flex flex-col gap-4">
+              <div>
+                <label className="text-xs text-white font-medium mb-1 block">Correo electrónico</label>
+                <input type="email" placeholder="ejemplo@correo.com" value={loginForm.email}
+                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-white font-medium mb-1 block">Contraseña</label>
+                <input type="password" placeholder="••••••••" value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                <input type="checkbox" checked={loginForm.recordar}
+                  onChange={(e) => setLoginForm({ ...loginForm, recordar: e.target.checked })}
+                  className="accent-green-500 w-4 h-4" />
+                Mantener sesión iniciada
+              </label>
+              <button onClick={handleLogin}
+                className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+                Ingresar
+              </button>
+              <button onClick={() => { setShowRecuperar(true); setRecuperarEnviado(false); setRecuperarEmail(''); }}
+                className="w-full text-white hover:text-white text-xs text-center transition-colors">
+                ¿Olvidaste tu contraseña?
+              </button>
+              <button onClick={() => setShowRegistro(true)}
+                className="w-full text-white hover:text-white text-sm text-center transition-colors mt-1">
+                ¿No tenés cuenta? <span className="text-[#00d957] font-medium">Probá 5 días gratis</span>
+              </button>
+            </div>
+          ) : (
+            <div className="bg-[#111920] border border-[#253641] rounded-2xl p-8 flex flex-col gap-4">
+              <h2 className="text-white font-bold text-lg">Crear cuenta — 5 días gratis</h2>
+              <div>
+                <label className="text-xs text-white font-medium mb-1 block">Nombre del taller</label>
+                <input type="text" placeholder="Ej: TechRepair Montevideo" value={registroForm.nombre}
+                  onChange={(e) => setRegistroForm({ ...registroForm, nombre: e.target.value })}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-white font-medium mb-1 block">Correo electrónico</label>
+                <input type="email" placeholder="correo@ejemplo.com" value={registroForm.email}
+                  onChange={(e) => setRegistroForm({ ...registroForm, email: e.target.value })}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-white font-medium mb-1 block">Contraseña</label>
+                <input type="password" placeholder="Mínimo 6 caracteres" value={registroForm.password}
+                  onChange={(e) => setRegistroForm({ ...registroForm, password: e.target.value })}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-white font-medium mb-1 block">Confirmar contraseña</label>
+                <input type="password" placeholder="Repetí la contraseña" value={registroForm.confirmar}
+                  onChange={(e) => setRegistroForm({ ...registroForm, confirmar: e.target.value })}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm" />
+              </div>
+              <button onClick={handleRegistro} disabled={registrando}
+                className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-3 rounded-xl transition-colors text-sm mt-2">
+                {registrando ? 'Creando cuenta...' : 'Crear cuenta gratis'}
+              </button>
+              <button onClick={() => setShowRegistro(false)}
+                className="w-full text-white hover:text-white text-sm text-center transition-colors">
+                ← Volver al inicio de sesión
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showRecuperar && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
+          <div className="bg-[#111920] border border-[#253641] rounded-2xl p-8 w-full max-w-sm">
+            {!recuperarEnviado ? (
+              <>
+                <h2 className="text-white font-bold text-lg mb-2">Recuperar contraseña</h2>
+                <p className="text-white text-sm mb-4">Ingresá tu email y te enviaremos un link para restablecerla.</p>
+                <input type="email" placeholder="correo@ejemplo.com" value={recuperarEmail}
+                  onChange={e => setRecuperarEmail(e.target.value)}
+                  className="w-full bg-[#17232d] border border-[#293946] text-white placeholder-zinc-500 p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm mb-4" />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowRecuperar(false)}
+                    className="flex-1 border border-[#293946] text-white py-2.5 rounded-xl text-sm">Cancelar</button>
+                  <button onClick={handleRecuperar}
+                    className="flex-1 bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-2.5 rounded-xl text-sm">Enviar</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-4">
+                  <div className="text-4xl mb-3">📧</div>
+                  <h2 className="text-white font-bold text-lg mb-2">Email enviado</h2>
+                  <p className="text-white text-sm">Revisá tu bandeja de entrada y seguí el link para restablecer tu contraseña.</p>
+                </div>
+                <button onClick={() => setShowRecuperar(false)}
+                  className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-2.5 rounded-xl text-sm">Entendido</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      </>
+    );
+  }
+
+  // ── Nav items ─────────────────────────────────────────────────────────────
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'reparaciones', label: 'Reparaciones', icon: '🔧' },
+    { id: 'finanzas', label: 'Finanzas', icon: '💰' },
+    { id: 'clientes', label: 'Clientes', icon: '👥' },
+    ...((config.is_admin || (typeof window !== 'undefined' && localStorage.getItem('megabyte_is_admin') === 'true') || suscripcionActual?.plan === 'pro') ? [{ id: 'ventas', label: 'Ventas', icon: '🛒' }] : []),
+    { id: 'calculadora', label: 'Calculadora', icon: '🧮' },
+    { id: 'configuracion', label: 'Configuración', icon: '⚙️' },
+    ...(config.is_admin ? [{ id: 'admin', label: 'Admin', icon: '🛡️' }] : []),
+  ];
+
+  // ── Días de trial restantes ──────────────────────────────────────────────
+  const diasTrialRestantes = (() => {
+    if (!suscripcionActual || suscripcionActual.estado !== 'trial' || !suscripcionActual.fecha_vencimiento) return null;
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    // Parsear fecha como local (no UTC) para evitar desfase de zona horaria
+    const [y, m, d] = suscripcionActual.fecha_vencimiento.split('-').map(Number);
+    const venc = new Date(y, m - 1, d);
+    return Math.ceil((venc.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  })();
+
+  // ── Main app ──────────────────────────────────────────────────────────────
+  return (
+    <div className={`min-h-screen ${t.bg} ${t.text} flex`}>
+      {diasTrialRestantes !== null && diasTrialRestantes >= 0 && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black text-center text-xs font-bold py-1.5">
+          ⏳ Período de prueba — {diasTrialRestantes} día{diasTrialRestantes !== 1 ? 's' : ''} restante{diasTrialRestantes !== 1 ? 's' : ''}
+        </div>
+      )}
+
+      {/* Sidebar desktop */}
+      <aside className={`hidden md:flex w-60 ${t.sidebar} border-r flex-col py-4 px-3 shrink-0 fixed h-full z-40 overflow-y-auto`}
+        style={{paddingTop: diasTrialRestantes !== null && diasTrialRestantes >= 0 ? '40px' : undefined}}>
+        <div className="flex items-center justify-center px-2 mb-4 pb-4 border-b border-[#253641] shrink-0">
+          <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="w-36 h-auto object-contain" />
+        </div>
+        <nav className="flex flex-col gap-0.5 flex-1 min-h-0">
+          {navItems.map((item) => (
+            <button key={item.id} onClick={() => setSection(item.id)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+                section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
+              }`}>
+              <span className="text-base">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className={`border-t ${t.divider} pt-3 mt-3 shrink-0`}>
+          <div className="px-3 py-1.5 mb-1">
+            <p className={`text-xs ${t.subtext} mb-0.5`}>Conectado como</p>
+            <p className={`text-xs font-medium truncate ${t.muted}`}>{user.email}</p>
+          </div>
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all">
+            🚪 Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      {/* Header móvil */}
+      <div className={`md:hidden fixed top-0 left-0 right-0 z-40 ${t.sidebar} border-b ${t.divider} px-4 py-3 flex items-center justify-between`}
+        style={{marginTop: diasTrialRestantes !== null && diasTrialRestantes >= 0 ? '28px' : '0'}}>
+        <div className="flex items-center gap-2">
+          <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="h-8 w-auto object-contain" />
+        </div>
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={`p-2 rounded-xl ${t.badge} text-lg`}>
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      {/* Menu móvil overlay */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileMenuOpen(false)}>
+          <div className={`${t.sidebar} w-64 h-full p-5 flex flex-col`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-center mb-8">
+              <img src={darkMode ? "/logo_nuevo_transparente.png" : "/logo_nuevo_claro_transparente.png"} alt="MegaTallerPro" className="w-48 h-auto object-contain" />
+            </div>
+            <nav className="flex flex-col gap-1 flex-1">
+              {navItems.map((item) => (
+                <button key={item.id} onClick={() => { setSection(item.id); setMobileMenuOpen(false); }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+                    section === item.id ? t.navActive : `${t.muted} ${t.navHover}`
+                  }`}>
+                  <span>{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <div className={`border-t ${t.divider} pt-4 mt-4`}>
+              <div className="px-3 py-2 mb-2">
+                <p className={`text-xs ${t.subtext}`}>Conectado como</p>
+                <p className={`text-xs ${t.muted} font-medium truncate`}>{user.email}</p>
+              </div>
+              <button onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all">
+                🚪 Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <main className="flex-1 overflow-auto p-4 md:p-8 md:ml-60 mt-14 md:mt-0">
+
+        {/* ── Dashboard ── */}
+        {section === 'dashboard' && (
+          <div>
+            <div className="mb-8">
+              <h1 className={`text-2xl font-bold ${t.text}`}>Dashboard</h1>
+              <p className={`${t.subtext} text-sm mt-1`}>Resumen general del taller</p>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              {[
+                { label: 'Total reparaciones', value: repairs.length, color: 'text-[#00d957]', accent: 'bg-[#00c347]/10' },
+                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400', accent: 'bg-yellow-500/10' },
+                { label: 'En reparación', value: repairs.filter(r => r.estado === 'En reparación').length, color: 'text-blue-400', accent: 'bg-blue-500/10' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-[#00c347]', accent: 'bg-[#00c347]/10' },
+              ].map((stat) => (
+                <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
+                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                  <p className={`text-3xl font-semibold ${stat.color}`}>{stat.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              {[
+                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
+                { label: 'Cobrado', value: `$ ${totalCobrado}`, color: 'text-[#00d957]' },
+                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
+                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
+                { label: 'Equipo más reparado', value: equipoTop, color: 'text-[#00d957]', small: true },
+                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
+              ].map((stat) => (
+                <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
+                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                  <p className={`font-semibold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* ── Finanzas ── */}
+        {section === 'finanzas' && (
+          <div>
+            <div className="mb-8">
+              <h1 className={`text-2xl font-bold ${t.text}`}>Finanzas</h1>
+              <p className={`${t.subtext} text-sm mt-1`}>Estado financiero del taller</p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { label: 'Reparaciones totales', value: repairs.length, color: 'text-[#00d957]' },
+                { label: 'Pendientes', value: repairs.filter(r => r.estado === 'Pendiente').length, color: 'text-yellow-400' },
+                { label: 'Entregados', value: repairs.filter(r => r.estado === 'Entregado').length, color: 'text-[#00c347]' },
+                { label: 'Facturación total', value: `$ ${totalTrabajos}`, color: 'text-blue-400' },
+                { label: 'Total cobrado', value: `$ ${totalCobrado}`, color: 'text-[#00d957]' },
+                { label: 'Saldo pendiente', value: `$ ${totalPendiente}`, color: 'text-red-400' },
+                { label: 'Promedio por reparación', value: `$ ${promedio}`, color: 'text-purple-400' },
+                { label: 'Equipo más reparado', value: equipoTop, color: 'text-[#00d957]', small: true },
+                { label: 'Cliente VIP', value: clienteVIP, color: 'text-yellow-400', small: true },
+              ].map((stat) => (
+                <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
+                  <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                  <p className={`font-semibold ${stat.color} ${stat.small ? 'text-xl' : 'text-3xl'}`}>{stat.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Gráficas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+              {/* Ingresos por mes */}
+              <div className={`${t.card} border rounded-2xl p-5`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-1 uppercase tracking-wider`}>Ingresos por mes</p>
+                <div className="flex gap-4 mb-3">
+                  <span className="flex items-center gap-1.5 text-xs text-white"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-400"></span>Facturado</span>
+                  <span className="flex items-center gap-1.5 text-xs text-white"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#00c347]"></span>Cobrado</span>
+                </div>
+                <div style={{position:'relative', height:'180px'}}>
+                  <canvas id="chartMeses"></canvas>
+                </div>
+              </div>
+              {/* Estado de reparaciones */}
+              <div className={`${t.card} border rounded-2xl p-5`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-1 uppercase tracking-wider`}>Estado de reparaciones</p>
+                <div className="flex flex-wrap gap-3 mb-3">
+                  {estadosData.map(e => (
+                    <span key={e.label} className="flex items-center gap-1.5 text-xs text-white">
+                      <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{backgroundColor: e.color}}></span>
+                      {e.label} {e.count}
+                    </span>
+                  ))}
+                </div>
+                <div style={{position:'relative', height:'180px'}}>
+                  <canvas id="chartEstados"></canvas>
+                </div>
+              </div>
+            </div>
+            {/* Equipos más reparados */}
+            <div className={`${t.card} border rounded-2xl p-5 mt-4`}>
+              <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Equipos más reparados</p>
+              <div style={{position:'relative', height: `${Math.max(equiposData.length * 40 + 20, 100)}px`}}>
+                <canvas id="chartEquipos"></canvas>
+              </div>
+            </div>
+
+            {/* ── Finanzas Pro ── */}
+            {(() => {
+              const esPro = config.is_admin || (typeof window !== 'undefined' && localStorage.getItem('megabyte_is_admin') === 'true') || suscripcionActual?.plan === 'pro';
+              if (!esPro) return (
+                <div className={`${t.card} border border-dashed rounded-2xl p-6 mt-4 text-center`}>
+                  <p className="text-2xl mb-2">⭐</p>
+                  <p className={`font-semibold ${t.text} mb-1`}>Análisis avanzado disponible en Plan Pro</p>
+                  <p className={`text-sm ${t.subtext} mb-4`}>Comparativa vs mes anterior, proyección de ingresos, ranking de clientes y exportación PDF.</p>
+                  <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
+                    target="_blank" className="inline-block bg-[#00c347] hover:bg-[#00d957] text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                    Actualizar a Pro — $22/mes
+                  </a>
+                </div>
+              );
+
+              // Cálculos Pro
+              const hoy = new Date();
+              const mesActual = hoy.getMonth();
+              const anioActual = hoy.getFullYear();
+              const mesAnterior = mesActual === 0 ? 11 : mesActual - 1;
+              const anioAnterior = mesActual === 0 ? anioActual - 1 : anioActual;
+
+              const parseFecha = (f: string) => {
+                if (!f) return null;
+                const parts = f.split('/');
+                if (parts.length === 3) return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                return new Date(f);
+              };
+
+              const repsMesActual = repairs.filter((r: any) => {
+                const d = parseFecha(r.fecha); if (!d) return false;
+                return d.getMonth() === mesActual && d.getFullYear() === anioActual;
+              });
+              const repsMesAnterior = repairs.filter((r: any) => {
+                const d = parseFecha(r.fecha); if (!d) return false;
+                return d.getMonth() === mesAnterior && d.getFullYear() === anioAnterior;
+              });
+
+              const ingresoActual = repsMesActual.reduce((a: number, r: any) => a + Number(r.costo||0), 0);
+              const ingresoAnterior = repsMesAnterior.reduce((a: number, r: any) => a + Number(r.costo||0), 0);
+              const varIngreso = ingresoAnterior > 0 ? Math.round(((ingresoActual - ingresoAnterior) / ingresoAnterior) * 100) : 0;
+              const varOrdenes = repsMesActual.length - repsMesAnterior.length;
+              const ticketActual = repsMesActual.length > 0 ? Math.round(ingresoActual / repsMesActual.length) : 0;
+              const ticketAnterior = repsMesAnterior.length > 0 ? Math.round(ingresoAnterior / repsMesAnterior.length) : 0;
+              const varTicket = ticketAnterior > 0 ? Math.round(((ticketActual - ticketAnterior) / ticketAnterior) * 100) : 0;
+
+              // Ranking clientes
+              const clienteRanking: any = {};
+              repairs.forEach((r: any) => {
+                if (!r.cliente) return;
+                clienteRanking[r.cliente] = (clienteRanking[r.cliente] || 0) + Number(r.costo||0);
+              });
+              const topClientes = Object.entries(clienteRanking)
+                .sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+
+              const mesesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+              // Tasa de reparación
+              const repsEntregadas = repairs.filter((r: any) => r.estado === 'Entregado');
+              const repsReparadas = repsEntregadas.filter((r: any) => r.se_reparo !== false).length;
+              const repsNoReparadas = repsEntregadas.length - repsReparadas;
+              const tasaReparacion = repsEntregadas.length > 0 ? Math.round((repsReparadas / repsEntregadas.length) * 100) : 0;
+
+              // Saldo pendiente por cliente
+              const saldoMap: any = {};
+              repairs.forEach((r: any) => {
+                if (Number(r.saldo || 0) > 0 && r.cliente) {
+                  saldoMap[r.cliente] = (saldoMap[r.cliente] || 0) + Number(r.saldo);
+                }
+              });
+              const topSaldos = Object.entries(saldoMap).sort((a: any, b: any) => b[1] - a[1]).slice(0, 5);
+              const totalSaldoPendiente = (Object.values(saldoMap) as number[]).reduce((a, b) => a + b, 0);
+
+              // Ingresos por tipo de equipo
+              const equipoIngresosMap: any = {};
+              repairs.forEach((r: any) => {
+                const tipo = (r.equipo || 'Otro').split(' - ')[0];
+                equipoIngresosMap[tipo] = (equipoIngresosMap[tipo] || 0) + Number(r.costo || 0);
+              });
+              const equipoIngresosList = Object.entries(equipoIngresosMap).sort((a: any, b: any) => (b[1] as number) - (a[1] as number)).slice(0, 5);
+
+              return (
+                <div className="mt-4 flex flex-col gap-4">
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Análisis Pro — comparativa vs mes anterior</p>
+                      <span className="text-xs bg-[#00c347]/15 text-[#00d957] px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
+                    </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {([
+                        { label: 'Ingresos', value: `$${ingresoActual.toLocaleString('es-UY')}`, varN: varIngreso, unit: '%', showVar: true, sub: '' },
+                        { label: 'Órdenes completadas', value: String(repsMesActual.length), varN: varOrdenes, unit: '', showVar: true, sub: '' },
+                        { label: 'Ticket promedio', value: `$${ticketActual.toLocaleString('es-UY')}`, varN: varTicket, unit: '%', showVar: true, sub: '' },
+                        { label: 'Tasa de reparación', value: `${tasaReparacion}%`, varN: 0, unit: '', showVar: false, sub: `${repsReparadas} reparados / ${repsNoReparadas} no reparados` },
+                      ] as {label:string,value:string,varN:number,unit:string,showVar:boolean,sub:string}[]).map(stat => (
+                        <div key={stat.label} className={`${darkMode ? 'bg-[#17232d]' : 'bg-slate-50'} rounded-xl p-4`}>
+                          <p className={`text-xs ${t.subtext} mb-2`}>{stat.label}</p>
+                          <p className={`text-xl font-semibold ${t.text}`}>{stat.value}</p>
+                          {stat.showVar ? (
+                            <p className={`text-xs mt-1 ${stat.varN >= 0 ? 'text-[#00d957]' : 'text-red-400'}`}>
+                              {stat.varN >= 0 ? '↑' : '↓'} {Math.abs(stat.varN)}{stat.unit} vs mes anterior
+                            </p>
+                          ) : (
+                            <p className={`text-xs mt-1 ${t.subtext}`}>{stat.sub}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Ranking de clientes</p>
+                      {topClientes.length === 0 ? (
+                        <p className={`text-sm ${t.subtext}`}>Sin datos suficientes</p>
+                      ) : (
+                        <div className="flex flex-col">
+                          {topClientes.map(([nombre, total]: any, i) => (
+                            <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text}`}>{i+1}. {nombre}</span>
+                              <span className={`text-sm font-semibold ${t.text}`}>${Number(total).toLocaleString('es-UY')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Saldo pendiente por cliente</p>
+                      {topSaldos.length === 0 ? (
+                        <p className={`text-sm ${t.subtext}`}>Sin saldos pendientes</p>
+                      ) : (
+                        <div className="flex flex-col">
+                          {topSaldos.map(([nombre, saldo]: any) => (
+                            <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text}`}>{nombre}</span>
+                              <span className="text-sm font-semibold text-red-400">${Number(saldo).toLocaleString('es-UY')}</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between items-center pt-2 mt-1">
+                            <span className={`text-xs font-medium ${t.subtext}`}>Total pendiente</span>
+                            <span className="text-sm font-semibold text-red-400">${Number(totalSaldoPendiente).toLocaleString('es-UY')}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ingresos por tipo de equipo</p>
+                    <div style={{position:'relative', height:`${Math.max(equipoIngresosList.length * 40 + 20, 80)}px`}}>
+                      <canvas id="chartEquiposIngresosP"></canvas>
+                    </div>
+                    {typeof window !== 'undefined' && (() => {
+                      setTimeout(() => {
+                        const win = window as any;
+                        if (!win.Chart) return;
+                        const existing = win.Chart.getChart('chartEquiposIngresosP');
+                        if (existing) existing.destroy();
+                        const c = document.getElementById('chartEquiposIngresosP');
+                        if (!c) return;
+                        const isDarkM = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        const gridC = isDarkM ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+                        const tickC = isDarkM ? '#888' : '#aaa';
+                        const eColors = ['#378ADD','#534AB7','#639922','#EF9F27','#888780'];
+                        new win.Chart(c, {
+                          type: 'bar',
+                          data: {
+                            labels: equipoIngresosList.map((e: any) => e[0]),
+                            datasets: [{ data: equipoIngresosList.map((e: any) => e[1]), backgroundColor: eColors.slice(0, equipoIngresosList.length), borderRadius: 4 }]
+                          },
+                          options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                              x: { ticks: { color: tickC, font: { size: 11 }, callback: (v: any) => '$' + Number(v).toLocaleString('es-UY') }, grid: { color: gridC }, border: { display: false } },
+                              y: { ticks: { color: tickC, font: { size: 11 } }, grid: { display: false }, border: { display: false } }
+                            }
+                          }
+                        });
+                      }, 200);
+                      return null;
+                    })()}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-2 uppercase tracking-wider`}>Proyección próximo mes</p>
+                      <p className={`text-3xl font-semibold ${t.text} mb-1`}>
+                        ${ingresoActual > 0 ? Math.round(ingresoActual * 1.05).toLocaleString('es-UY') : '—'}
+                      </p>
+                      <p className={`text-xs ${t.subtext}`}>Estimación basada en tendencia actual (+5%)</p>
+                    </div>
+                    <div className={`${t.card} border rounded-2xl p-5 flex items-center justify-center`}>
+                      <button
+                        onClick={() => {
+                          const sep = '\t';
+                          const nl = '\n';
+                          const rows = repairs.map((r: any) => [r.orden||'', r.cliente||'', r.equipo||'', r.estado||'', r.costo||0, r.entrega||0, r.fecha||''].join(sep)).join(nl);
+                          const exportContent = ['Orden','Cliente','Equipo','Estado','Costo','Cobrado','Fecha'].join(sep) + nl + rows;
+                          const blob = new Blob([exportContent], { type: 'text/tab-separated-values' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url; a.download = 'reporte-finanzas-megatallerpro.tsv'; a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="w-full border rounded-xl py-2.5 text-sm font-medium hover:opacity-80 transition-opacity flex items-center justify-center gap-2"
+                        style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
+                        📥 Exportar datos (Excel)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+          </div>
+        )}
+
+        {/* ── Clientes ── */}
+        {section === 'clientes' && (
+          <div>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className={`text-2xl font-bold ${t.text}`}>Clientes</h1>
+                <p className={`${t.subtext} text-sm mt-1`}>Directorio de clientes</p>
+              </div>
+            </div>
+            <div className={`rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} ${t.card}`}>
+                <input type="text" placeholder="🔍  Buscar por nombre o teléfono..."
+                  value={searchClientes} onChange={(e) => setSearchClientes(e.target.value)}
+                  className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
+              </div>
+              <div className={`overflow-x-auto ${t.bg}`}>
+              <table className="w-full border-separate border-spacing-y-0.5">
+                <thead>
+                  <tr>
+                    {['Cliente', 'Teléfono', 'Reparaciones', 'Total gastado', 'Nivel', 'Historial', 'WhatsApp', 'Nueva orden'].map(h => (
+                      <th key={h} className={`text-left px-3 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const statsMap: any = {};
+                    repairs.forEach((repair: any) => {
+                      const key = repair.cliente;
+                      if (!statsMap[key]) statsMap[key] = { cantidad: 0, total: 0, telefono: repair.telefono };
+                      statsMap[key].cantidad += 1;
+                      statsMap[key].total += Number(repair.costo || 0);
+                      if (!statsMap[key].telefono && repair.telefono) statsMap[key].telefono = repair.telefono;
+                    });
+                    const vistos = new Set<string>();
+                    const lista: any[] = [];
+                    clientes.forEach((c: any) => {
+                      const stats = statsMap[c.cliente] || { cantidad: 0, total: 0, telefono: c.telefono };
+                      lista.push({ cliente: c.cliente, telefono: c.telefono || stats.telefono, cantidad: stats.cantidad, total: stats.total });
+                      vistos.add(c.cliente);
+                    });
+                    // Incluir clientes que aún no estén en la tabla persistente (datos antiguos)
+                    Object.keys(statsMap).forEach((nombre) => {
+                      if (!vistos.has(nombre)) {
+                        lista.push({ cliente: nombre, telefono: statsMap[nombre].telefono, cantidad: statsMap[nombre].cantidad, total: statsMap[nombre].total });
+                      }
+                    });
+                    return lista;
+                  })().filter((cliente: any) =>
+                    cliente.cliente.toLowerCase().includes(searchClientes.toLowerCase()) ||
+                    (cliente.telefono || '').includes(searchClientes)
+                  ).map((cliente: any, index: number) => (
+                    <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-[#1b2832]" : "hover:bg-slate-50"}`}>
+                      <td className={`px-3 py-2.5 text-xs font-medium ${t.text} rounded-l-xl border-l border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{cliente.cliente}</td>
+                      <td className={`px-3 py-2.5 text-xs ${t.muted} border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>{cliente.telefono?.replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ')}</td>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                        <span className="bg-[#00c347]/20 text-[#00d957] border border-[#00c347]/30 px-2 py-1 rounded-lg text-xs font-bold">
+                          {cliente.cantidad}
+                        </span>
+                      </td>
+                      <td className={`px-3 py-2.5 text-xs text-blue-400 font-bold border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>$ {cliente.total}</td>
+                      <td className={`px-3 py-2.5 font-bold text-xs ${getNivelCliente(cliente.cantidad).color} border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                        {getNivelCliente(cliente.cantidad).texto}
+                      </td>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                        <button onClick={() => {
+                          const historial = repairs.filter((r: any) => r.cliente === cliente.cliente);
+                          let texto = `Historial de ${cliente.cliente}\n\n`;
+                          historial.forEach((r: any) => {
+                            texto += `• ${r.equipo}\nEstado: ${r.estado}\nCosto: $${r.costo}\nFecha: ${r.fecha}\n\n`;
+                          });
+                          alert(texto);
+                        }} className={`${t.badge} hover:bg-zinc-600 px-3 py-1.5 rounded-lg text-xs transition-colors ${t.muted}`}>
+                          Ver historial
+                        </button>
+                      </td>
+                      <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                        <a href={`https://wa.me/598${(cliente.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`}
+                          target="_blank"
+                          className="bg-[#00c347] hover:bg-[#00d957] px-3 py-1.5 rounded-lg text-black text-xs font-bold transition-colors">
+                          WhatsApp
+                        </a>
+                      </td>
+                      <td className={`px-3 py-2.5 rounded-r-xl border-r border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                        <div className="flex gap-2">
+                          <button onClick={() => {
+                            setEditingCliente(cliente);
+                            setEditClienteForm({ cliente: cliente.cliente, telefono: (cliente.telefono || '').replace(/\D/g, '').replace(/(\d{3})(?=\d)/g, '$1 ') });
+                          }} className={`${t.badge} px-3 py-1.5 rounded-lg text-xs transition-colors ${t.muted} whitespace-nowrap`}>
+                            ✏️ Editar
+                          </button>
+                          <button onClick={() => {
+                            setEditingRepair(null);
+                            setForm({ cliente: cliente.cliente, tipo: '', modelo: '', falla: '', telefono: cliente.telefono, contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '', comentario_publico: '' });
+                            setSection('reparaciones');
+                            setShowModal(true);
+                          }} className="bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-lg text-white text-xs font-bold transition-colors whitespace-nowrap">
+                            + Orden
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
+            </div>
+
+            {editingCliente && (
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+                  <h2 className={`text-lg font-bold ${t.text} mb-4`}>Editar cliente</h2>
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Nombre</label>
+                      <input value={editClienteForm.cliente}
+                        onChange={e => setEditClienteForm({...editClienteForm, cliente: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
+                      <input value={editClienteForm.telefono}
+                        onChange={e => {
+                          const digits = e.target.value.replace(/\D/g, '');
+                          const formatted = digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+                          setEditClienteForm({...editClienteForm, telefono: formatted});
+                        }}
+                        placeholder="09X XXX XXX"
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => setEditingCliente(null)}
+                        className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
+                      <button onClick={guardarEdicionCliente}
+                        className="flex-1 bg-[#00c347] hover:bg-[#00d957] text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Admin ── */}
+        {section === 'admin' && config.is_admin && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className={`text-2xl font-bold ${t.text}`}>Panel Admin</h1>
+                <p className={`${t.subtext} text-sm mt-1`}>{suscripciones.length} talleres registrados</p>
+              </div>
+              <button onClick={() => { cargarSuscripciones(); setShowAdminModal({ nombre_taller: '', email: '', plan: 'basic', estado: 'activo', fecha_vencimiento: '' }); }}
+                className="bg-[#00c347] hover:bg-[#00d957] text-black font-bold px-4 py-2 rounded-xl text-sm">
+                + Nuevo taller
+              </button>
+            </div>
+
+            {/* Estadísticas generales */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {(() => {
+                const hoy = new Date(); hoy.setHours(0,0,0,0);
+                const activos = suscripciones.filter((s: any) => s.estado === 'activo').length;
+                const trials = suscripciones.filter((s: any) => s.estado === 'trial').length;
+                const inactivos = suscripciones.filter((s: any) => s.estado === 'inactivo').length;
+                const ingresosBasic = suscripciones.filter((s: any) => s.estado === 'activo' && s.plan === 'basic').length * 15;
+                const ingresosPro = suscripciones.filter((s: any) => s.estado === 'activo' && s.plan === 'pro').length * 22;
+                const ingresosMes = ingresosBasic + ingresosPro;
+                return [
+                  { label: 'Activos', value: activos, color: 'text-[#00d957]' },
+                  { label: 'En trial', value: trials, color: 'text-amber-400' },
+                  { label: 'Inactivos', value: inactivos, color: 'text-red-400' },
+                  { label: 'Ingresos est. mes', value: `$ ${ingresosMes}`, color: 'text-blue-400' },
+                ].map(stat => (
+                  <div key={stat.label} className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>{stat.label}</p>
+                    <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            <div className={`${t.card} border rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} flex flex-wrap gap-3`}>
+                <input type="text" placeholder="🔍 Buscar por nombre o email..."
+                  value={adminSearch} onChange={e => setAdminSearch(e.target.value)}
+                  className={`flex-1 min-w-[180px] border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                <select value={adminFiltro} onChange={e => setAdminFiltro(e.target.value)}
+                  className={`border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                  <option value="todos">Todos</option>
+                  <option value="activo">Activos</option>
+                  <option value="trial">En trial</option>
+                  <option value="inactivo">Inactivos</option>
+                </select>
+                <select value={adminOrden} onChange={e => setAdminOrden(e.target.value)}
+                  className={`border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                  <option value="vencimiento">Por vencimiento</option>
+                  <option value="nombre">Por nombre</option>
+                  <option value="estado">Por estado</option>
+                </select>
+              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className={`border-b ${t.divider}`}>
+                    {['Taller', 'Email', 'Plan', 'Vencimiento', 'Estado', 'Acciones'].map(h => (
+                      <th key={h} className={`text-left p-4 text-xs ${t.tableHead} font-medium uppercase tracking-wider`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {suscripciones
+                    .filter((sub: any) => {
+                      const matchSearch = adminSearch === '' ||
+                        sub.nombre_taller?.toLowerCase().includes(adminSearch.toLowerCase()) ||
+                        sub.email?.toLowerCase().includes(adminSearch.toLowerCase());
+                      const matchFiltro = adminFiltro === 'todos' || sub.estado === adminFiltro;
+                      return matchSearch && matchFiltro;
+                    })
+                    .sort((a: any, b: any) => {
+                      if (adminOrden === 'nombre') return (a.nombre_taller || '').localeCompare(b.nombre_taller || '');
+                      if (adminOrden === 'estado') return (a.estado || '').localeCompare(b.estado || '');
+                      if (adminOrden === 'vencimiento') {
+                        if (!a.fecha_vencimiento) return 1;
+                        if (!b.fecha_vencimiento) return -1;
+                        return new Date(a.fecha_vencimiento).getTime() - new Date(b.fecha_vencimiento).getTime();
+                      }
+                      return 0;
+                    })
+                    .map((sub: any) => (
+                    <tr key={sub.id} className={`border-t ${t.row} transition-colors`}>
+                      <td className={`p-4 font-medium ${t.text}`}>{sub.nombre_taller}</td>
+                      <td className={`p-4 ${t.muted} text-sm`}>{sub.email}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.plan === 'pro' ? 'bg-blue-500/20 text-blue-400' : 'bg-zinc-500/20 text-white'}`}>
+                          {sub.plan?.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className={`p-4 ${t.muted} text-sm`}>
+                        {sub.fecha_vencimiento ? new Date(sub.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                      </td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${sub.estado === 'activo' ? 'bg-[#00c347]/20 text-[#00d957]' : sub.estado === 'trial' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {sub.estado === 'activo' ? '✅ Activo' : sub.estado === 'trial' ? '⏳ En prueba' : '⛔ Inactivo'}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <button onClick={() => setShowAdminModal({...sub})}
+                            className={`${t.badge} px-3 py-1.5 rounded-lg text-sm ${t.muted}`}>
+                            ✏️ Editar
+                          </button>
+                          <button onClick={() => toggleEstado(sub.id, sub.estado)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-bold ${sub.estado === 'activo' ? 'bg-red-500/20 text-red-400' : 'bg-[#00c347]/20 text-[#00d957]'}`}>
+                            {sub.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {suscripciones.length === 0 && (
+                    <tr><td colSpan={6} className={`p-8 text-center ${t.subtext} text-sm`}>Sin talleres registrados</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {showAdminModal && (
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+                  <h2 className={`text-lg font-bold ${t.text} mb-4`}>{showAdminModal.id ? 'Editar taller' : 'Nuevo taller'}</h2>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { key: 'nombre_taller', label: 'Nombre del taller', placeholder: 'Ej: TechRepair' },
+                      { key: 'email', label: 'Email', placeholder: 'correo@ejemplo.com' },
+
+                    ].map(({ key, label, placeholder }) => (
+                      <div key={key}>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
+                        <input value={showAdminModal[key] || ''} placeholder={placeholder}
+                          onChange={e => setShowAdminModal({...showAdminModal, [key]: e.target.value})}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                      </div>
+                    ))}
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Vencimiento</label>
+                      <input type="date" value={showAdminModal.fecha_vencimiento || ''}
+                        onChange={e => setShowAdminModal({...showAdminModal, fecha_vencimiento: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Plan</label>
+                      <select value={showAdminModal.plan || 'basic'}
+                        onChange={e => setShowAdminModal({...showAdminModal, plan: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`}>
+                        <option value="basic">Basic</option>
+                        <option value="pro">Pro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Estado</label>
+                      <select value={showAdminModal.estado || 'activo'}
+                        onChange={e => setShowAdminModal({...showAdminModal, estado: e.target.value})}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`}>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => setShowAdminModal(null)}
+                        className={`flex-1 ${t.badge} border ${t.divider} py-2 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
+                      <button onClick={() => guardarSuscripcion(showAdminModal)}
+                        className="flex-1 bg-[#00c347] hover:bg-[#00d957] text-black py-2 rounded-xl text-sm font-bold">Guardar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Punto de Ventas ── */}
+        {section === 'ventas' && (() => {
+          const esPro = config.is_admin || (typeof window !== 'undefined' && localStorage.getItem('megabyte_is_admin') === 'true') || suscripcionActual?.plan === 'pro';
+
+          const productosFiltrados = productos.filter((p: any) =>
+            p.nombre.toLowerCase().includes(busquedaPdv.toLowerCase()) ||
+            (p.codigo_barras && p.codigo_barras.includes(busquedaPdv))
+          );
+
+          const agregarAlCarrito = (producto: any) => {
+            setCarrito(prev => {
+              const existente = prev.find((i: any) => i.id === producto.id);
+              if (existente) return prev.map((i: any) => i.id === producto.id ? {...i, cantidad: i.cantidad + 1} : i);
+              return [...prev, {...producto, cantidad: 1}];
+            });
+            setBusquedaPdv('');
+          };
+
+          const cambiarCantidad = (id: number, delta: number) => {
+            setCarrito(prev => prev.map((i: any) => i.id === id ? {...i, cantidad: Math.max(1, i.cantidad + delta)} : i));
+          };
+
+          const quitarDelCarrito = (id: number) => setCarrito(prev => prev.filter((i: any) => i.id !== id));
+
+          const totalCarrito = carrito.reduce((a: number, i: any) => a + (Number(i.precio) * i.cantidad), 0);
+
+          const confirmarVenta = async () => {
+            if (carrito.length === 0) return;
+            if (tieneGarantiaVenta && !clienteGarantiaVenta.trim()) { alert('Falta el nombre del cliente para la garantía'); return; }
+            const ventanaTicket = window.open('', '_blank', 'width=400,height=600');
+            const { data: ventas } = await supabase.from('ventas').select('numero_venta').eq('user_id', user.id).order('id', { ascending: false }).limit(1).maybeSingle();
+            const nro = ventas ? parseInt((ventas.numero_venta || '0').replace(/\D/g,'')) + 1 : 1;
+            const numero = `#${String(nro).padStart(4,'0')}`;
+            const items = carrito.map((i: any) => ({ id: i.id, nombre: i.nombre, precio: Number(i.precio), cantidad: i.cantidad }));
+            await supabase.from('ventas').insert({ user_id: user.id, numero_venta: numero, total: totalCarrito, forma_pago: formaPagoPdv, items });
+            const { data: ventasActualizadas } = await supabase.from('ventas').select('*').order('fecha', { ascending: false });
+            if (ventasActualizadas) setVentasList(ventasActualizadas);
+            for (const item of carrito) {
+              await supabase.from('productos').update({ stock: Math.max(0, (item.stock || 0) - item.cantidad) }).eq('id', item.id);
+            }
+            const { data: prodsActualizados } = await supabase.from('productos').select('*').order('nombre');
+            if (prodsActualizados) setProductos(prodsActualizados);
+            const fecha = new Date().toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+            let garantiaInfo: { meses: number, cliente: string, telefono: string, vencimiento: string } | null = null;
+            if (tieneGarantiaVenta) {
+              const meses = parseInt(mesesGarantiaVenta, 10) || 3;
+              const fechaVenc = new Date();
+              fechaVenc.setMonth(fechaVenc.getMonth() + meses);
+              const productosNombres = items.map((i: any) => i.nombre).join(', ');
+              await supabase.from('garantias_ventas').insert({
+                user_id: user.id, numero_venta: numero, cliente: clienteGarantiaVenta.trim(),
+                telefono: telefonoGarantiaVenta.trim() || null, productos: productosNombres,
+                meses, fecha_vencimiento: fechaVenc.toISOString()
+              });
+              const { data: garantiasActualizadas } = await supabase.from('garantias_ventas').select('*').order('fecha_venta', { ascending: false });
+              if (garantiasActualizadas) setGarantiasVentasList(garantiasActualizadas);
+              garantiaInfo = { meses, cliente: clienteGarantiaVenta.trim(), telefono: telefonoGarantiaVenta.trim(), vencimiento: fechaVenc.toLocaleDateString('es-UY') };
+            }
+
+            setTicketVenta({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha, garantia: garantiaInfo });
+            imprimirTicketData({ numero, total: totalCarrito, items, formaPago: formaPagoPdv, fecha, garantia: garantiaInfo }, ventanaTicket);
+            setCarrito([]);
+            setTieneGarantiaVenta(false);
+            setMesesGarantiaVenta('3');
+            setClienteGarantiaVenta('');
+            setTelefonoGarantiaVenta('');
+            setMontoRecibidoPdv('');
+          };
+
+          const guardarProducto = async () => {
+            if (!productoForm.nombre || !productoForm.precio) return;
+            if (editingProducto) {
+              await supabase.from('productos').update({
+                nombre: productoForm.nombre, precio: Number(productoForm.precio),
+                stock: Number(productoForm.stock || 0), codigo_barras: productoForm.codigo_barras || null
+              }).eq('id', editingProducto.id);
+            } else {
+              await supabase.from('productos').insert({
+                user_id: user.id, nombre: productoForm.nombre, precio: Number(productoForm.precio),
+                stock: Number(productoForm.stock || 0), codigo_barras: productoForm.codigo_barras || null
+              });
+            }
+            const { data } = await supabase.from('productos').select('*').order('nombre');
+            if (data) setProductos(data);
+            setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' });
+            setShowAddProducto(false);
+            setEditingProducto(null);
+          };
+
+          const eliminarProducto = async (id: number) => {
+            if (!confirm('¿Eliminar este producto?')) return;
+            await supabase.from('productos').delete().eq('id', id);
+            setProductos(prev => prev.filter((p: any) => p.id !== id));
+          };
+
+          const imprimirTicketData = (datos: { numero: string, fecha: string, items: any[], total: number, formaPago: string, garantia?: { meses: number, cliente: string, telefono: string, vencimiento: string } | null }, ventanaExistente?: Window | null) => {
+            const w = ventanaExistente || window.open('', '_blank', 'width=400,height=600');
+            if (!w) return;
+            const nombreLocal = config.nombre_negocio || 'MegaTallerPro';
+            const encabezado = config.logo_url
+              ? `<div style="text-align:center;margin-bottom:4px"><img src="${config.logo_url}" style="max-width:50mm;max-height:20mm;object-fit:contain"/></div>`
+              : `<h2>${nombreLocal}</h2>`;
+            const direccion = config.direccion ? `<p style="font-size:11px;color:#000">${config.direccion}</p>` : '';
+            const telefono = config.telefono ? `<p style="font-size:11px;color:#000">Tel: ${config.telefono}</p>` : '';
+            const lineas = datos.items.map((i: any) => `<p style="margin:2px 0">${i.nombre} x${i.cantidad} .......... $${(i.precio * i.cantidad).toLocaleString('es-UY')}</p>`).join('');
+            const garantiaHtml = datos.garantia ? `
+              <div class="linea"></div>
+              <p style="font-weight:bold">GARANTÍA: ${datos.garantia.meses} meses</p>
+              <p style="font-size:11px;color:#000">Cliente: ${datos.garantia.cliente}</p>
+              ${datos.garantia.telefono ? `<p style="font-size:11px;color:#000">Tel: ${datos.garantia.telefono}</p>` : ''}
+              <p style="font-size:11px;color:#000">Válida hasta: ${datos.garantia.vencimiento}</p>
+            ` : '';
+            w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket</title>
+              <style>body{font-family:monospace;font-size:13px;padding:20px;max-width:300px}
+              h2,p{text-align:center;margin:4px 0}.linea{border-top:1px dashed #000;margin:8px 0}
+              .total{font-size:15px;font-weight:bold}</style></head><body>
+              ${encabezado}${direccion}${telefono}
+              <p>Ticket de venta ${datos.numero}</p>
+              <p style="font-size:11px;color:#000">${datos.fecha}</p>
+              <div class="linea"></div>${lineas}<div class="linea"></div>
+              <p class="total">TOTAL: $${datos.total.toLocaleString('es-UY')}</p>
+              <p>Pago: ${datos.formaPago}</p>
+              ${garantiaHtml}
+              <div class="linea"></div><p>Gracias por su compra</p>
+              <script>window.addEventListener("afterprint", function() { window.close(); }, { once: true }); window.addEventListener("load", async function() { await Promise.all(Array.from(document.images).map(function(img) { return img.complete ? Promise.resolve() : new Promise(function(resolve) { img.onload = resolve; img.onerror = resolve; }); })); window.focus(); window.print(); });</script></body></html>`);
+            w.document.close();
+          };
+
+          const imprimirTicket = () => {
+            if (!ticketVenta) return;
+            imprimirTicketData(ticketVenta);
+          };
+
+          const reimprimirVenta = (v: any) => {
+            imprimirTicketData({
+              numero: v.numero_venta,
+              fecha: new Date(v.fecha).toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }),
+              items: v.items || [],
+              total: Number(v.total || 0),
+              formaPago: v.forma_pago || 'Efectivo'
+            });
+          };
+
+          if (!esPro) return (
+            <div>
+              <div className={`${t.card} border border-dashed rounded-2xl p-6 text-center`}>
+                <p className="text-2xl mb-2">🛒</p>
+                <p className={`font-semibold ${t.text} mb-1`}>Punto de ventas disponible en Plan Pro</p>
+                <p className={`text-sm ${t.subtext} mb-4`}>Vendé productos, manejá tu inventario y generá tickets.</p>
+                <a href="https://megatallerpro.lemonsqueezy.com/checkout/buy/33d3e500-c3e3-443f-8d92-8773e19f3081"
+                  target="_blank" className="inline-block bg-[#00c347] hover:bg-[#00d957] text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+                  Actualizar a Pro — $22/mes
+                </a>
+              </div>
+            </div>
+          );
+
+          // ── Métricas de finanzas de ventas ──
+          const hoyStr = new Date().toDateString();
+          const mesActualV = new Date().getMonth();
+          const anioActualV = new Date().getFullYear();
+          const ventasVigentes = ventasList.filter((v: any) => !v.anulada);
+          const ventasHoy = ventasVigentes.filter((v: any) => new Date(v.fecha).toDateString() === hoyStr);
+          const ventasMes = ventasVigentes.filter((v: any) => {
+            const d = new Date(v.fecha);
+            return d.getMonth() === mesActualV && d.getFullYear() === anioActualV;
+          });
+          const totalHoy = ventasHoy.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const totalMes = ventasMes.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const totalGeneral = ventasVigentes.reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+          const ticketPromVenta = ventasVigentes.length > 0 ? Math.round(totalGeneral / ventasVigentes.length) : 0;
+          const valorInventario = productos.reduce((a: number, p: any) => a + (Number(p.precio || 0) * Number(p.stock || 0)), 0);
+
+          // Productos más vendidos
+          const vendidosMap: any = {};
+          ventasList.filter((v: any) => !v.anulada).forEach((v: any) => {
+            (v.items || []).forEach((it: any) => {
+              if (!vendidosMap[it.nombre]) vendidosMap[it.nombre] = { cantidad: 0, total: 0 };
+              vendidosMap[it.nombre].cantidad += it.cantidad;
+              vendidosMap[it.nombre].total += it.precio * it.cantidad;
+            });
+          });
+          const topVendidos = Object.entries(vendidosMap).sort((a: any, b: any) => b[1].cantidad - a[1].cantidad).slice(0, 5);
+
+          // Ventas por día (últimos 7 días)
+          const ventasPorDia: { dia: string, total: number }[] = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const diaStr = d.toDateString();
+            const total = ventasVigentes.filter((v: any) => new Date(v.fecha).toDateString() === diaStr).reduce((a: number, v: any) => a + Number(v.total || 0), 0);
+            ventasPorDia.push({ dia: d.toLocaleDateString('es-UY', { weekday: 'short', day: 'numeric' }), total });
+          }
+          const maxDia = Math.max(...ventasPorDia.map(d => d.total), 1);
+
+          return (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className={`text-2xl font-bold ${t.text}`}>Punto de ventas</h1>
+                  <p className={`${t.subtext} text-sm mt-1`}>Vendé productos y generá tickets</p>
+                </div>
+                <span className="text-xs bg-[#00c347]/15 text-[#00d957] px-2.5 py-1 rounded-lg font-semibold">⭐ Pro</span>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2 mb-6">
+                <button onClick={() => setSubVenta('vender')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'vender' ? 'bg-[#00c347] text-black' : `${t.card} border ${t.subtext}`}`}>
+                  🛒 Vender
+                </button>
+                <button onClick={() => setSubVenta('finanzas')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'finanzas' ? 'bg-[#00c347] text-black' : `${t.card} border ${t.subtext}`}`}>
+                  💰 Finanzas
+                </button>
+                <button onClick={() => setSubVenta('historial')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'historial' ? 'bg-[#00c347] text-black' : `${t.card} border ${t.subtext}`}`}>
+                  🧾 Historial
+                </button>
+                <button onClick={() => setSubVenta('garantias')}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${subVenta === 'garantias' ? 'bg-[#00c347] text-black' : `${t.card} border ${t.subtext}`}`}>
+                  🛡️ Garantías
+                </button>
+              </div>
+
+              {subVenta === 'garantias' ? (
+                <div className={`${t.card} border rounded-2xl p-5`}>
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Garantías de ventas ({garantiasVentasList.length})</p>
+                    <input type="text" value={busquedaGarantiasVentas}
+                      placeholder="Buscar por cliente, producto o ticket..."
+                      onChange={e => setBusquedaGarantiasVentas(e.target.value)}
+                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-[#00c347]`} />
+                  </div>
+                  {(() => {
+                    const q = busquedaGarantiasVentas.trim().toLowerCase();
+                    const ahora = new Date();
+                    const filtradas = garantiasVentasList.filter((g: any) => {
+                      if (!q) return true;
+                      return (g.cliente || '').toLowerCase().includes(q) ||
+                             (g.productos || '').toLowerCase().includes(q) ||
+                             (g.numero_venta || '').toLowerCase().includes(q);
+                    });
+                    if (filtradas.length === 0) return <p className={`text-sm ${t.subtext}`}>Sin garantías registradas.</p>;
+                    return (
+                      <div className="flex flex-col">
+                        {filtradas.map((g: any) => {
+                          const vencimiento = new Date(g.fecha_vencimiento);
+                          const vigente = vencimiento >= ahora;
+                          return (
+                            <div key={g.id} className="flex items-center justify-between py-3 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium ${t.text}`}>{g.cliente}</p>
+                                <p className={`text-xs ${t.subtext} truncate mt-0.5`}>{g.productos} · Ticket {g.numero_venta}</p>
+                                {g.telefono && <p className={`text-xs ${t.subtext}`}>{g.telefono}</p>}
+                              </div>
+                              <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${vigente ? 'bg-[#00c347]/15 text-[#00d957]' : 'bg-red-500/15 text-red-400'}`}>
+                                {vigente ? 'Vigente hasta' : 'Vencida'} {vencimiento.toLocaleDateString('es-UY')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : subVenta === 'historial' ? (
+                <div className={`${t.card} border rounded-2xl p-5`}>
+                  <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                    <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider`}>Historial de ventas ({ventasList.length}, {ventasList.filter((v: any) => v.anulada).length} anuladas)</p>
+                    <input type="text" value={busquedaHistorial}
+                      placeholder="Buscar por N° ticket, fecha o pago..."
+                      onChange={e => setBusquedaHistorial(e.target.value)}
+                      className={`border ${t.input} px-3 py-2 rounded-xl outline-none text-sm w-full max-w-xs focus:border-[#00c347]`} />
+                  </div>
+                  {(() => {
+                    const q = busquedaHistorial.trim().toLowerCase();
+                    const filtradas = ventasList.filter((v: any) => {
+                      if (!q) return true;
+                      const fechaStr = new Date(v.fecha).toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }).toLowerCase();
+                      return (v.numero_venta || '').toLowerCase().includes(q) ||
+                             fechaStr.includes(q) ||
+                             (v.forma_pago || '').toLowerCase().includes(q) ||
+                             (v.items || []).some((it: any) => (it.nombre || '').toLowerCase().includes(q));
+                    });
+                    if (filtradas.length === 0) return <p className={`text-sm ${t.subtext}`}>No se encontraron ventas.</p>;
+                    return (
+                      <div className="flex flex-col">
+                        {filtradas.map((v: any) => (
+                          <div key={v.id} className={`flex items-center justify-between py-3 border-b last:border-0 ${v.anulada ? "opacity-65" : ""}`} style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-semibold ${t.text}`}>{v.numero_venta}</span>
+                                {v.anulada && <span className="text-[10px] font-bold text-red-400 border border-red-500/40 rounded px-1.5 py-0.5">ANULADA</span>}
+                                <span className={`text-xs ${t.subtext}`}>{new Date(v.fecha).toLocaleDateString('es-UY', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                              </div>
+                              <p className={`text-xs ${t.subtext} truncate mt-0.5`}>
+                                {(v.items || []).map((it: any) => `${it.nombre} x${it.cantidad}`).join(', ')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                              <div className="text-right">
+                                <p className={`text-sm font-semibold ${t.text}`}>${Number(v.total).toLocaleString('es-UY')}</p>
+                                <p className={`text-xs ${t.subtext}`}>{v.forma_pago}</p>
+                              </div>
+                              <button onClick={() => anularVenta(v)} disabled={eliminandoVentaId !== null || !!v.anulada}
+                                title={v.anulada ? "Venta ya anulada" : "Anular venta y devolver productos al stock"}
+                                className="text-xs border border-red-500/40 text-red-400 rounded-lg px-2.5 py-1.5 hover:bg-red-500/10 disabled:opacity-40">
+                                {eliminandoVentaId === v.id ? '...' : v.anulada ? 'Anulada' : 'Anular'}
+                              </button>
+                              <button disabled={!!v.anulada} onClick={() => reimprimirVenta(v)}
+                                className={`text-xs border rounded-lg px-2.5 py-1.5 hover:opacity-70 disabled:opacity-30`}
+                                style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
+                                🖨️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : subVenta === 'finanzas' ? (
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Vendido hoy', value: `$${totalHoy.toLocaleString('es-UY')}`, color: 'text-[#00d957]' },
+                      { label: 'Vendido este mes', value: `$${totalMes.toLocaleString('es-UY')}`, color: 'text-blue-400' },
+                      { label: 'Total general', value: `$${totalGeneral.toLocaleString('es-UY')}`, color: 'text-purple-400' },
+                      { label: 'Cantidad de ventas', value: ventasVigentes.length, color: 'text-[#00d957]' },
+                      { label: 'Ticket promedio', value: `$${ticketPromVenta.toLocaleString('es-UY')}`, color: 'text-yellow-400' },
+                      { label: 'Valor del inventario', value: `$${valorInventario.toLocaleString('es-UY')}`, color: 'text-blue-400' },
+                    ].map(stat => (
+                      <div key={stat.label} className={`${t.card} border rounded-2xl p-4`}>
+                        <p className={`text-xs ${t.subtext} font-medium mb-2 uppercase tracking-wider`}>{stat.label}</p>
+                        <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ventas por mes</p>
+                    <div style={{position:'relative', height:'200px'}}>
+                      <canvas id="chartVentasMeses"></canvas>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Productos más vendidos</p>
+                      {topVendidos.length === 0 ? (
+                        <p className={`text-sm ${t.subtext}`}>Sin ventas registradas</p>
+                      ) : (
+                        <div className="flex flex-col">
+                          {topVendidos.map(([nombre, datos]: any, i) => (
+                            <div key={nombre} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text}`}>{i+1}. {nombre}</span>
+                              <span className={`text-sm ${t.subtext}`}>{datos.cantidad} u. · <span className="font-semibold">${datos.total.toLocaleString('es-UY')}</span></span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Ventas últimos 7 días</p>
+                      <div className="flex items-end justify-between gap-2" style={{height:'140px'}}>
+                        {ventasPorDia.map((d, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                            <div className="w-full bg-[#00c347] rounded-t" style={{height: `${(d.total / maxDia) * 100}%`, minHeight: d.total > 0 ? '4px' : '0'}}></div>
+                            <span className={`text-[10px] ${t.subtext} mt-1 text-center`}>{d.dia}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Últimas ventas</p>
+                    {ventasVigentes.length === 0 ? (
+                      <p className={`text-sm ${t.subtext}`}>Sin ventas registradas</p>
+                    ) : (
+                      <div className="flex flex-col">
+                        {ventasVigentes.slice(0, 10).map((v: any) => (
+                          <div key={v.id} className="flex justify-between items-center py-2 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div>
+                              <span className={`text-sm ${t.text}`}>{v.numero_venta}</span>
+                              <span className={`text-xs ${t.subtext} ml-2`}>{new Date(v.fecha).toLocaleDateString('es-UY', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-sm font-semibold ${t.text}`}>${Number(v.total).toLocaleString('es-UY')}</span>
+                              <span className={`text-xs ${t.subtext} ml-2`}>{v.forma_pago}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Columna izquierda */}
+                <div className="flex flex-col gap-4">
+                  {/* Buscador */}
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Escanear / buscar producto</p>
+                    <input type="text" value={busquedaPdv} autoFocus
+                      placeholder="Escanear código de barras o buscar por nombre..."
+                      onChange={e => setBusquedaPdv(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          const match = productos.find((p: any) => p.codigo_barras === busquedaPdv || p.nombre.toLowerCase() === busquedaPdv.toLowerCase());
+                          if (match) agregarAlCarrito(match);
+                        }
+                      }}
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm focus:border-[#00c347]`} />
+                    <p className={`text-xs ${t.subtext} mt-2`}>El lector ingresa el código automáticamente. Presioná Enter para agregar.</p>
+                    {busquedaPdv && productosFiltrados.length > 0 && (
+                      <div className={`mt-2 border ${t.divider} rounded-xl overflow-hidden`}>
+                        {productosFiltrados.slice(0, 5).map((p: any) => (
+                          <button key={p.id} onClick={() => agregarAlCarrito(p)}
+                            className={`w-full text-left px-4 py-2.5 text-sm ${t.text} hover:bg-[#00c347]/10 flex justify-between items-center border-b last:border-0`} style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <span>{p.nombre}</span>
+                            <span className="font-medium">${Number(p.precio).toLocaleString('es-UY')}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Inventario */}
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <div className="flex items-center justify-between mb-3 gap-2">
+                      <p className={`text-xs ${t.subtext} font-medium uppercase tracking-wider whitespace-nowrap`}>Inventario ({productos.length})</p>
+                      <div className="flex items-center gap-2 flex-1 justify-end">
+                        <input type="text" value={busquedaInventario}
+                          placeholder="Buscar..."
+                          onChange={e => setBusquedaInventario(e.target.value)}
+                          className={`border ${t.input} px-3 py-1.5 rounded-lg outline-none text-xs w-full max-w-[160px] focus:border-[#00c347]`} />
+                        <button onClick={() => { setShowAddProducto(true); setEditingProducto(null); setProductoForm({ nombre: '', precio: '', stock: '', codigo_barras: '' }); }}
+                          className="text-xs bg-[#00c347] text-black font-bold px-3 py-1.5 rounded-lg hover:bg-[#00d957] transition-colors whitespace-nowrap">+ Agregar</button>
+                      </div>
+                    </div>
+                    {productos.length === 0 ? (
+                      <p className={`text-sm ${t.subtext}`}>Sin productos. Agregá el primero.</p>
+                    ) : (
+                      <div className="flex flex-col">
+                        {productos.filter((p: any) =>
+                          p.nombre.toLowerCase().includes(busquedaInventario.toLowerCase()) ||
+                          (p.codigo_barras && p.codigo_barras.includes(busquedaInventario))
+                        ).map((p: any) => (
+                          <div key={p.id} className="flex items-center justify-between py-2.5 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                            <div className="flex-1 min-w-0 mr-3">
+                              <p className={`text-sm font-medium ${t.text} truncate`}>{p.nombre}</p>
+                              <p className={`text-xs ${t.subtext}`}>{p.codigo_barras || 'Sin código'}</p>
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              <div className="text-right">
+                                <p className={`text-sm font-semibold ${t.text}`}>${Number(p.precio).toLocaleString('es-UY')}</p>
+                                <p className={`text-xs ${p.stock <= 2 ? 'text-yellow-400' : 'text-[#00d957]'}`}>Stock: {p.stock}</p>
+                              </div>
+                              <button onClick={() => agregarAlCarrito(p)} className="text-xs bg-[#00c347]/15 text-[#00d957] px-2 py-1 rounded-lg hover:bg-[#00c347]/25">+</button>
+                              <button onClick={() => { setEditingProducto(p); setProductoForm({ nombre: p.nombre, precio: String(p.precio), stock: String(p.stock), codigo_barras: p.codigo_barras || '' }); setShowAddProducto(true); }}
+                                className={`text-xs ${t.muted} hover:opacity-70`}>✏️</button>
+                              <button onClick={() => eliminarProducto(p.id)} className="text-xs text-red-400 hover:opacity-70">🗑️</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Columna derecha */}
+                <div className="flex flex-col gap-4">
+                  {/* Carrito */}
+                  <div className={`${t.card} border rounded-2xl p-5`}>
+                    <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Carrito de venta</p>
+                    {carrito.length === 0 ? (
+                      <p className={`text-sm ${t.subtext}`}>Escaneá o seleccioná productos para agregar al carrito.</p>
+                    ) : (
+                      <>
+                        <div className="flex flex-col">
+                          {carrito.map((item: any) => (
+                            <div key={item.id} className="flex items-center gap-2 py-2.5 border-b last:border-0" style={{borderColor:'var(--color-border-tertiary)'}}>
+                              <span className={`text-sm ${t.text} flex-1 truncate`}>{item.nombre}</span>
+                              <button onClick={() => cambiarCantidad(item.id, -1)} className={`w-7 h-7 rounded-lg ${t.badge} border text-sm flex items-center justify-center`} style={{borderColor:'var(--color-border-tertiary)'}}>−</button>
+                              <span className={`text-sm font-medium ${t.text} w-5 text-center`}>{item.cantidad}</span>
+                              <button onClick={() => cambiarCantidad(item.id, 1)} className={`w-7 h-7 rounded-lg ${t.badge} border text-sm flex items-center justify-center`} style={{borderColor:'var(--color-border-tertiary)'}}>+</button>
+                              <span className={`text-sm font-semibold ${t.text} w-20 text-right`}>${(Number(item.precio) * item.cantidad).toLocaleString('es-UY')}</span>
+                              <button onClick={() => quitarDelCarrito(item.id)} className="text-red-400 text-sm">✕</button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center mt-3 pt-3 border-t" style={{borderColor:'var(--color-border-tertiary)'}}>
+                          <span className={`text-sm ${t.subtext}`}>Total</span>
+                          <span className={`text-2xl font-semibold ${t.text}`}>${totalCarrito.toLocaleString('es-UY')}</span>
+                        </div>
+                        <div className="mt-3">
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Forma de pago</label>
+                          <select value={formaPagoPdv} onChange={e => { setFormaPagoPdv(e.target.value); if (e.target.value !== 'Efectivo') setMontoRecibidoPdv(''); }}
+                            className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm mb-3`}>
+                            <option>Efectivo</option>
+                            <option>Tarjeta</option>
+                            <option>Transferencia</option>
+                          </select>
+                        </div>
+                        {formaPagoPdv === 'Efectivo' && (
+                          <div className="mb-3">
+                            <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Monto recibido</label>
+                            <input type="number" value={montoRecibidoPdv} placeholder="0"
+                              onChange={e => setMontoRecibidoPdv(e.target.value)}
+                              className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                            {montoRecibidoPdv !== '' && (
+                              Number(montoRecibidoPdv) >= totalCarrito ? (
+                                <p className="text-sm font-semibold text-[#00d957] mt-2">
+                                  Cambio a devolver: ${(Number(montoRecibidoPdv) - totalCarrito).toLocaleString('es-UY')}
+                                </p>
+                              ) : (
+                                <p className="text-sm font-semibold text-red-400 mt-2">
+                                  Falta: ${(totalCarrito - Number(montoRecibidoPdv)).toLocaleString('es-UY')}
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-sm ${t.text}`}>¿Tiene garantía?</span>
+                          <button type="button" onClick={() => setTieneGarantiaVenta(!tieneGarantiaVenta)}
+                            className={`w-10 h-6 rounded-full relative transition-colors ${tieneGarantiaVenta ? 'bg-[#00c347]' : `${t.badge}`}`}>
+                            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${tieneGarantiaVenta ? 'left-[18px]' : 'left-0.5'}`}></span>
+                          </button>
+                        </div>
+                        {tieneGarantiaVenta && (
+                          <div className="flex flex-col gap-2 mb-3">
+                            <div>
+                              <label className={`text-xs ${t.subtext} mb-1 block`}>Meses de garantía</label>
+                              <select value={mesesGarantiaVenta} onChange={e => setMesesGarantiaVenta(e.target.value)}
+                                className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                                <option value="1">1 mes</option>
+                                <option value="3">3 meses</option>
+                                <option value="6">6 meses</option>
+                                <option value="12">12 meses</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className={`text-xs ${t.subtext} mb-1 block`}>Nombre del cliente</label>
+                              <input type="text" value={clienteGarantiaVenta} placeholder="Nombre completo"
+                                onChange={e => setClienteGarantiaVenta(e.target.value)}
+                                className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                            </div>
+                            <div>
+                              <label className={`text-xs ${t.subtext} mb-1 block`}>Teléfono (opcional)</label>
+                              <input type="text" value={telefonoGarantiaVenta} placeholder="Teléfono"
+                                onChange={e => setTelefonoGarantiaVenta(e.target.value)}
+                                className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                            </div>
+                          </div>
+                        )}
+                        <button onClick={confirmarVenta}
+                          className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                          🧾 Confirmar venta y generar ticket
+                        </button>
+                        <button onClick={() => setCarrito([])} className={`w-full mt-2 text-xs ${t.subtext} hover:opacity-70`}>Vaciar carrito</button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Ticket */}
+                  {ticketVenta && (
+                    <div className={`${t.card} border rounded-2xl p-5`}>
+                      <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Ticket — {ticketVenta.numero}</p>
+                      <div className={`${darkMode ? 'bg-[#17232d]' : 'bg-slate-50'} rounded-xl p-4 font-mono text-xs`}>
+                        {config.logo_url ? (
+                          <img src={config.logo_url} alt="logo" className="mx-auto mb-2" style={{maxWidth:'120px', maxHeight:'48px', objectFit:'contain'}} />
+                        ) : (
+                          <p className={`text-center font-bold ${t.text} mb-1`}>{config.nombre_negocio || 'MegaTallerPro'}</p>
+                        )}
+                        {config.direccion && <p className={`text-center ${t.subtext} mb-1`}>{config.direccion}</p>}
+                        {config.telefono && <p className={`text-center ${t.subtext} mb-1`}>Tel: {config.telefono}</p>}
+                        <p className={`text-center ${t.subtext} mb-2`}>Ticket de venta {ticketVenta.numero}</p>
+                        <p className={`${t.subtext} mb-2`}>{ticketVenta.fecha}</p>
+                        <div className={`border-t border-dashed mb-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                        {ticketVenta.items.map((item: any, i: number) => (
+                          <p key={i} className={`${t.text} mb-1`}>{item.nombre} x{item.cantidad} ... ${(item.precio * item.cantidad).toLocaleString('es-UY')}</p>
+                        ))}
+                        <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                        <p className={`font-bold ${t.text}`}>TOTAL: ${ticketVenta.total.toLocaleString('es-UY')}</p>
+                        <p className={`${t.subtext}`}>Pago: {ticketVenta.formaPago}</p>
+                        {ticketVenta.garantia && (
+                          <>
+                            <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                            <p className={`font-bold ${t.text}`}>GARANTÍA: {ticketVenta.garantia.meses} meses</p>
+                            <p className={`${t.subtext}`}>Cliente: {ticketVenta.garantia.cliente}</p>
+                            <p className={`${t.subtext}`}>Válida hasta: {ticketVenta.garantia.vencimiento}</p>
+                          </>
+                        )}
+                        <div className={`border-t border-dashed my-2`} style={{borderColor:'var(--color-border-tertiary)'}}></div>
+                        <p className={`text-center ${t.subtext}`}>Gracias por su compra</p>
+                      </div>
+                      <button onClick={imprimirTicket}
+                        className={`mt-3 w-full border rounded-xl py-2.5 text-sm font-medium hover:opacity-80 transition-opacity flex items-center justify-center gap-2`}
+                        style={{borderColor:'var(--color-border-tertiary)', color:'var(--color-text-primary)'}}>
+                        🖨️ Imprimir ticket
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              )}
+
+              {/* Modal agregar/editar producto */}
+              {showAddProducto && (
+                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                  <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className={`font-semibold ${t.text}`}>{editingProducto ? 'Editar producto' : 'Agregar producto'}</h2>
+                      <button onClick={() => { setShowAddProducto(false); setEditingProducto(null); }} className={`${t.muted} text-xl`}>×</button>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      {[
+                        { label: 'Nombre', key: 'nombre', placeholder: 'Ej: Funda iPhone 15' },
+                        { label: 'Precio ($)', key: 'precio', placeholder: '0' },
+                        { label: 'Stock', key: 'stock', placeholder: '0' },
+                        { label: 'Código de barras (opcional)', key: 'codigo_barras', placeholder: 'Escanear o dejar vacío' },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{f.label}</label>
+                          <input type={f.key === 'precio' || f.key === 'stock' ? 'number' : 'text'}
+                            value={(productoForm as any)[f.key]} placeholder={f.placeholder}
+                            onChange={e => setProductoForm({...productoForm, [f.key]: e.target.value})}
+                            className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={guardarProducto}
+                      className="mt-4 w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-2.5 rounded-xl text-sm">
+                      {editingProducto ? 'Guardar cambios' : 'Agregar producto'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── Calculadora ── */}
+        {section === 'calculadora' && (() => {
+          const fmt = (v: number) => '$ ' + v.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const tasaIva = ivaPais !== '0' ? parseFloat(ivaPais) : (parseFloat(ivaCustom) || 0);
+          const presSubtotal = (parseFloat(pCosto)||0) + (parseFloat(pMano)||0);
+          const presConG = presSubtotal * (1 + (parseFloat(pGanancia)||0) / 100);
+          const presConD = presConG * (1 - (parseFloat(pDescuento)||0) / 100);
+          const presSaldo = Math.max(0, presConD - (parseFloat(pEntrega)||0));
+          const ivaBaseN = parseFloat(ivaBase) || 0;
+          const ivaFinalN = parseFloat(ivaFinal) || 0;
+          const ivaMonto = ivaBaseN ? ivaBaseN * (tasaIva / 100) : 0;
+          const ivaFinalCalc = ivaBaseN ? ivaBaseN + ivaMonto : 0;
+          const ivaBaseCalc = ivaFinalN ? ivaFinalN / (1 + tasaIva / 100) : 0;
+          const ivaMontoDesde = ivaFinalN ? ivaFinalN - ivaBaseCalc : 0;
+
+          const doCalcBtn = (action: string) => {
+            const sym: any = {'+':'+','-':'−','*':'×','/':'÷'};
+            if (action === 'clear') {
+              calcValRef.current = '0';
+              setCalcVal('0'); setCalcPrev(null); setCalcOper(null); setCalcNewNum(false);
+              setCalcDisplay('0'); setCalcExpr('');
+            } else if (action === 'backspace') {
+              if (calcNewNum) return;
+              const nv = calcVal.length > 1 ? calcVal.slice(0, -1) : '0';
+              setCalcVal(nv);
+              setCalcDisplay(nv === '0' ? '0' : parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
+            } else if (action === 'sign') {
+              const v = String(-parseFloat(calcVal));
+              setCalcVal(v); setCalcDisplay(v);
+            } else if (action === 'percent') {
+              const v = String(parseFloat(calcVal) / 100);
+              setCalcVal(v); setCalcDisplay(v);
+            } else if (action === 'dot') {
+              if (calcNewNum) { setCalcVal('0.'); setCalcNewNum(false); setCalcDisplay('0.'); }
+              else if (!calcVal.includes('.')) { setCalcVal(calcVal + '.'); setCalcDisplay(calcVal + '.'); }
+            } else if (action.startsWith('num:')) {
+              const n = action.split(':')[1];
+              const nv = calcNewNum ? n : (calcVal === '0' ? n : calcVal + n);
+              calcValRef.current = nv;
+              setCalcVal(nv); setCalcNewNum(false);
+              setCalcDisplay(parseFloat(nv).toLocaleString('es-UY', { maximumFractionDigits: 8 }));
+              if (calcNewNum && calcOper === null && calcExpr.includes('=')) setCalcExpr('');
+            } else if (action.startsWith('op:')) {
+              const op = action.split(':')[1];
+              let prev = calcPrev;
+              let cv = calcVal;
+              if (prev !== null && !calcNewNum) {
+                const cur = parseFloat(cv);
+                let res = op === '+' ? prev+cur : op === '-' ? prev-cur : op === '*' ? prev*cur : cur !== 0 ? prev/cur : NaN;
+                cv = isNaN(res) ? 'NaN' : String(+res.toFixed(10));
+                setCalcVal(cv);
+                setCalcDisplay(isNaN(parseFloat(cv)) ? 'Error' : parseFloat(cv).toLocaleString('es-UY', {maximumFractionDigits:8}));
+                prev = parseFloat(cv);
+              } else {
+                prev = parseFloat(cv);
+              }
+              setCalcPrev(prev); setCalcOper(op); setCalcNewNum(true);
+              setCalcExpr(prev!.toLocaleString('es-UY') + ' ' + sym[op]);
+            } else if (action === 'equals') {
+              if (calcPrev === null || calcOper === null) return;
+              const cur = parseFloat(calcVal);
+              let res: number;
+              if (calcOper==='+') res=calcPrev+cur;
+              else if (calcOper==='-') res=calcPrev-cur;
+              else if (calcOper==='*') res=calcPrev*cur;
+              else res = cur !== 0 ? calcPrev/cur : NaN;
+              const rv = isNaN(res) ? 'NaN' : String(+res.toFixed(10));
+              setCalcExpr(`${calcPrev.toLocaleString('es-UY')} ${sym[calcOper]} ${cur.toLocaleString('es-UY')} =`);
+              setCalcVal(rv); setCalcNewNum(true); setCalcPrev(null); setCalcOper(null);
+              setCalcDisplay(isNaN(parseFloat(rv)) ? 'Error' : parseFloat(rv).toLocaleString('es-UY', {maximumFractionDigits:8}));
+            }
+          };
+
+          return (
+          <div>
+            <div className="mb-8">
+              <h1 className={`text-2xl font-bold ${t.text}`}>Calculadora</h1>
+              <p className={`${t.subtext} text-sm mt-1`}>Herramientas de cálculo para el taller</p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+              {/* Calculadora básica */}
+              <div tabIndex={0} onFocus={() => setCalcFocused(true)} onBlur={() => setCalcFocused(false)} className={`${t.card} border rounded-2xl p-5 outline-none`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-3 uppercase tracking-wider`}>Calculadora</p>
+                <div className={`${darkMode ? 'bg-[#17232d]' : 'bg-slate-100'} rounded-xl p-4 mb-3 border-2 transition-colors ${calcFocused ? 'border-[#00c347]' : 'border-transparent'}`}>
+                  <div className={`text-xs ${t.subtext} min-h-[18px] text-right mb-1`}>{calcExpr}</div>
+                  <div className={`text-3xl font-mono font-semibold ${t.text} text-right`}>
+                    {calcDisplay}
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { label: 'C', action: 'clear', cls: 'text-red-400' },
+                    { label: '+/-', action: 'sign', cls: 'text-blue-400' },
+                    { label: '%', action: 'percent', cls: 'text-blue-400' },
+                    { label: '÷', action: 'op:/', cls: 'text-blue-400' },
+                    { label: '7', action: 'num:7', cls: '' },
+                    { label: '8', action: 'num:8', cls: '' },
+                    { label: '9', action: 'num:9', cls: '' },
+                    { label: '×', action: 'op:*', cls: 'text-blue-400' },
+                    { label: '4', action: 'num:4', cls: '' },
+                    { label: '5', action: 'num:5', cls: '' },
+                    { label: '6', action: 'num:6', cls: '' },
+                    { label: '−', action: 'op:-', cls: 'text-blue-400' },
+                    { label: '1', action: 'num:1', cls: '' },
+                    { label: '2', action: 'num:2', cls: '' },
+                    { label: '3', action: 'num:3', cls: '' },
+                    { label: '+', action: 'op:+', cls: 'text-blue-400' },
+                    { label: '0', action: 'num:0', cls: 'col-span-2' },
+                    { label: '.', action: 'dot', cls: '' },
+                    { label: '=', action: 'equals', cls: 'bg-[#00c347] !text-black font-bold border-[#00c347]' },
+                  ].map((btn) => (
+                    <button key={btn.action}
+                      data-calc={btn.action}
+                      onClick={() => doCalcBtn(btn.action)}
+                      className={`${btn.cls} ${btn.action === 'num:0' ? 'col-span-2' : ''} ${t.card} border rounded-xl py-3 text-sm font-medium hover:opacity-80 transition-opacity`}>
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Calculadora de presupuesto */}
+              <div className={`${t.card} border rounded-2xl p-5`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Presupuesto de reparación</p>
+                <div className="flex flex-col gap-3">
+                  {([
+                    { label: 'Costo de piezas ($)', val: pCosto, set: setPCosto },
+                    { label: 'Mano de obra ($)', val: pMano, set: setPMano },
+                    { label: 'Ganancia (%)', val: pGanancia, set: setPGanancia },
+                    { label: 'Descuento (%)', val: pDescuento, set: setPDescuento },
+                    { label: 'Entrega / seña ($)', val: pEntrega, set: setPEntrega },
+                  ] as any[]).map((f: any) => (
+                    <div key={f.label}>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{f.label}</label>
+                      <input type="number" min="0" value={f.val} placeholder="0"
+                        onChange={e => { f.set(e.target.value); if (f.label === 'Ganancia (%)') localStorage.setItem('calc_ganancia', e.target.value); }}
+                        className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                    </div>
+                  ))}
+                </div>
+                <div className={`${darkMode ? 'bg-[#17232d]' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
+                  {[
+                    { label: 'Subtotal', val: fmt(presSubtotal), color: t.subtext },
+                    { label: 'Con ganancia', val: fmt(presConG), color: 'text-blue-400' },
+                    { label: 'Con descuento', val: fmt(presConD), color: 'text-[#00d957]' },
+                    { label: 'Saldo pendiente', val: fmt(presSaldo), color: 'text-red-400', big: true },
+                  ].map(r => (
+                    <div key={r.label} className="flex justify-between items-center">
+                      <span className={`text-xs ${r.color}`}>{r.label}</span>
+                      <span className={`font-semibold ${r.color} ${r.big ? 'text-lg' : 'text-sm'}`}>{r.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Calculadora IVA */}
+              <div className={`${t.card} border rounded-2xl p-5`}>
+                <p className={`text-xs ${t.subtext} font-medium mb-4 uppercase tracking-wider`}>Calculadora de IVA</p>
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>País</label>
+                    <select value={ivaPais} onChange={e => setIvaPais(e.target.value)}
+                      className={`w-full border ${t.select} p-2.5 rounded-xl outline-none text-sm`}>
+                      <option value="22">Uruguay — 22%</option>
+                      <option value="21">Argentina — 21%</option>
+                      <option value="19">Chile — 19%</option>
+                      <option value="19">Colombia — 19%</option>
+                      <option value="16">México — 16%</option>
+                      <option value="12">Ecuador — 12%</option>
+                      <option value="18">Perú — 18%</option>
+                      <option value="13">Bolivia — 13%</option>
+                      <option value="10">Paraguay — 10%</option>
+                      <option value="21">España — 21%</option>
+                      <option value="0">Personalizado</option>
+                    </select>
+                  </div>
+                  {ivaPais === '0' && (
+                    <div>
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tasa personalizada (%)</label>
+                      <input type="number" min="0" max="100" value={ivaCustom} placeholder="0"
+                        onChange={e => setIvaCustom(e.target.value)}
+                        className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                    </div>
+                  )}
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Precio base (sin IVA)</label>
+                    <input type="number" min="0" value={ivaBase} placeholder="0"
+                      onChange={e => { setIvaBase(e.target.value); setIvaFinal(''); }}
+                      className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                  </div>
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Precio final (con IVA)</label>
+                    <input type="number" min="0" value={ivaFinal} placeholder="0"
+                      onChange={e => { setIvaFinal(e.target.value); setIvaBase(''); }}
+                      className={`w-full border ${t.input} p-2.5 rounded-xl outline-none text-sm`} />
+                  </div>
+                </div>
+                <div className={`${darkMode ? 'bg-[#17232d]' : 'bg-slate-100'} rounded-xl p-4 mt-4 flex flex-col gap-2`}>
+                  {[
+                    { label: 'Tasa aplicada', val: tasaIva + '%', color: t.subtext },
+                    { label: 'Precio sin IVA', val: ivaBaseN ? fmt(ivaBaseN) : ivaFinalN ? fmt(ivaBaseCalc) : '—', color: 'text-blue-400', big: true },
+                    { label: 'Monto de IVA', val: ivaBaseN ? fmt(ivaMonto) : ivaFinalN ? fmt(ivaMontoDesde) : '—', color: 'text-yellow-400' },
+                    { label: 'Precio con IVA', val: ivaBaseN ? fmt(ivaFinalCalc) : ivaFinalN ? fmt(ivaFinalN) : '—', color: 'text-[#00d957]', big: true },
+                  ].map(r => (
+                    <div key={r.label} className="flex justify-between items-center">
+                      <span className={`text-xs ${r.color}`}>{r.label}</span>
+                      <span className={`font-semibold ${r.color} ${r.big ? 'text-lg' : 'text-sm'}`}>{r.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          );
+        })()}
+
+                {/* ── Configuración ── */}
+        {section === 'configuracion' && (
+          <div>
+            <div className="mb-8">
+              <h1 className={`text-2xl font-bold ${t.text}`}>Configuración</h1>
+              <p className={`${t.subtext} text-sm mt-1`}>Personalizá tu negocio</p>
+            </div>
+            <div className="flex flex-col gap-5 max-w-lg">
+
+              {/* Apariencia */}
+              <div className={`${t.card} border rounded-2xl p-6`}>
+                <h2 className={`text-base font-semibold ${t.text} mb-1`}>Apariencia</h2>
+                <p className={`text-sm ${t.subtext} mb-5`}>Cambiá el tema visual de la aplicación</p>
+                <div className={`flex items-center justify-between p-4 rounded-xl border ${t.divider} ${darkMode ? 'bg-[#17232d]/50' : 'bg-gray-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{darkMode ? '🌙' : '☀️'}</span>
+                    <div>
+                      <p className={`text-sm font-medium ${t.text}`}>{darkMode ? 'Tema oscuro' : 'Tema claro'}</p>
+                      <p className={`text-xs ${t.subtext}`}>{darkMode ? 'Fondo oscuro, ideal para poca luz' : 'Fondo claro, ideal para el día'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#00c347]' : 'bg-gray-300'}`}
+                  >
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Datos del negocio */}
+              <div className={`${t.card} border rounded-2xl p-6`}>
+                <h2 className={`text-base font-semibold ${t.text} mb-1`}>Datos del negocio</h2>
+                <p className={`text-sm ${t.subtext} mb-5`}>Se muestran en el ticket de impresión</p>
+
+                {/* Logo */}
+                <div className="mb-5">
+                  <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO PARA TICKETS (BLANCO Y NEGRO)</label>
+                  {config.logo_url && (
+                    <div className={`mb-3 p-3 ${darkMode ? 'bg-[#17232d]' : 'bg-gray-100'} rounded-xl inline-block`}>
+                      <img src={config.logo_url} alt="Logo" className="max-h-20 max-w-full object-contain" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/*"
+                    onChange={(e) => { if (e.target.files?.[0]) subirLogo(e.target.files[0]); }}
+                    className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-[#00c347] file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
+                  <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG. Se mostrará en el ticket de impresión.</p>
+                </div>
+
+                {/* Logo independiente para la web del QR y las vistas previas de WhatsApp */}
+                <div className="mb-5">
+                  <label className={`text-xs ${t.subtext} font-medium mb-2 block`}>LOGO A COLOR PARA SEGUIMIENTO WEB Y WHATSAPP</label>
+                  {(config.logo_seguimiento_url || config.logo_url) && (
+                    <div className={`mb-3 p-3 ${darkMode ? 'bg-[#17232d]' : 'bg-gray-100'} rounded-xl inline-block`}>
+                      <img src={config.logo_seguimiento_url || config.logo_url} alt="Logo de seguimiento" className="max-h-24 max-w-full object-contain" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => { if (e.target.files?.[0]) subirLogoSeguimiento(e.target.files[0]); e.target.value = ''; }}
+                    className={`w-full border ${t.input} p-3 rounded-xl text-sm file:mr-3 file:bg-[#00c347] file:border-0 file:rounded-lg file:px-3 file:py-1 file:text-black file:font-bold file:cursor-pointer`} />
+                  <p className={`text-xs ${t.subtext} mt-1`}>PNG, JPG o WebP (máx. 5 MB). Se usa en el QR y la miniatura de WhatsApp. Guardá la configuración después de subirlo.</p>
+                  {config.logo_seguimiento_url && (
+                    <button type="button" onClick={() => setConfig((prev: any) => ({ ...prev, logo_seguimiento_url: '' }))}
+                      className={`mt-2 text-xs underline ${t.subtext}`}>Volver a usar el logo del ticket</button>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-4 mb-6">
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>NOMBRE DEL NEGOCIO</label>
+                    <input value={config.nombre_negocio || ''} onChange={e => setConfig({...config, nombre_negocio: e.target.value})}
+                      placeholder="Ej: MegaByte"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                  </div>
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>DIRECCIÓN</label>
+                    <input value={config.direccion || ''} onChange={e => setConfig({...config, direccion: e.target.value})}
+                      placeholder="Ej: Gral. Flores 287"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                  </div>
+                  <div>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>TELÉFONO</label>
+                    <input value={config.telefono || ''} onChange={e => setConfig({...config, telefono: e.target.value})}
+                      placeholder="Ej: 099 347 478"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                  </div>
+                  <div className={`border-t ${t.divider} pt-4`}>
+                    <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>DOMINIO PERSONALIZADO DE SEGUIMIENTO (OPCIONAL)</label>
+                    <input type="url" value={config.dominio_seguimiento || ''}
+                      onChange={e => setConfig({...config, dominio_seguimiento: e.target.value, dominio_seguimiento_activo: false})}
+                      placeholder="https://www.mitaller.com"
+                      className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                    <p className={`text-xs ${t.subtext} mt-2`}>Debe estar conectado a un sitio que atienda /seguimiento/[token]. Si no lo activás, se usa el dominio de MegaTallerPro.</p>
+                    <label className={`mt-3 flex items-center gap-2 text-sm ${t.text}`}>
+                      <input type="checkbox" checked={!!config.dominio_seguimiento_activo}
+                        onChange={e => setConfig({...config, dominio_seguimiento_activo: e.target.checked})} />
+                      Activar dominio (solo después de configurar el DNS y el sitio)
+                    </label>
+                    <p className={`text-xs ${t.subtext} mt-2 break-all`}>Enlace: {config.dominio_seguimiento_activo && config.dominio_seguimiento ? String(config.dominio_seguimiento).replace(/\/+$/, '') : 'https://www.megatallerpro.com'}/seguimiento/...</p>
+                  </div>
+                </div>
+
+                {/* Mensajes automáticos */}
+                <div className={`border-t ${t.divider} pt-6`}>
+                  <h3 className={`text-sm font-bold ${t.text} mb-1`}>Mensajes automáticos de WhatsApp</h3>
+                  <p className={`text-xs ${t.subtext} mb-4`}>Variables disponibles: <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{cliente}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{equipo}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{saldo}"}</code> <code className="bg-[#253641] text-[#00d957] px-1 rounded">{"{seguimiento}"}</code> (si no la incluís, el enlace se agrega al final automáticamente)</p>
+                  <div className="space-y-4">
+                    {[
+                      { key: 'en_diagnostico', label: 'EN DIAGNÓSTICO', msgKey: 'msg_en_diagnostico', switchKey: 'switch_en_diagnostico' },
+                      { key: 'en_reparacion', label: 'EN REPARACIÓN', msgKey: 'msg_en_reparacion', switchKey: 'switch_en_reparacion' },
+                      { key: 'reparado', label: 'REPARADO', msgKey: 'msg_reparado', switchKey: 'switch_reparado' },
+                      { key: 'entregado', label: 'ENTREGADO', msgKey: 'msg_entregado', switchKey: 'switch_entregado' },
+                    ].map(({ label, msgKey, switchKey }) => (
+                      <div key={msgKey} className={`border ${t.divider} rounded-xl p-3`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className={`text-xs ${t.subtext} font-medium`}>{label}</label>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-medium ${config[switchKey] ? 'text-[#00d957]' : t.subtext}`}>
+                              {config[switchKey] ? 'Activo' : 'Inactivo'}
+                            </span>
+                            <button
+                              onClick={() => setConfig({...config, [switchKey]: !config[switchKey]})}
+                              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${config[switchKey] ? 'bg-[#00c347]' : 'bg-zinc-600'}`}>
+                              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-200 ${config[switchKey] ? 'left-[18px]' : 'left-0.5'}`} />
+                            </button>
+                          </div>
+                        </div>
+                        <textarea
+                          value={config[msgKey] ?? (msgKey === 'msg_en_diagnostico' ? 'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍' : '')}
+                          onChange={e => setConfig({...config, [msgKey]: e.target.value})}
+                          disabled={!config[switchKey]}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[80px] resize-none ${!config[switchKey] ? 'opacity-40 cursor-not-allowed' : ''}`} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Exportar datos */}
+                <div className={`border-t ${t.divider} pt-6`}>
+                  <h3 className={`text-sm font-bold ${t.text} mb-1`}>Exportar datos</h3>
+                  <p className={`text-xs ${t.subtext} mb-4`}>Descargá un respaldo de tus datos en PDF</p>
+                  <div className="flex flex-col gap-2">
+                    <button onClick={exportarReparacionesPDF}
+                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-[#00c347] transition-colors`}>
+                      <span className="text-lg">📄</span>
+                      <div className="text-left">
+                        <p className={`font-medium ${t.text}`}>Exportar reparaciones</p>
+                        <p className={`text-xs ${t.subtext}`}>Lista completa de órdenes</p>
+                      </div>
+                    </button>
+                    <button onClick={exportarClientesPDF}
+                      className={`w-full flex items-center gap-3 border ${t.divider} ${t.badge} py-3 px-4 rounded-xl text-sm font-medium ${t.muted} hover:border-[#00c347] transition-colors`}>
+                      <span className="text-lg">👥</span>
+                      <div className="text-left">
+                        <p className={`font-medium ${t.text}`}>Exportar clientes</p>
+                        <p className={`text-xs ${t.subtext}`}>Directorio con historial</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <button onClick={guardarConfig} disabled={configGuardando}
+                  className="w-full bg-[#00c347] hover:bg-[#00d957] text-black font-bold py-3 rounded-xl transition-colors text-sm">
+                  {configGuardando ? 'Guardando...' : 'Guardar configuración'}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ── Reparaciones ── */}
+        {section === 'reparaciones' && (
+          <div className="min-w-0">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className={`text-2xl font-bold ${t.text}`}>Reparaciones</h1>
+                <p className={`${t.subtext} text-sm mt-1`}>{repairs.length} órdenes en total</p>
+              </div>
+              <button onClick={() => {
+                setEditingRepair(null);
+                setForm({ cliente: '', tipo: '', modelo: '', falla: '', telefono: '', contrasena: '', trabajo: '', costo: '', entrega: '', saldo: '', garantia: '', garantiaCustom: '', comentario_publico: '' });
+                setShowModal(true);
+              }} className="bg-[#00c347] hover:bg-[#00d957] text-black px-5 py-2.5 rounded-xl font-bold text-sm transition-colors">
+                + Nueva Orden
+              </button>
+            </div>
+
+            <div className={`rounded-2xl overflow-hidden`}>
+              <div className={`p-4 border-b ${t.divider} ${t.card}`}>
+                <input type="text" placeholder="🔍  Buscar por cliente, equipo o número de orden..."
+                  value={search} onChange={(e) => setSearch(e.target.value)}
+                  className={`border ${t.input} p-3 rounded-xl w-full outline-none transition-colors text-sm`} />
+              </div>
+
+              <div className={`overflow-x-auto ${t.bg}`}>
+                <table className="w-full border-separate border-spacing-y-0.5">
+                  <thead>
+                    <tr>
+                      {['Orden', 'Cliente', 'Equipo', 'Falla', 'Costo', 'Entrega', 'Saldo', 'Fecha', 'Estado', 'Presupuesto', ''].map(h => (
+                        <th key={h} className={`text-left px-4 py-2 text-xs ${t.tableHead} font-medium uppercase tracking-wider whitespace-nowrap`}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {repairs
+                      .filter((repair: any) => {
+                        const q = search.trim().toLowerCase();
+                        if (!q) return true;
+                        const ordenDigitos = String(repair.orden).replace(/\D/g, '');
+                        const queryDigitos = q.replace(/\D/g, '');
+                        const matchOrden = queryDigitos !== '' && (
+                          ordenDigitos === queryDigitos ||
+                          ordenDigitos === String(parseInt(queryDigitos, 10)) ||
+                          ordenDigitos.includes(queryDigitos)
+                        );
+                        return (
+                          repair.cliente.toLowerCase().includes(q) ||
+                          repair.equipo.toLowerCase().includes(q) ||
+                          matchOrden
+                        );
+                      })
+                      .map((repair: any, index: number) => (
+                        <tr key={index} className={`${t.card} transition-colors ${darkMode ? "hover:bg-[#1b2832]" : "hover:bg-slate-50"}`}>
+                          <td className={`px-3 py-2.5 text-xs font-bold text-[#00d957] whitespace-nowrap rounded-l-xl border-l border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>{repair.orden}</td>
+                          <td className={`px-3 py-2.5 text-xs font-medium ${t.text} whitespace-nowrap border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`} style={{whiteSpace: 'pre'}}>{repair.cliente}</td>
+                          <td className={`px-3 py-2.5 text-xs ${darkMode ? 'text-white' : 'text-gray-600'} whitespace-nowrap border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>{repair.equipo}</td>
+                          <td className={`px-3 py-2.5 text-xs ${t.muted} max-w-[160px] truncate border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>{repair.falla}</td>
+                          <td className={`px-3 py-2.5 text-xs text-blue-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>$ {repair.costo || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs text-[#00d957] font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>$ {repair.entrega || 0}</td>
+                          <td className={`px-3 py-2.5 text-xs text-yellow-400 font-semibold whitespace-nowrap border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>$ {repair.saldo || 0}</td>
+                          <td className={`px-3 py-2.5 ${t.subtext} text-xs whitespace-nowrap border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>{repair.fecha}</td>
+                          <td className={`px-3 py-2.5 border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                            <select value={repair.estado}
+                              onChange={async (e) => {
+                                const nuevoEstado = e.target.value;
+                                await supabase.from('repairs').update({ estado: nuevoEstado }).eq('id', repair.id);
+                                setRepairs(repairs.map((r: any) => r.id === repair.id ? { ...r, estado: nuevoEstado } : r));
+
+                                const buildMsg = (template: string) => {
+                                  const seguimientoUrl = repair.seguimiento_token
+                                    ? `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
+                                    : '';
+                                  const enlace = seguimientoUrl
+                                    ? `📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}`
+                                    : '';
+                                  let texto = template
+                                    .replace(/{cliente}/g, primerNombreWhatsApp(repair.cliente))
+                                    .replace(/{equipo}/g, repair.equipo)
+                                    .replace(/{saldo}/g, String(repair.saldo ?? '0'));
+                                  if (texto.includes('{seguimiento}')) {
+                                    texto = texto.replace(/{seguimiento}/g, seguimientoUrl);
+                                    if (!seguimientoUrl) {
+                                      texto = texto.replace(/\n*📋 Consultá el estado de tu equipo acá:\n*/g, '\n');
+                                    }
+                                  } else if (enlace) {
+                                    // Si una plantilla personalizada no incluye la variable,
+                                    // insertar el enlace antes del cierre, nunca después.
+                                    const firma = /\n\n(MegaByte 💚|¡Gracias por confiar en MegaByte! 💚)\s*$/;
+                                    texto = firma.test(texto)
+                                      ? texto.replace(firma, (_match, cierre) => `\n\n${enlace}\n\n${cierre}`)
+                                      : `${texto}\n\n${enlace}`;
+                                  }
+                                  return encodeURIComponent(texto);
+                                };
+                                let mensaje = '';
+                                if (nuevoEstado === 'En diagnóstico' && config.switch_en_diagnostico !== false)
+                                  mensaje = buildMsg(config.msg_en_diagnostico || 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚');
+                                else if (nuevoEstado === 'En reparación' && config.switch_en_reparacion !== false)
+                                  mensaje = buildMsg(config.msg_en_reparacion || 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚');
+                                else if (nuevoEstado === 'Reparado' && config.switch_reparado !== false)
+                                  mensaje = buildMsg(config.msg_reparado || 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚');
+                                else if (nuevoEstado === 'Entregado' && config.switch_entregado !== false)
+                                  mensaje = buildMsg(config.msg_entregado || 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚');
+
+                                if (mensaje) {
+                                  const numero = repair.telefono?.replace(/\D/g, '')?.replace(/^0/, '');
+                                  window.open(`https://api.whatsapp.com/send?phone=598${numero}&text=${mensaje}`, '_blank');
+                                }
+                              }}
+                              className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer min-w-[110px] ${estadoSelectColor[repair.estado] || (darkMode ? 'bg-[#253641] text-white' : 'bg-slate-100 text-slate-700')}`}>
+                              <option>Pendiente</option>
+                              <option>En diagnóstico</option>
+                              <option>En reparación</option>
+                              <option>Reparado</option>
+                              <option value="Entregado">Entregado {repair.se_reparo === false ? '❌' : '✅'}</option>
+                            </select>
+                          </td>
+                          <td className={`px-3 py-2.5 text-xs border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                            {repair.presupuesto_publicado ? (
+                              <span className={`rounded-full px-2 py-1 font-semibold whitespace-nowrap ${repair.presupuesto_estado === 'aprobado' ? 'bg-green-500/20 text-green-400' : repair.presupuesto_estado === 'rechazado' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                {repair.presupuesto_estado === 'aprobado' ? '✓ Aprobado' : repair.presupuesto_estado === 'rechazado' ? '✕ Rechazado' : '◷ Pendiente'}
+                              </span>
+                            ) : <span className={t.muted}>Sin publicar</span>}
+                            {repair.presupuesto_publicado && <div className="mt-1 whitespace-nowrap">$ {repair.presupuesto_importe}</div>}
+                            {repair.presupuesto_respondido_en && <div className={`${t.muted} mt-1 whitespace-nowrap`}>{new Date(repair.presupuesto_respondido_en).toLocaleString('es-UY')}</div>}
+                          </td>
+                          <td className={`px-3 py-2.5 relative rounded-r-xl border-r border-t border-b ${darkMode ? 'border-[#253641]' : 'border-slate-200'}`}>
+                            {openMenu === repair.id && (
+                              <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
+                            )}
+                            <button onClick={(e) => {
+                              if (openMenu === repair.id) { setOpenMenu(null); return; }
+                              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                              const menuH = 210;
+                              const menuW = 160;
+                              const top = rect.bottom + menuH > window.innerHeight ? rect.top - menuH : rect.bottom + 4;
+                              const left = Math.min(rect.right - menuW, window.innerWidth - menuW - 8);
+                              setMenuPos({ top, left });
+                              setOpenMenu(repair.id);
+                            }} className={`${t.badge} hover:bg-zinc-600 w-8 h-8 rounded-lg text-sm font-bold transition-colors ${t.muted}`}>⋮</button>
+                            {openMenu === repair.id && (
+                              <div style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
+                                className={`${t.menuBg} border rounded-xl shadow-2xl w-48 overflow-hidden`}>
+                                <button onClick={() => { generatePDF(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>📄 Ticket cliente</button>
+                                <button onClick={() => { generateTicketInterno(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>🏷️ Ticket interno</button>
+                                <button onClick={() => {
+                                  setOpenMenu(null);
+                                  setTimeout(() => {
+                                    setEntregaForm({ costo: repair.costo || '', entrega: repair.entrega || '', garantia: repair.garantia || '', garantiaCustom: '', seReparo: repair.se_reparo !== false });
+                                    setModalEntrega(repair);
+                                  }, 50);
+                                }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✅ Ticket entrega</button>
+                                <button onClick={() => { setPresupuestoEditor(repair); setPresupuestoImporte(String(repair.presupuesto_importe || '')); setPresupuestoDetalle(repair.presupuesto_detalle || ''); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} ${t.text}`}>💰 Presupuesto QR</button>
+                                {repair.presupuesto_publicado && <button onClick={() => { void ocultarPresupuesto(repair); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} ${t.text}`}>🙈 Ocultar presupuesto</button>}
+                                <button onClick={() => { editRepair(repair); setOpenMenu(null); }} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 ${t.text}`}>✏️ Editar</button>
+                                <a href={`https://wa.me/598${(repair.telefono || '').replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" onClick={() => setOpenMenu(null)} className={`w-full text-left px-3 py-2.5 text-sm ${t.menuItem} transition-colors flex items-center gap-2 block ${t.text}`}>💬 WhatsApp</a>
+                                <button onClick={() => { deleteRepair(repair.id); setOpenMenu(null); }} className="w-full text-left px-3 py-2.5 text-sm hover:bg-red-500/20 text-red-400 transition-colors flex items-center gap-2">🗑️ Eliminar</button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {presupuestoEditor && (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 p-4">
+                <div className={`${t.modal} w-full max-w-md rounded-2xl border p-5 space-y-4`}>
+                  <h3 className={`text-lg font-bold ${t.text}`}>Presupuesto QR · {presupuestoEditor.orden}</h3>
+                  <p className={`text-sm ${t.muted}`}>El cliente podrá aprobar o rechazar desde su enlace de seguimiento.</p>
+                  <label className={`block text-sm ${t.text}`}>Importe (UYU)
+                    <input type="number" min="0.01" step="0.01" value={presupuestoImporte} onChange={e => setPresupuestoImporte(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-600 bg-[#18232c] p-3 text-white" />
+                  </label>
+                  <label className={`block text-sm ${t.text}`}>Detalle visible para el cliente
+                    <textarea value={presupuestoDetalle} onChange={e => setPresupuestoDetalle(e.target.value)} rows={4} className="mt-1 w-full rounded-lg border border-gray-600 bg-[#18232c] p-3 text-white" />
+                  </label>
+                  {presupuestoEditor.presupuesto_publicado && presupuestoEditor.presupuesto_estado === 'pendiente' && (
+                    <div className="rounded-xl border border-gray-600 p-3 space-y-2">
+                      <p className={`text-sm font-semibold ${t.text}`}>Respuesta recibida por WhatsApp</p>
+                      <p className={`text-xs ${t.muted}`}>Registrá la decisión del cliente sin que tenga que usar el QR.</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button type="button" onClick={() => { void responderPresupuestoManual(presupuestoEditor, 'aprobado'); }} className="rounded-lg bg-green-600 px-3 py-2 font-bold text-white">✓ Aprobar</button>
+                        <button type="button" onClick={() => { void responderPresupuestoManual(presupuestoEditor, 'rechazado'); }} className="rounded-lg bg-red-700 px-3 py-2 font-bold text-white">✕ Rechazar</button>
+                      </div>
+                    </div>
+                  )}
+                  {presupuestoEditor.presupuesto_estado === 'aprobado' || presupuestoEditor.presupuesto_estado === 'rechazado' ? <p className="text-sm text-yellow-400">Atención: republicar reiniciará la decisión del cliente a pendiente.</p> : null}
+                  <div className="flex justify-end gap-2"><button onClick={() => setPresupuestoEditor(null)} className="rounded-lg border px-4 py-2">Cancelar</button><button onClick={() => { void guardarPresupuesto(); }} className="rounded-lg bg-green-600 px-4 py-2 font-bold text-white">Publicar presupuesto</button></div>
+                </div>
+              </div>
+            )}
+            {presupuestoAviso && <div role="alert" className="fixed right-4 top-4 z-[10001] max-w-sm rounded-xl border border-green-500 bg-[#122b20] p-4 text-white shadow-2xl"><p className="font-semibold">🔔 Respuesta de presupuesto</p><p className="mt-1 text-sm">{presupuestoAviso}</p><button onClick={() => setPresupuestoAviso('')} className="mt-2 text-sm underline">Cerrar</button></div>}
+            {/* Modal */}
+            {showModal && (
+              <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                <div className={`${t.modal} border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto`}>
+                  <div className={`flex items-center justify-between p-6 border-b ${t.divider}`}>
+                    <h2 className={`text-xl font-bold ${t.text}`}>
+                      {editingRepair ? '✏️ Editar Orden' : '➕ Nueva Orden'}
+                    </h2>
+                    <button onClick={() => setShowModal(false)} className={`${t.subtext} hover:${t.text} text-xl transition-colors`}>✕</button>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Fila 1: Cliente - Teléfono */}
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Cliente</label>
+                        <input placeholder="Nombre del cliente" value={form.cliente}
+                          autoCapitalize="words"
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/(?:^|\s)\S/g, (c) => c.toUpperCase());
+                            setForm({ ...form, cliente: val });
+                          }}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                      </div>
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Teléfono</label>
+                        <input placeholder="09X XXX XXX" value={form.telefono}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, '');
+                            const formatted = digits.replace(/(\d{3})(?=\d)/g, '$1 ');
+                            setForm({ ...form, telefono: formatted });
+                          }}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                      </div>
+                      {/* Fila 2: Tipo de equipo - Modelo */}
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Tipo de equipo</label>
+                        <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                          className={`w-full border ${t.select} p-3 rounded-xl outline-none focus:border-[#00c347] transition-colors text-sm`}>
+                          <option value="">Seleccionar tipo</option>
+                          <option value="Celular">Celular</option>
+                          <option value="Notebook">Notebook</option>
+                          <option value="Tablet">Tablet</option>
+                          <option value="PC">PC</option>
+                          <option value="Otro">Otro</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Modelo</label>
+                        <input placeholder="Ej: iPhone 13, Lenovo V15" value={form.modelo}
+                          onChange={(e) => setForm({ ...form, modelo: e.target.value })}
+                          className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                      </div>
+                      {/* Fila 3: Falla - Contraseña */}
+                      {[
+                        { key: 'falla', label: 'Falla', placeholder: 'Descripción del problema' },
+                        { key: 'contrasena', label: 'Contraseña', placeholder: 'Contraseña del equipo' },
+                        { key: 'costo', label: 'Costo total ($)', placeholder: '0' },
+                        { key: 'entrega', label: 'Entrega ($)', placeholder: '0' },
+                      ].map(({ key, label, placeholder }) => (
+                        <div key={key}>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>{label}</label>
+                          <input placeholder={placeholder} value={(form as any)[key]}
+                            onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Garantía</label>
+                        <select value={(form as any).garantia || ''} onChange={e => setForm({...form, garantia: e.target.value} as any)}
+                          className={`w-full border ${t.select} p-3 rounded-xl outline-none transition-colors text-sm`}>
+                          <option value="">Sin garantía</option>
+                          <option value="30 días">30 días</option>
+                          <option value="3 meses">3 meses</option>
+                          <option value="otro">Otro...</option>
+                        </select>
+                      </div>
+                      {(form as any).garantia === 'otro' && (
+                        <div>
+                          <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Especificar garantía</label>
+                          <input placeholder="Ej: 6 meses, 1 año..." value={(form as any).garantiaCustom || ''}
+                            onChange={e => setForm({...form, garantiaCustom: e.target.value} as any)}
+                            className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm`} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4">
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Trabajo realizado</label>
+                      <textarea placeholder="Descripción detallada del trabajo..." value={form.trabajo}
+                        onChange={(e) => setForm({ ...form, trabajo: e.target.value })}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[100px] resize-none`} />
+                    </div>
+
+                    <div className="mt-4">
+                      <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Comentario para el cliente (seguimiento QR)</label>
+                      <textarea placeholder="Ej: Estamos esperando el repuesto para continuar con la reparación..." value={form.comentario_publico}
+                        onChange={(e) => setForm({ ...form, comentario_publico: e.target.value })}
+                        className={`w-full border ${t.input} p-3 rounded-xl outline-none transition-colors text-sm min-h-[90px] resize-y`} />
+                      <p className={`mt-1 text-xs ${t.subtext}`}>Visible para el cliente al consultar su QR. No se imprime en los tickets.</p>
+                    </div>
+
+                    <div className="flex gap-3 mt-6">
+                      <button onClick={addRepair} disabled={guardandoOrden}
+                        className="flex-1 bg-[#00c347] hover:bg-[#00d957] disabled:opacity-60 text-black font-bold py-3 rounded-xl transition-colors text-sm">
+                        {guardandoOrden ? 'Guardando...' : (editingRepair ? 'Guardar cambios' : 'Crear orden')}
+                      </button>
+                      <button onClick={() => setShowModal(false)}
+                        className={`px-6 ${t.badge} hover:bg-[#253641] ${t.text} font-bold py-3 rounded-xl transition-colors text-sm`}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Modal entrega - nivel global */}
+      {modalEntrega && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4">
+          <div className={`${t.card} border rounded-2xl p-6 w-full max-w-sm`}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className={`text-base font-bold ${t.text}`}>Entregar orden {modalEntrega.orden}</p>
+                <p className={`text-xs ${t.subtext} mt-0.5`}>{modalEntrega.cliente} — {modalEntrega.equipo}</p>
+              </div>
+              <button onClick={() => setModalEntrega(null)} className={`${t.muted} text-xl leading-none`}>×</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>¿Se reparó el equipo?</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setEntregaForm({...entregaForm, seReparo: true})}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${entregaForm.seReparo ? 'bg-[#00c347]/15 border-[#00c347] text-[#00d957]' : `${t.badge} border ${t.divider} ${t.muted}`}`}>
+                    ✅ Reparado
+                  </button>
+                  <button type="button" onClick={() => setEntregaForm({...entregaForm, seReparo: false})}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${!entregaForm.seReparo ? 'bg-red-500/15 border-red-500 text-red-400' : `${t.badge} border ${t.divider} ${t.muted}`}`}>
+                    ❌ No reparado
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Costo total ($)</label>
+                  <input type="number" value={entregaForm.costo}
+                    onChange={e => setEntregaForm({...entregaForm, costo: e.target.value})}
+                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                </div>
+                <div>
+                  <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Entrega ($)</label>
+                  <input type="number" value={entregaForm.entrega}
+                    onChange={e => setEntregaForm({...entregaForm, entrega: e.target.value})}
+                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                </div>
+              </div>
+              <div className={`${t.badge} rounded-xl p-3 flex justify-between items-center`}>
+                <span className={`text-sm ${t.subtext}`}>Saldo pendiente</span>
+                <span className={`text-base font-bold ${t.text}`}>$ {Math.max(0, Number(entregaForm.costo || 0) - Number(entregaForm.entrega || 0))}</span>
+              </div>
+              <div>
+                <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Garantía</label>
+                <select value={entregaForm.garantia}
+                  onChange={e => setEntregaForm({...entregaForm, garantia: e.target.value})}
+                  className={`w-full border ${t.select} p-3 rounded-xl outline-none text-sm`}>
+                  <option value="">Sin garantía</option>
+                  <option value="30 días">30 días</option>
+                  <option value="3 meses">3 meses</option>
+                  <option value="otro">Otro...</option>
+                </select>
+              </div>
+              {entregaForm.garantia === 'otro' && (
+                <div>
+                  <label className={`text-xs ${t.subtext} font-medium mb-1 block`}>Especificar garantía</label>
+                  <input placeholder="Ej: 6 meses, 1 año..." value={entregaForm.garantiaCustom}
+                    onChange={e => setEntregaForm({...entregaForm, garantiaCustom: e.target.value})}
+                    className={`w-full border ${t.input} p-3 rounded-xl outline-none text-sm`} />
+                </div>
+              )}
+              <div className="flex gap-2 mt-1">
+                <button onClick={() => setModalEntrega(null)}
+                  className={`flex-1 ${t.badge} border ${t.divider} py-2.5 rounded-xl text-sm ${t.muted}`}>Cancelar</button>
+                <button onClick={confirmarEntrega}
+                  className="flex-1 bg-[#00c347] hover:bg-[#00d957] text-black py-2.5 rounded-xl text-sm font-bold">
+                  Confirmar entrega
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-    <div className="mt-3 text-[25px] font-extrabold text-[#41e17b]">$ {Number(importe).toLocaleString('es-UY', { minimumFractionDigits: 2 })} UYU</div>
-    {estado === 'pendiente' ? <>
-      <p className="mt-2 text-[12px] text-[#afc4b8]">¿Autorizás este presupuesto?</p>
-      {!confirmacion ? <div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => setConfirmacion('aprobado')} className="rounded-lg bg-[#16803c] px-2 py-3 text-sm font-bold text-white">✓ Aprobar</button><button onClick={() => setConfirmacion('rechazado')} className="rounded-lg border border-red-500 px-2 py-3 text-sm font-bold text-red-300">✕ Rechazar</button></div> : <div className="mt-3 rounded-lg border border-yellow-700 p-3"><p className="text-sm">¿Confirmás que querés {confirmacion === 'aprobado' ? 'APROBAR' : 'RECHAZAR'} este presupuesto?</p><div className="mt-3 flex gap-2"><button disabled={cargando} onClick={responder} className="rounded-lg bg-green-700 px-3 py-2 text-sm font-bold disabled:opacity-50">{cargando ? 'Guardando…' : 'Sí, confirmar'}</button><button disabled={cargando} onClick={() => setConfirmacion(null)} className="rounded-lg border px-3 py-2 text-sm">Cancelar</button></div></div>}
-    </> : <p className={`mt-3 rounded-lg px-3 py-3 text-sm font-bold ${estado === 'aprobado' ? 'bg-green-900 text-green-200' : 'bg-red-950 text-red-200'}`}>{estado === 'aprobado' ? '✓ Presupuesto aprobado' : '✕ Presupuesto rechazado'}{fecha ? ` · ${new Date(fecha).toLocaleString('es-UY')}` : ''}</p>}
-    {error && <p role="alert" className="mt-2 text-sm text-red-300">{error}</p>}
-    <p className="mt-3 text-[11px] text-[#9bb4a8]">La respuesta queda registrada en el taller.</p>
-  </section>;
+  );
 }
