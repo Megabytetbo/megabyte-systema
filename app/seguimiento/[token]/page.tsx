@@ -41,11 +41,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 
 const PASOS = [
-  { nombre: 'Equipo recibido', detalle: 'Se recibió el equipo en el taller.' },
-  { nombre: 'En diagnóstico', detalle: 'Estamos revisando el equipo.' },
-  { nombre: 'En reparación', detalle: 'Se está trabajando en la reparación.' },
-  { nombre: 'Listo para retirar', detalle: 'Tu equipo está listo para retirar.' },
-  { nombre: 'Entregado', detalle: 'El equipo fue entregado.' },
+  { nombre: 'Equipo recibido' },
+  { nombre: 'En diagnóstico' },
+  { nombre: 'En reparación' },
+  { nombre: 'Listo para retirar' },
+  { nombre: 'Entregado' },
 ];
 
 function progreso(estado: string) {
@@ -142,7 +142,7 @@ export default async function SeguimientoPage({ params }: Props) {
                 <span className={`relative z-10 flex h-[29px] w-[29px] items-center justify-center rounded-full border-[2px] text-[16px] font-bold ${completado ? 'border-[#00c34b] bg-[#00c34b] text-black' : activo ? 'border-[#00c34b] bg-[#073d22] text-[#00d75a] shadow-[0_0_0_4px_rgba(0,195,75,.10)]' : 'border-[#687485] bg-[#101820] text-[#687485]'}`}>{completado ? '✓' : activo ? '●' : ''}</span>
                 <div className="flex min-w-0 flex-col gap-[5px] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                   <div className="min-w-0 sm:w-[43%]"><div className={`text-[13px] font-semibold leading-snug ${activo ? 'text-[#00d957]' : hecho ? 'text-white' : 'text-[#8794a5]'}`}>{paso.nombre}</div></div>
-                  {hecho && <div className={`min-w-0 flex-1 rounded-[7px] px-[9px] py-[9px] text-[11px] leading-[1.4] ${activo ? 'border border-[#08733a] bg-[#09291d] text-[#e5fff0]' : 'bg-[#1b2832] text-[#e3eaf1]'}`}>{paso.detalle}</div>}
+
                 </div>
               </li>;
             })}
