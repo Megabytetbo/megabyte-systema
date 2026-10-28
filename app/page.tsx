@@ -3623,7 +3623,8 @@ export default function Home() {
                                     .replace(/{cliente}/g, primerNombreWhatsApp(repair.cliente))
                                     .replace(/{equipo}/g, repair.equipo)
                                     .replace(/{saldo}/g, String(repair.saldo ?? '0'))
-                                    .replace(/\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}/g, seguimientoUrl ? `\n\n📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}` : '')\n                                    .replace(/{seguimiento}/g, seguimientoUrl);
+                                    .replace(/\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}/g, seguimientoUrl ? `\n\n📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}` : '')
+                                    .replace(/{seguimiento}/g, seguimientoUrl);
                                   if (seguimientoUrl && !incluyeSeguimiento) {
                                     const enlace = `📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}`;
                                     // Mantener la firma del taller al final del mensaje.
