@@ -186,53 +186,28 @@ export default function Home() {
       const { data } = await supabase
         .from('configuracion').select('*').eq('user_id', user.id).single();
       if (data) {
-        // Actualizar solamente las plantillas antiguas estándar ya guardadas en Supabase.
-        // Los mensajes personalizados por el taller se mantienen sin cambios.
-        const anteriores: Record<string, string[]> = {
-          msg_en_diagnostico: [
-            'Hola {cliente} 👋\n\nTu equipo {equipo} se encuentra en etapa de diagnóstico en MegaByte 🔍',
-          ],
-          msg_en_reparacion: [
-            'Hola {cliente} 👋\n\nTu equipo {equipo} ya ingresó a reparación en MegaByte 🔧',
-            'Hola {cliente} 👋\n\nTu equipo {equipo} ya ingresó a reparación 🔧',
-          ],
-          msg_reparado: [
-            'Hola {cliente} 👋\n\nTu equipo {equipo} ya está reparado y listo para retirar ✅',
-          ],
-          msg_entregado: [
-            'Hola {cliente} 👋\n\nTu equipo {equipo} ya está pronto para retirar ✅\n\nSaldo pendiente: ${saldo}\n\nGracias por confiar en MegaByte',
-          ],
-        };
-        const nuevos: Record<string, string> = {
+        // Aplicar una sola vez los mensajes acordados. Luego se pueden editar normalmente.
+        // Se usa una clave por usuario para no reescribir sus personalizaciones futuras.
+        const mensajesDefinitivos: Record<string, string> = {
           msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
           msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
           msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
           msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚',
         };
-        // Versiones estándar anteriores de MegaTallerPro (sin enlace o con enlace añadido al final).
-        // No se modifican plantillas que el taller haya personalizado.
-        const estandaresPrevios: Record<string, string> = {
-          msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\nMegaByte 💚',
-          msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\nMegaByte 💚',
-          msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\nMegaByte 💚',
-          msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n¡Gracias por confiar en MegaByte! 💚',
-        };
-        for (const clave of Object.keys(estandaresPrevios)) {
-          anteriores[clave].push(estandaresPrevios[clave]);
-          const previo = estandaresPrevios[clave];
-          const firma = clave === 'msg_entregado' ? '¡Gracias por confiar en MegaByte! 💚' : 'MegaByte 💚';
-          anteriores[clave].push(previo.replace(`\n\n${firma}`, `\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n${firma}`));
-        }
-        const cambios: Record<string, string> = {};
-        for (const clave of Object.keys(nuevos)) {
-          if (data[clave] == null || anteriores[clave].includes(data[clave])) cambios[clave] = nuevos[clave];
-        }
-        const configActualizada = { ...data, ...cambios };
-        setConfig(configActualizada);
-        if (Object.keys(cambios).length) {
+        const versionMensajes = `megatallerpro_mensajes_definitivos_v3_${user.id}`;
+        if (localStorage.getItem(versionMensajes) !== 'aplicado') {
           const { error: errorMensajes } = await supabase.from('configuracion')
-            .update(cambios).eq('user_id', user.id);
-          if (errorMensajes) console.error('No se pudieron actualizar los mensajes automáticos:', errorMensajes);
+            .update(mensajesDefinitivos).eq('user_id', user.id);
+          if (errorMensajes) {
+            console.error('No se pudieron guardar los mensajes definitivos:', errorMensajes);
+            // Mostrar el texto acordado durante esta sesión aunque falle la escritura.
+            setConfig({ ...data, ...mensajesDefinitivos });
+          } else {
+            localStorage.setItem(versionMensajes, 'aplicado');
+            setConfig({ ...data, ...mensajesDefinitivos });
+          }
+        } else {
+          setConfig(data);
         }
         if (data.is_admin) {
           cargarSuscripciones();
@@ -1037,7 +1012,7 @@ export default function Home() {
 
     const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(data.seguimiento_token || presupuestoEditor.seguimiento_token)}`;
     const nombreNegocio = String(config.nombre_negocio || 'MegaByte');
-    const mensaje = `Hola ${primerNombreWhatsApp(data.cliente || presupuestoEditor.cliente)} 👋\n\n🔧 El presupuesto para tu equipo ya está disponible.\n\n💰 Importe: $ ${importe.toLocaleString('es-UY')}\n\n📋 Consultá todos los detalles en el siguiente enlace:\n${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
+    const mensaje = `Hola ${primerNombreWhatsApp(data.cliente || presupuestoEditor.cliente)} 👋\n\n🔧 El presupuesto para tu equipo ya está disponible.\n\n💰 Importe: $ ${importe.toLocaleString('es-UY')}\n\n📋 Consultá todos los detalles en el siguiente enlace:\n🔗 ${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
     if (!telefono) {
       alert('Presupuesto publicado correctamente. Esta reparación no tiene teléfono: compartí el enlace de seguimiento con el cliente para que pueda aprobar o rechazar.\n\n' + seguimientoUrl);
       return;
@@ -3618,19 +3593,24 @@ export default function Home() {
                                   const seguimientoUrl = repair.seguimiento_token
                                     ? `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(repair.seguimiento_token)}`
                                     : '';
-                                  const incluyeSeguimiento = template.includes('{seguimiento}');
+                                  const enlace = seguimientoUrl
+                                    ? `📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}`
+                                    : '';
                                   let texto = template
                                     .replace(/{cliente}/g, primerNombreWhatsApp(repair.cliente))
                                     .replace(/{equipo}/g, repair.equipo)
-                                    .replace(/{saldo}/g, String(repair.saldo ?? '0'))
-                                    .replace(/\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}/g, seguimientoUrl ? `\n\n📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}` : '')
-                                    .replace(/{seguimiento}/g, seguimientoUrl);
-                                  if (seguimientoUrl && !incluyeSeguimiento) {
-                                    const enlace = `📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}`;
-                                    // Mantener la firma del taller al final del mensaje.
+                                    .replace(/{saldo}/g, String(repair.saldo ?? '0'));
+                                  if (texto.includes('{seguimiento}')) {
+                                    texto = texto.replace(/{seguimiento}/g, seguimientoUrl);
+                                    if (!seguimientoUrl) {
+                                      texto = texto.replace(/\n*📋 Consultá el estado de tu equipo acá:\n*/g, '\n');
+                                    }
+                                  } else if (enlace) {
+                                    // Si una plantilla personalizada no incluye la variable,
+                                    // insertar el enlace antes del cierre, nunca después.
                                     const firma = /\n\n(MegaByte 💚|¡Gracias por confiar en MegaByte! 💚)\s*$/;
                                     texto = firma.test(texto)
-                                      ? texto.replace(firma, (_coincidencia, cierre) => `\n\n${enlace}\n\n${cierre}`)
+                                      ? texto.replace(firma, (_match, cierre) => `\n\n${enlace}\n\n${cierre}`)
                                       : `${texto}\n\n${enlace}`;
                                   }
                                   return encodeURIComponent(texto);
