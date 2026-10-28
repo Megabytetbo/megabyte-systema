@@ -42,10 +42,10 @@ export default function Home() {
   const [config, setConfig] = useState<any>({
     nombre_negocio: 'MegaByte', direccion: '', telefono: '', logo_url: '', logo_seguimiento_url: '',
     dominio_seguimiento: '', dominio_seguimiento_activo: false,
-    msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\nMegaByte 💚',
-    msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\nMegaByte 💚',
-    msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\nMegaByte 💚',
-    msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n¡Gracias por confiar en MegaByte! 💚',
+    msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+    msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+    msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+    msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚',
     switch_en_diagnostico: true, switch_en_reparacion: true, switch_reparado: true, switch_entregado: true,
   });
   const [configGuardando, setConfigGuardando] = useState(false);
@@ -204,11 +204,25 @@ export default function Home() {
           ],
         };
         const nuevos: Record<string, string> = {
+          msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+          msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+          msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚',
+          msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚',
+        };
+        // Versiones estándar anteriores de MegaTallerPro (sin enlace o con enlace añadido al final).
+        // No se modifican plantillas que el taller haya personalizado.
+        const estandaresPrevios: Record<string, string> = {
           msg_en_diagnostico: 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\nMegaByte 💚',
           msg_en_reparacion: 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\nMegaByte 💚',
           msg_reparado: 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\nMegaByte 💚',
           msg_entregado: 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n¡Gracias por confiar en MegaByte! 💚',
         };
+        for (const clave of Object.keys(estandaresPrevios)) {
+          anteriores[clave].push(estandaresPrevios[clave]);
+          const previo = estandaresPrevios[clave];
+          const firma = clave === 'msg_entregado' ? '¡Gracias por confiar en MegaByte! 💚' : 'MegaByte 💚';
+          anteriores[clave].push(previo.replace(`\n\n${firma}`, `\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n${firma}`));
+        }
         const cambios: Record<string, string> = {};
         for (const clave of Object.keys(nuevos)) {
           if (data[clave] == null || anteriores[clave].includes(data[clave])) cambios[clave] = nuevos[clave];
@@ -3609,7 +3623,7 @@ export default function Home() {
                                     .replace(/{cliente}/g, primerNombreWhatsApp(repair.cliente))
                                     .replace(/{equipo}/g, repair.equipo)
                                     .replace(/{saldo}/g, String(repair.saldo ?? '0'))
-                                    .replace(/{seguimiento}/g, seguimientoUrl);
+                                    .replace(/\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}/g, seguimientoUrl ? `\n\n📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}` : '')\n                                    .replace(/{seguimiento}/g, seguimientoUrl);
                                   if (seguimientoUrl && !incluyeSeguimiento) {
                                     const enlace = `📋 Consultá el estado de tu equipo acá:\n${seguimientoUrl}`;
                                     // Mantener la firma del taller al final del mensaje.
@@ -3622,13 +3636,13 @@ export default function Home() {
                                 };
                                 let mensaje = '';
                                 if (nuevoEstado === 'En diagnóstico' && config.switch_en_diagnostico !== false)
-                                  mensaje = buildMsg(config.msg_en_diagnostico || 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\nMegaByte 💚');
+                                  mensaje = buildMsg(config.msg_en_diagnostico || 'Hola {cliente} 👋\n\n🔍 Tu equipo está en diagnóstico.\n\nTe avisamos cuando tengamos novedades.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚');
                                 else if (nuevoEstado === 'En reparación' && config.switch_en_reparacion !== false)
-                                  mensaje = buildMsg(config.msg_en_reparacion || 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\nMegaByte 💚');
+                                  mensaje = buildMsg(config.msg_en_reparacion || 'Hola {cliente} 👋\n\n🔧 Tu equipo ya está en reparación.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚');
                                 else if (nuevoEstado === 'Reparado' && config.switch_reparado !== false)
-                                  mensaje = buildMsg(config.msg_reparado || 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\nMegaByte 💚');
+                                  mensaje = buildMsg(config.msg_reparado || 'Hola {cliente} 👋\n\n✅ ¡Tu equipo ya está reparado!\n\nPodés pasar a retirarlo.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\nMegaByte 💚');
                                 else if (nuevoEstado === 'Entregado' && config.switch_entregado !== false)
-                                  mensaje = buildMsg(config.msg_entregado || 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n¡Gracias por confiar en MegaByte! 💚');
+                                  mensaje = buildMsg(config.msg_entregado || 'Hola {cliente} 👋\n\n✅ Tu equipo fue entregado.\n\n📋 Consultá el estado de tu equipo acá:\n{seguimiento}\n\n¡Gracias por confiar en MegaByte! 💚');
 
                                 if (mensaje) {
                                   const numero = repair.telefono?.replace(/\D/g, '')?.replace(/^0/, '');
