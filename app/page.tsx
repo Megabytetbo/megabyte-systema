@@ -1011,7 +1011,7 @@ export default function Home() {
 
     const seguimientoUrl = `${obtenerBaseSeguimiento()}/seguimiento/${encodeURIComponent(data.seguimiento_token || presupuestoEditor.seguimiento_token)}`;
     const nombreNegocio = String(config.nombre_negocio || 'MegaByte');
-    const mensaje = `Hola ${primerNombreWhatsApp(data.cliente || presupuestoEditor.cliente)} 👋\n\n🔧 El presupuesto para tu equipo ya está disponible.\n\n💰 Importe: $ ${importe.toLocaleString('es-UY')}\n\n📋 Consultá todos los detalles en el siguiente enlace:\n🔗 ${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
+    const mensaje = `Hola ${primerNombreWhatsApp(data.cliente || presupuestoEditor.cliente)} 👋\n\n🔧 El presupuesto para tu equipo ya está disponible.\n\n📋 Consulta todos los detalles en el siguiente enlace:\n\n${seguimientoUrl}\n\n¡Gracias por confiar en ${nombreNegocio}! 💚`;
     if (!telefono) {
       alert('Presupuesto publicado correctamente. Esta reparación no tiene teléfono: compartí el enlace de seguimiento con el cliente para que pueda aprobar o rechazar.\n\n' + seguimientoUrl);
       return;
