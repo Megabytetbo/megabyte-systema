@@ -25,7 +25,7 @@ export default function PresupuestoRespuesta({ token, importe, detalle, estado: 
       <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-[#72e6a2]">📋 Detalle del presupuesto</p>
       <p className="whitespace-pre-wrap break-words text-[15px] font-medium leading-relaxed text-white">{detalle}</p>
     </div>
-    <div className="mt-3 text-[25px] font-extrabold text-[#41e17b]">$ {Number(importe).toLocaleString('es-UY', { minimumFractionDigits: 2 })} UYU</div>
+    <div className="mt-3 text-[25px] font-extrabold text-[#41e17b]">$ {Number(importe).toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} UYU</div>
     {estado === 'pendiente' ? <>
       <p className="mt-2 text-[12px] text-[#afc4b8]">¿Autorizás este presupuesto?</p>
       {!confirmacion ? <div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => setConfirmacion('aprobado')} className="rounded-lg bg-[#16803c] px-2 py-3 text-sm font-bold text-white">✓ Aprobar</button><button onClick={() => setConfirmacion('rechazado')} className="rounded-lg border border-red-500 px-2 py-3 text-sm font-bold text-red-300">✕ Rechazar</button></div> : <div className="mt-3 rounded-lg border border-yellow-700 p-3"><p className="text-sm">¿Confirmás que querés {confirmacion === 'aprobado' ? 'APROBAR' : 'RECHAZAR'} este presupuesto?</p><div className="mt-3 flex gap-2"><button disabled={cargando} onClick={responder} className="rounded-lg bg-green-700 px-3 py-2 text-sm font-bold disabled:opacity-50">{cargando ? 'Guardando…' : 'Sí, confirmar'}</button><button disabled={cargando} onClick={() => setConfirmacion(null)} className="rounded-lg border px-3 py-2 text-sm">Cancelar</button></div></div>}
