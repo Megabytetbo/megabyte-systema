@@ -943,7 +943,7 @@ export default function Home() {
     let activo = true;
     const consultar = async () => {
       const { data, error } = await supabase.from('repairs')
-        .select('id,presupuesto_estado,presupuesto_respondido_en,presupuesto_importe,presupuesto_detalle,presupuesto_publicado');
+        .select('id,orden,cliente,presupuesto_estado,presupuesto_respondido_en,presupuesto_importe,presupuesto_detalle,presupuesto_publicado');
       if (!activo || error || !data) return;
       const anteriores = presupuestoEstados.current;
       const nuevos: Record<string,string> = {};
@@ -951,8 +951,7 @@ export default function Home() {
         const estado = String(r.presupuesto_estado || '');
         nuevos[String(r.id)] = estado;
         if (presupuestoInicializado.current && (estado === 'aprobado' || estado === 'rechazado') && anteriores[String(r.id)] && anteriores[String(r.id)] !== estado) {
-          const orden = repairs.find(x => x.id === r.id);
-          setPresupuestoAviso(`${orden?.cliente || 'Un cliente'} ${estado === 'aprobado' ? 'aprobó' : 'rechazó'} el presupuesto de la orden ${orden?.orden || r.id}`);
+          setPresupuestoAviso(`${r.cliente || 'Un cliente'} ${estado === 'aprobado' ? 'aprobó' : 'rechazó'} el presupuesto de la orden ${r.orden ?? 'sin número'}`);
           try {
             const audio = new (window.AudioContext || (window as any).webkitAudioContext)();
             const osc = audio.createOscillator(); const gain = audio.createGain();
