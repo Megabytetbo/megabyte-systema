@@ -3758,6 +3758,7 @@ export default function Home() {
                           <option value="Notebook">Notebook</option>
                           <option value="Tablet">Tablet</option>
                           <option value="PC">PC</option>
+                          <option value="Impresora">Impresora</option>
                           <option value="Otro">Otro</option>
                         </select>
                       </div>
