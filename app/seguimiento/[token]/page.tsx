@@ -150,14 +150,7 @@ export default async function SeguimientoPage({ params }: Props) {
             })}
           </ol>
           {r.presupuesto_publicado && r.presupuesto_importe != null && <PresupuestoRespuesta token={token} importe={r.presupuesto_importe} detalle={r.presupuesto_detalle || ''} estado={r.presupuesto_estado || 'pendiente'} fecha={r.presupuesto_respondido_en} />}
-          {mostrarPrecioReparacion && <section className="mt-4 rounded-[10px] border border-[#00a943] bg-[#07351e] px-4 py-4">
-            <div className="text-[11px] font-bold uppercase tracking-[.08em] text-[#83f4ac]">Precio de la reparación</div>
-            <div className="mt-2 text-[27px] font-extrabold text-white">$ {costoReparacion.toLocaleString('es-UY')}</div>
-            {r.trabajo?.trim() && <div className="mt-3 border-t border-[#236c43] pt-3">
-              <div className="text-[11px] font-semibold text-[#83f4ac]">Detalle del trabajo</div>
-              <p className="mt-1 whitespace-pre-wrap break-words text-[12px] leading-relaxed text-white">{r.trabajo}</p>
-            </div>}
-          </section>}
+          {mostrarPrecioReparacion && <PresupuestoRespuesta token={token} importe={costoReparacion} detalle={r.trabajo || ''} estado="reparacion" />}
           <section className="mt-4 rounded-[10px] border border-[#253641] bg-[#101a23] px-3 py-3">
             <div className="flex items-center gap-2 text-[13px] font-bold"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#b8c9db" strokeWidth="1.7" aria-hidden="true"><path d="M4 4h16v13H9l-5 4V4Z"/><path d="M7 9h10M7 13h7"/></svg>Comentarios del taller</div>
             <p className="mt-3 whitespace-pre-wrap break-words text-[12px] leading-relaxed text-[#b4c3d4]">{r.comentario_publico?.trim() || 'Todavía no hay novedades adicionales para esta reparación.'}</p>
