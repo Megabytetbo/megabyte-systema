@@ -9,7 +9,7 @@ export default function PresupuestoRespuesta({ importe, detalle, estado, fecha }
       <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-[#72e6a2]">📋 {esReparacion ? 'Detalle del trabajo' : 'Detalle del presupuesto'}</p>
       <p className="whitespace-pre-wrap break-words text-[15px] font-medium leading-relaxed text-white">{detalle.trim() || 'Sin detalle cargado.'}</p>
     </div>
-    <div className="mt-3 text-[25px] font-extrabold text-[#41e17b]">$ {Number(importe).toLocaleString('es-UY', { minimumFractionDigits: 2 })} UYU</div>
+    <div className="mt-3 text-[25px] font-extrabold text-[#41e17b]">$ {Number(importe).toLocaleString('es-UY', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} UYU</div>
     {!esReparacion && <>
       {estado === 'aprobado' ? <p className="mt-3 rounded-lg bg-green-900 px-3 py-3 text-sm font-bold text-green-200">✓ Presupuesto aprobado{fecha ? ` · ${new Date(fecha).toLocaleString('es-UY')}` : ''}</p>
         : estado === 'rechazado' ? <p className="mt-3 rounded-lg bg-red-950 px-3 py-3 text-sm font-bold text-red-200">✕ Presupuesto rechazado{fecha ? ` · ${new Date(fecha).toLocaleString('es-UY')}` : ''}</p>
